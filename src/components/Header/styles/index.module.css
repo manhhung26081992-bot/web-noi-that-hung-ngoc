@@ -137,7 +137,7 @@
   display: none !important; /* PHẢI ẨN để nhường chỗ cho menu xanh */
 }
 /* --- 5. GIAO DIỆN MÀN HÌNH NHỎ (MOBILE < 768px) --- */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .topBar {
     display: flex !important;
     justify-content: space-between !important;

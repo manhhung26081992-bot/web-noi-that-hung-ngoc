@@ -135,7 +135,7 @@
 }
 
 /* --- 5. GIAO DIỆN MÀN HÌNH NHỎ (MOBILE < 768px) --- */
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
   .topBar {
     display: flex !important;
     justify-content: space-between !important;

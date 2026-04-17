@@ -42,7 +42,7 @@ export default function WarrantyPolicy() {
           <section className={Style.contactInfo}>
             <p>Mọi yêu cầu hỗ trợ bảo hành, quý khách vui lòng liên hệ trực tiếp:</p>
             <p><strong>Nội Thất Hùng Ngọc - Giá Xưởng Hà Nội</strong></p>
-            <p>Hotline: <a href="tel:0974336571">0974 336 571</a></p>
+            <p>Hotline: <a href="tel:0347227377">0974 336 571</a></p>
             <p>Địa chỉ: Số 211 Đường Nguyễn Văn Giáp, P. Cầu Diễn, Q. Nam Từ Liêm, Hà Nội</p>
           </section>
         </article>

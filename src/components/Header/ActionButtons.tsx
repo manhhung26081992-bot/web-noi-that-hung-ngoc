@@ -34,7 +34,7 @@ export default function ActionButtons() {
   return (
     <div className={styles.contactInfo}>
       {/* Hotline chuẩn SEO: Giúp khách gọi ngay trên Mobile */}
-      <a href="tel:0974336571" className={styles.hotline} title="Gọi tư vấn Nội Thất Hùng Ngọc">
+      <a href="tel:0347227377" className={styles.hotline} title="Gọi tư vấn Nội Thất Hùng Ngọc">
         <span className={styles.iconPulse}>📞</span> 
         <span className={styles.phoneNum}>0777353192</span>  
       </a>

@@ -54,7 +54,7 @@ export default function ShippingPolicy() {
             <p>Để nhận báo giá vận chuyển chính xác nhất cho đơn hàng của bạn, vui lòng liên hệ:</p>
             <p><strong>Kho Nội Thất Hùng Ngọc</strong></p>
             <p>Địa chỉ kho: Số 211 Đường Nguyễn Văn Giáp, Cầu Diễn, Nam Từ Liêm, Hà Nội</p>
-            <p>Hotline: <a href="tel:0974336571">0974 336 571</a></p>
+            <p>Hotline: <a href="tel:0347227377">0974 336 571</a></p>
           </section>
         </article>
       </main>

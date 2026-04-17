@@ -54,7 +54,7 @@ export default function ReturnPolicy() {
           <section className={Style.contactInfo}>
             <p>Chúng tôi luôn nỗ lực để mang lại trải nghiệm mua sắm tốt nhất. Mọi khiếu nại vui lòng liên hệ:</p>
             <p><strong>Phòng Chăm Sóc Khách Hàng - Nội Thất Hùng Ngọc</strong></p>
-            <p>Hotline hỗ trợ: <a href="tel:0974336571">0974 336 571</a></p>
+            <p>Hotline hỗ trợ: <a href="tel:0347227377">0974 336 571</a></p>
             <p>Địa chỉ: Số 211 Nguyễn Văn Giáp, P. Cầu Diễn, Q. Nam Từ Liêm, Hà Nội</p>
           </section>
         </article>

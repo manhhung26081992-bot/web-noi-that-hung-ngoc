@@ -68,7 +68,7 @@ const loadAndCalculateCart = () => {
 
   const handleZaloOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    const phoneNumber = "0974336571"; // Hotline Hùng Ngọc
+    const phoneNumber = "0347227377"; // Hotline Hùng Ngọc
     let message = `🔔 ĐƠN HÀNG MỚI\n👤 Khách: ${formData.lastName} ${formData.firstName}\n📞 SĐT: ${formData.phone}\n📍 ĐC: ${formData.address}\n\n🛒 CHI TIẾT:\n`;
     cart.forEach((item, i) => message += `${i + 1}. ${item.name} x ${item.quantity}\n`);
     message += `\n💰 TỔNG: ${totalPrice.toLocaleString()}₫`;

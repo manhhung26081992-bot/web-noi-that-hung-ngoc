@@ -72,7 +72,7 @@ const footerData = [
             <p><strong>Xưởng SX:</strong> KCN Thạch Thất, Quốc Oai, Hà Nội</p>
           </div>
           <div className={styles.copyrightBox}>
-            <p>Hotline: <a href="tel:0974336571">0974 336 571</a> | <strong>© 2026 Nội Thất Hùng Ngọc</strong></p>
+            <p>Hotline: <a href="tel:0347227377">0974 336 571</a> | <strong>© 2026 Nội Thất Hùng Ngọc</strong></p>
           </div>
         </div>
       </div>
@@ -93,8 +93,8 @@ const footerData = [
         <div className={styles.chatBody}>
           <p>Chào bạn! Hùng Ngọc có thể giúp gì cho bạn về nội thất giá xưởng ạ?</p>
           <div className={styles.autoReplies}>
-            <button onClick={() => window.location.href='tel:0974336571'}>📞 Gọi Hotline báo giá</button>
-            <button onClick={() => window.open('https://zalo.me/0974336571')}>✉️ Nhắn Zalo tư vấn</button>
+            <button onClick={() => window.location.href='tel:0347227377'}>📞 Gọi Hotline báo giá</button>
+            <button onClick={() => window.open('https://zalo.me/0347227377')}>✉️ Nhắn Zalo tư vấn</button>
             <Link href="/search?q=ban-van-phong" className={styles.chatLink} onClick={() => setIsChatOpen(false)}>🏢 Xem mẫu bàn mới nhất</Link>
           </div>
         </div>
@@ -111,7 +111,7 @@ const footerData = [
         </button>
 
         <a 
-          href="https://zalo.me/0974336571" 
+          href="https://zalo.me/0347227377" 
           className={`${styles.contactBtn} ${styles.zaloBtn}`}
           target="_blank"
           rel="noopener noreferrer"
@@ -120,7 +120,7 @@ const footerData = [
           <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg" alt="Zalo Nội Thất Hùng Ngọc" />
         </a>
 
-        <a href="tel:0974336571" className={`${styles.contactBtn} ${styles.phone}`} aria-label="Gọi điện">
+        <a href="tel:0347227377" className={`${styles.contactBtn} ${styles.phone}`} aria-label="Gọi điện">
           <span className={styles.phoneIcon}>📞</span>
         </a>
       </div>

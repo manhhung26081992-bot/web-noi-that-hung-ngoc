@@ -65,18 +65,17 @@ const loadAndCalculateCart = () => {
       window.dispatchEvent(new Event("cartUpdate"));
     }
   };
-const handleZaloOrder = (e: React.FormEvent) => {
+const handleZaloOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 1. Kiểm tra giỏ hàng có trống không
     if (cart.length === 0) {
       alert("Giỏ hàng của bạn đang trống!");
       return;
     }
 
-    const phoneNumber = "0347227377"; // Hotline Hùng Ngọc
+    const phoneNumber = "0347227377"; 
     
-    // 2. Tạo nội dung tin nhắn có cấu trúc rõ ràng
+    // 1. Tạo nội dung tin nhắn
     let message = `🔔 ĐƠN HÀNG MỚI TỪ WEBSITE\n`;
     message += `--------------------------\n`;
     message += `👤 Khách hàng: ${formData.lastName} ${formData.firstName}\n`;
@@ -90,21 +89,26 @@ const handleZaloOrder = (e: React.FormEvent) => {
       const itemPrice = typeof item.price === 'string' 
         ? parseInt(item.price.replace(/\D/g, "")) 
         : (Number(item.price) || 0);
-      message += `${i + 1}. ${item.name}\n   Số lượng: ${item.quantity} x ${itemPrice.toLocaleString()}₫\n`;
+      message += `${i + 1}. ${item.name} (x${item.quantity}) - ${itemPrice.toLocaleString()}₫\n`;
     });
     
     message += `--------------------------\n`;
     message += `💰 TỔNG CỘNG: ${totalPrice.toLocaleString()}₫`;
 
-    // 3. Sử dụng link zalo.me kèm tham số text đã được mã hóa
-    const zaloUrl = `https://zalo.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-    
-    // 4. Mở Zalo
-    window.open(zaloUrl, '_blank');
+    try {
+      // 2. Tự động Copy nội dung vào điện thoại khách
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(message);
+        // Thông báo cho khách biết để họ chủ động dán nếu app Zalo bị trống
+        alert("Đơn hàng đã được sao chép! Bạn chỉ cần nhấn 'Dán' (Paste) vào ô chat Zalo để gửi cho Nội Thất Hùng Ngọc nhé.");
+      }
+    } catch (err) {
+      console.error("Lỗi copy:", err);
+    }
 
-    // Tùy chọn: Xóa giỏ hàng sau khi đặt (Nên cân nhắc nếu khách muốn quay lại sửa)
-    // localStorage.removeItem('cart');
-    // window.dispatchEvent(new Event("cartUpdate"));
+    // 3. Mở Zalo (Vẫn đính kèm text dự phòng cho các dòng máy hỗ trợ)
+    const zaloUrl = `https://zalo.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(zaloUrl, '_blank');
   };
   // const handleZaloOrder = (e: React.FormEvent) => {
   //   e.preventDefault();

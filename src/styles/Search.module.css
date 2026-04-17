@@ -1,0 +1,254 @@
+/* styles/Search.module.css */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.breadcrumb {
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.title {
+  font-size: 24px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.searchStatus {
+  margin-bottom: 25px;
+  color: #666;
+}
+
+.productGrid {
+  display: grid !important;
+  /* Ép chia đúng 2 cột bằng nhau trên điện thoại */
+  grid-template-columns: repeat(2, 1fr) !important; 
+  /* Giảm khoảng cách giữa 2 cột cho đỡ tốn diện tích */
+  gap: 12px !important; 
+  padding: 10px 0 !important;
+}
+
+/* Phần hiển thị khi không tìm thấy kết quả */
+.noResultBox {
+  text-align: center;
+  padding: 60px 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.noResultTitle {
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+.contactActions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.hotlineBtn {
+  padding: 10px 20px;
+  background: #e67e22;
+  color: #fff;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+.homeBtn {
+  padding: 10px 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+/* Phần gợi ý từ khóa SEO */
+.suggestionSection {
+  margin-top: 50px;
+  padding-top: 30px;
+  border-top: 1px solid #eee;
+}
+
+.suggestionTitle {
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.tagCloud {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tagItem {
+  padding: 5px 15px;
+  background: #f0f0f0;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #333;
+  transition: background 0.3s;
+}
+
+.tagItem:hover {
+  background: #e0e0e0;
+}
+
+/* =========================================
+   BỔ SUNG PHẦN PHÂN TRANG (PAGINATION) 
+   ========================================= */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin: 40px 0;
+  flex-wrap: wrap;
+}
+
+.pageInfo {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background: #fff;
+  color: #333;
+}
+
+.pageBtn {
+  padding: 8px 14px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+
+/* Trang đang hoạt động - Màu xám đậm chuẩn mẫu */
+.activePage {
+  background: #555 !important; 
+  color: #fff !important;
+  border-color: #555 !important;
+  font-weight: bold;
+}
+
+.pageBtn:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+  background: #f9f9f9;
+}
+
+.dots {
+  padding: 0 5px;
+  color: #999;
+}
+
+/* =========================================
+   MEDIA QUERIES
+   ========================================= */
+@media (min-width: 768px) {
+  .productGrid {
+    /* Trở lại 4 cột trên máy tính */
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 20px !important;
+    padding: 20px 0 !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .container {
+    padding: 10px !important;
+  }
+  
+  .title {
+    font-size: 18px !important; 
+  }
+
+  /* Làm lại nút Search cho tinh tế hơn */
+  .searchButton {
+    background: #f1f1f1 !important; /* Đổi từ cam sang xám nhạt */
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    padding: 6px !important;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Nếu bạn dùng kính lúp là icon, cho nó màu vàng đồng HN */
+  .searchIcon {
+    color: #c49941; 
+    font-size: 18px;
+  }
+
+  /* Căn chỉnh lại Header để Logo - Search - Cart nằm hàng ngang đẹp */
+  .headerInner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+  }
+
+  /* Nút hành động (Zalo, Hotline) trên mobile */
+  .contactActions {
+    flex-direction: column;
+    gap: 8px; /* Thu nhỏ khoảng cách một chút cho đỡ tốn diện tích */
+  }
+
+  /* Thu nhỏ nút phân trang (Đã tốt, giữ nguyên và tinh chỉnh nhẹ) */
+  .pageBtn {
+    padding: 6px 10px;
+    font-size: 12px;
+    min-width: 32px;
+    border-radius: 4px;
+  }
+  
+  .pageInfo {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  /* Ẩn bớt các chữ không cần thiết trên Mobile để tránh tràn dòng */
+  .hideOnMobile {
+    display: none;
+  }
+}
+
+
+/* @media (max-width: 767px) {
+  .container {
+    padding: 10px !important;
+  }
+  
+  .title {
+    font-size: 18px !important; 
+  }
+
+  .contactActions {
+    flex-direction: column;
+    gap: 10px;
+  } */
+
+  /* Thu nhỏ nút phân trang trên Mobile để không bị tràn */
+  /* .pageBtn {
+    padding: 6px 10px;
+    font-size: 12px;
+    min-width: 32px;
+  }
+  
+  .pageInfo {
+    font-size: 12px;
+    padding: 6px 8px;
+  } */
+/* } */

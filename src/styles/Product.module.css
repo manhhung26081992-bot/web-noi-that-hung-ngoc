@@ -1,0 +1,287 @@
+/* 1. CONTAINER TỔNG */
+.container {
+  max-width: var(--container-max-width);
+  margin: 40px auto;
+  padding: 0 1rem;
+}
+
+.categorySection {
+  margin-bottom: 60px;
+}
+
+/* 2. HEADER DANH MỤC - Tối ưu nhận diện Bot Google */
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid #005aab;
+  margin-bottom: 25px;
+}
+
+.titleBox {
+  background-color: #005aab;
+  color: #fff;
+  padding: 10px 25px;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 4px 4px 0 0; /* Bo nhẹ góc trên tạo sự tinh tế */
+}
+
+.titleBox h2 {
+  font-size: 16px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Nút 3 gạch CSS tinh gọn */
+.hamburgerIcon {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 18px;
+  height: 12px;
+}
+
+.hamburgerIcon span {
+  width: 100%;
+  height: 2px;
+  background-color: #fff;
+  border-radius: 2px;
+}
+
+.viewAll {
+  font-size: 14px;
+  color: #005aab;
+  font-weight: 600;
+  padding-bottom: 5px;
+  transition: transform 0.3s ease, color 0.3s;
+}
+
+.viewAll:hover {
+  color: #f39200;
+  transform: translateX(5px);
+}
+
+/* 3. LƯỚI SẢN PHẨM (Grid System) */
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* 4. CARD SẢN PHẨM - Hiệu ứng cao cấp */
+.productCard {
+  background: #fff;
+  border: 1px solid var(--border-color);
+  padding: 15px;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.productCard:hover {
+  transform: translateY(-8px); /* Bay nhẹ hơn một chút */
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  border-color: #005aab;
+}
+
+/* Khung ảnh chống giật Layout (CLS) */
+.imgBox {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Cố định tỉ lệ vuông giúp SEO tốt hơn */
+  overflow: hidden;
+  margin-bottom: 12px;
+  background-color: #fcfcfc;
+  border-radius: 4px;
+}
+
+.imgBox img {
+  object-fit: contain;
+  transition: transform 0.5s ease;
+}
+
+.productCard:hover .imgBox img {
+  transform: scale(1.08); /* Zoom nhẹ ảnh sản phẩm khi hover card */
+}
+
+/* Tên sản phẩm & Giá */
+.productName {
+  font-size: 15px;
+  color: var(--foreground);
+  margin-bottom: 8px;
+  line-height: 1.4;
+  font-weight: 600;
+  height: 42px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.price {
+  color: #d0021b;
+  font-weight: 700;
+  font-size: 17px;
+  margin-top: auto; /* Đẩy giá xuống dưới cùng */
+  margin-bottom: 15px;
+}
+
+/* 5. NÚT THÊM VÀO GIỎ - Tối ưu Mobile UX */
+.addToCartBtn {
+  background-color: transparent;
+  color: #f39200;
+  border: 1.5px solid #f39200;
+  padding: 10px 0;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-transform: uppercase;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.addToCartBtn:hover {
+  background-color: #f39200;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(243, 146, 0, 0.3);
+}
+
+/* 6. SEO LINKS (Gợi ý tìm kiếm) */
+.subCategoryLinks {
+  margin-top: 15px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.subCategoryLinks a {
+  color: #005aab;
+  text-decoration: none;
+}
+
+.subCategoryLinks a:hover {
+  text-decoration: underline;
+}
+/* Phần khung chứa ảnh: Đảm bảo ảnh không làm méo khung */
+.imageWrapper {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Ép ảnh luôn là hình vuông */
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.imageWrapper img {
+  object-fit: cover; /* Ảnh sẽ lấp đầy khung mà không bị méo */
+  width: 100%;
+  height: 100%;
+}
+
+/* --- RESPONSIVE OPTIMIZATION --- */
+@media (max-width: 1024px) {
+  .productGrid { grid-template-columns: repeat(3, 1fr); gap: 15px; }
+}
+
+@media (max-width: 768px) {
+  .productGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .titleBox { padding: 8px 15px; }
+  .productName { font-size: 14px; }
+  /* Tăng kích thước nút trên mobile để dễ bấm */
+  .addToCartBtn { 
+    height: 44px; 
+    font-size: 12px;
+  }
+}
+/* Bổ sung vào Product.module.css */
+.watermark {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  z-index: 5;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.productCard:hover .watermark {
+  opacity: 1;
+}
+
+.watermarkContainer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.watermarkLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #d0021b; /* Màu đỏ trùng với màu giá của bạn */
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+}
+
+.watermarkText {
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.paginationContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 30px;
+  padding-bottom: 20px;
+}
+
+.pageIndicator {
+  border: 1px solid #ccc;
+  padding: 5px 15px;
+  font-size: 14px;
+  color: #666;
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 5px;
+}
+
+.pageBtn {
+  background: #fff;
+  border: 1px solid #666;
+  color: #333;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+/* Nút trang hiện tại màu xám đậm */
+.activePage {
+  background-color: #666 !important;
+  color: #fff !important;
+}
+
+.pageBtn:hover:not(.activePage) {
+  background-color: #f0f0f0;
+}

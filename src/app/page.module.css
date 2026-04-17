@@ -1,0 +1,133 @@
+/* 1. KẾ THỪA BIẾN VÀ ĐỊNH NGHĨA LOCAL */
+.page {
+  --page-bg: var(--background); /* Kế thừa từ globals.css */
+  --content-bg: #ffffff;
+  --text-main: var(--foreground);
+  --text-sub: var(--text-muted);
+  --accent: var(--primary-color); /* Màu vàng đồng Hùng Ngọc */
+  
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--page-bg);
+  padding: 20px;
+}
+
+/* 2. MAIN CONTAINER - Tối ưu bố cục */
+.main {
+  display: flex;
+  min-height: 80vh; /* Không nhất thiết phải chiếm hết màn hình trên desktop */
+  width: 100%;
+  max-width: 1000px; /* Nới rộng một chút để hình ảnh nội thất có không gian */
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  background-color: var(--content-bg);
+  padding: 80px 60px;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+}
+
+/* 3. INTRO SECTION - Tối ưu Typography cho SEO */
+.intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.intro h1 {
+  max-width: 600px; /* Cho phép tiêu đề dài hơn để chứa keyword SEO */
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  text-wrap: balance;
+}
+
+.intro p {
+  max-width: 500px;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--text-sub);
+}
+
+/* 4. CALL TO ACTION (CTAs) - Tối ưu diện tích bấm cho Mobile SEO */
+.ctas {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.ctas a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 48px; /* Tăng lên 48px theo chuẩn Google Mobile Friendly */
+  padding: 0 28px;
+  border-radius: 8px; /* Bo góc nhẹ nhàng phù hợp ngành nội thất */
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+/* Nút chính - Màu thương hiệu */
+a.primary {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Nút phụ - Outline chuyên nghiệp */
+a.secondary {
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-main);
+}
+
+/* 5. INTERACTION & RESPONSIVE */
+@media (hover: hover) {
+  a.primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+  }
+
+  a.secondary:hover {
+    background: #f8f8f8;
+    border-color: var(--accent);
+  }
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding: 40px 24px;
+    min-height: auto;
+  }
+
+  .intro h1 {
+    font-size: 30px;
+  }
+
+  .ctas {
+    flex-direction: column; /* Mobile ưu tiên nút chồng lên nhau */
+  }
+
+  .ctas a {
+    width: 100%; /* Dễ bấm hơn trên điện thoại */
+  }
+}
+
+/* DARK MODE SUPPORT */
+@media (prefers-color-scheme: dark) {
+  .page {
+    --content-bg: #121212;
+    --page-bg: #000;
+  }
+  
+  a.secondary:hover {
+    background: #1a1a1a;
+  }
+}

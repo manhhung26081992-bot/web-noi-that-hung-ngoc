@@ -1,0 +1,130 @@
+/* 1. KHAI BÁO BIẾN (Variables) - Dễ dàng thay đổi màu sắc thương hiệu toàn trang */
+
+
+
+:root {
+  /* Màu sắc chủ đạo Nội Thất Hùng Ngọc */
+  --primary-color: #b88e2f; 
+  --primary-hover: #b88e2f;
+  --secondary-color: #333333;
+  
+  /* Màu hệ thống */
+  --background: #ffffff;
+  --foreground: #171717;
+  --text-muted: #666666;
+  --border-color: #e5e7eb;
+  
+  /* Font & Spacing */
+  --font-main: var(--font-inter), Arial, sans-serif;
+  --container-max-width: 1200px;
+  --transition-fast: 0.2s ease;
+}
+
+/* Chế độ tối (Dark Mode) - Tối ưu cho thiết bị hiện đại */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --text-muted: #a1a1a1;
+    --border-color: #262626;
+  }
+}
+
+/* 2. RESET & BASE STYLES */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 3. TYPOGRAPHY (Tối ưu Heading cho SEO) */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  color: var(--secondary-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  h1, h2, h3, h4, h5, h6 { color: var(--foreground); }
+}
+
+/* 4. MEDIA & ASSETS (Chống giật lag Layout Shift) */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  font-style: italic; /* Hiển thị đẹp hơn khi ảnh bị lỗi alt */
+}
+
+/* 5. COMPONENTS DÙNG CHUNG (Utility Classes) */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  display: inline-block; /* Giúp padding/margin hoạt động chuẩn */
+}
+
+a:hover {
+  color: var(--primary-color);
+}
+
+.container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Hidden but SEO-friendly (Bot vẫn đọc được) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* 6. RESPONSIVE OPTIMIZATION (Mobile First) */
+@media (max-width: 768px) {
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  
+  /* Cỡ chữ 16px là chuẩn vàng để tránh iOS tự động zoom khi focus vào input */
+  p, span, li, input, textarea { 
+    font-size: 16px; 
+  }
+  
+  /* Tăng diện tích bấm cho mobile (SEO Mobile Friendliness) */
+  a, button {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
+.mainContent {
+  min-height: 100vh;
+  /* Bạn có thể thêm padding-top nếu Header của bạn là sticky/fixed */
+  /* padding-top: 80px;  */
+}

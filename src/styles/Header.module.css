@@ -1,0 +1,204 @@
+/* --- 1. TỔNG THỂ & STICKY --- */
+.header {
+  width: 100%;
+  background-color: var(--background);
+  z-index: 1000;
+  position: relative;
+  transition: transform 0.3s ease-in-out;
+}
+/* Loại bỏ các ký tự tam giác nếu chúng được tạo bằng content CSS */
+.menuItem::after {
+    content: none !important;
+}
+.sticky {
+  position: fixed; top: 0; left: 0; right: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background-color: rgba(255, 255, 255, 0.98);
+  animation: slideInDown 0.4s ease forwards;
+}
+
+@keyframes slideInDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+/* --- 2. LAYOUT CHÍNH (TOP BAR) --- */
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 1rem;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  gap: 1.5rem;
+}
+
+.sticky .topBar { padding: 8px 1rem; }
+
+/* Logo & Brand */
+.logoContainer { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+.brandText { display: flex; flex-direction: column; line-height: 1.1; text-transform: uppercase; }
+.mainName { font-size: 12px; font-weight: 600; color: #555; letter-spacing: 0.5px; }
+.subName { font-size: 20px; font-weight: 800; color: #005aab; letter-spacing: 0.5px; }
+
+/* --- 3. TÌM KIẾM (DESKTOP) --- */
+.desktopSearch {
+  flex: 1;
+  max-width: 450px;
+  display: block; /* Hiện trên Desktop */
+}
+
+/* CSS cho component SearchBar bên trong wrapper */
+.searchWrapper {
+  display: flex; height: 40px; border: 2px solid #005aab;
+  border-radius: 6px; overflow: hidden; transition: border-color 0.2s;
+}
+.searchWrapper:focus-within { border-color: #f39200; }
+.searchInput { flex: 1; border: none; padding: 0 12px; outline: none; font-size: 14px; }
+.searchBtn { 
+  background-color: #f39200; color: white; border: none; padding: 0 15px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+
+/* XỬ LÝ LỖI: Ẩn tuyệt đối các ô tìm kiếm phụ trên Desktop */
+.mobileMenuSearch, .mobileSearchBtn, .mobileSearchDropdown {
+  display: none !important;
+}
+
+/* --- 4. NAVIGATION & DROPDOWN --- */
+.nav { background-color: #005aab; border-bottom: 3px solid #f39200; }
+.menuList { display: flex; list-style: none; max-width: var(--container-max-width); margin: 0 auto; }
+.menuList > li { position: relative; display: flex; align-items: center; }
+
+.menuItem {
+  display: block;
+    padding: 15px 20px;
+    color: white;
+    text-decoration: none;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 14px;
+    /* Đảm bảo không còn ký tự lạ sau tên menu */
+    position: relative;
+}
+.menuItem:hover, .active { background-color: #f39200; }
+
+/* Dropdown logic */
+.dropdownMenu {
+  position: absolute; top: 100%; left: 0; background-color: #f1f1f1;
+  min-width: 230px; list-style: none; padding: 0; margin: 0;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); display: none;
+  z-index: 9999; border-top: 3px solid #f39200;
+}
+.hasDropdown:hover .dropdownMenu { display: block; animation: fadeIn 0.2s ease-out; }
+.dropdownMenu li { width: 100%; border-bottom: 1px solid #e0e0e0; }
+.dropdownMenu li a {
+  display: block; padding: 12px 20px; color: #333 !important;
+  font-size: 14px; font-weight: 500; text-decoration: none; transition: all 0.2s;
+}
+.dropdownMenu li a:hover { background-color: #ffffff; color: #005aab !important; padding-left: 28px; }
+
+/* --- 5. TIỆN ÍCH (HOTLINE/GIỎ HÀNG) --- */
+.contactInfo { display: flex; align-items: center; gap: 1.2rem; }
+.hotline { color: #d0021b; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 5px; }
+.cartBtn {
+  position: relative; background-color: #005aab; color: white;
+  width: 40px; height: 40px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+}
+.cartCount {
+  position: absolute; top: -6px; right: -6px; background: #f39200;
+  color: #fff; font-size: 10px; font-weight: bold; width: 18px; height: 18px;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff;
+}
+
+/* --- 6. MOBILE RESPONSIVE (< 768px) --- */
+@media (max-width: 768px) {
+  .topBar { 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 60px !important; /* Chiều cao cố định để không bị nhảy layout */
+    padding: 0 15px !important;
+    background: #ffffff;
+    border-bottom: 1px solid #eee;
+    gap: 0 !important;
+    }
+    .dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #005aab; /* Chuyển nền sang xanh để nổi bật gạch trắng */
+  min-width: 230px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  display: none;
+  z-index: 9999;
+  border-top: 3px solid #f39200;
+}
+  .logoContainer img {
+    height: 80px !important; /* Tăng nhẹ kích thước logo để dễ nhìn */
+    width: auto;
+    object-fit: contain;
+  }
+  /* Ẩn các thành phần Desktop */
+  .desktopSearch,
+   .brandText, 
+   .hotline, 
+   .cartBtn { display: none !important; }
+
+  /* Logo & Hamburger Mobile */
+  .logoWrapper { flex: 1;
+     display: flex; 
+     justify-content: 
+     center; order: 2; }
+  .logoWrapper img { 
+    height: 50px !important; }
+  
+  .hamburger { display: flex !important; 
+    flex-direction: column; 
+    gap: 4px; 
+    order: 1;
+     border: none; 
+     background: none; }
+  .bar { width: 22px; height: 2px; background-color: #333; }
+
+  /* Nút search & Ô search mobile */
+  .contactInfo {
+    order: 3;
+    flex: 0 0 40px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .mobileSearchBtn { display: flex !important; 
+    color: #d0021b; 
+    font-size: 20px; background:
+     none; border: none; }
+  
+  .mobileSearchDropdown {
+    position: absolute; top: 50px; left: 0; width: 100%; background: #fff;
+    max-height: 0; overflow: hidden; transition: 0.3s; z-index: 10000;
+  }
+  .searchActive { max-height: 70px; padding: 12px 15px; border-bottom: 2px solid #d0021b; }
+
+  /* Sidebar Mobile */
+  .nav {
+    position: fixed; top: 0; left: -100%; width: 260px; height: 100vh;
+    transition: 0.3s; z-index: 10002; overflow-y: auto;
+  }
+  .navActive { left: 0 !important; visibility: visible !important; }
+  .menuList { flex-direction: column; }
+  
+  /* Hiện ô tìm kiếm TRONG sidebar */
+  .mobileMenuSearch { 
+    display: block !important; 
+    padding: 15px; 
+    background: #f5f5f5; }
+}
+
+/* --- 7. ANIMATIONS & UTILS --- */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.hiddenH1 { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }

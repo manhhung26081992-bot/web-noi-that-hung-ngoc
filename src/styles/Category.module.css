@@ -1,0 +1,89 @@
+.container {
+  max-width: 1200px;
+  margin: 20px auto 60px;
+  padding: 0 15px;
+}
+
+/* Thanh điều hướng phân cấp (Breadcrumb) */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 25px;
+  font-size: 14px;
+  color: #666;
+}
+
+.breadcrumb a {
+  text-decoration: none;
+  color: #005aab;
+  transition: 0.3s;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb h1 {
+  font-size: 22px;
+  color: #333;
+  margin: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Thông tin tổng quan danh mục */
+.headerInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+  margin-bottom: 30px;
+}
+
+.productCount {
+  font-size: 14px;
+  color: #888;
+}
+
+/* Lưới sản phẩm - Tái sử dụng cấu trúc Grid */
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+}
+
+.empty {
+  text-align: center;
+  padding: 100px 0;
+  font-size: 18px;
+  color: #999;
+  border: 2px dashed #eee;
+  border-radius: 8px;
+}
+
+/* --- Responsive cho Mobile & Tablet --- */
+@media (max-width: 1024px) {
+  .productGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .productGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .breadcrumb h1 {
+    font-size: 18px;
+  }
+  
+  .headerInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}

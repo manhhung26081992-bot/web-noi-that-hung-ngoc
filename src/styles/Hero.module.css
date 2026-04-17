@@ -1,0 +1,231 @@
+/* 1. KHUNG CHỨA HERO - Tối ưu Layout Stability */
+.hero {
+  position: relative;
+  max-width: var(--container-max-width); /* Đồng bộ 1200px từ globals */
+  height: 400px;
+  background-color: #222;
+  overflow: hidden;
+  margin: 20px auto; /* Thêm khoảng cách với Header */
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+
+}
+
+.slideContainer {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* 2. HIỆU ỨNG CHUYỂN SLIDE - Mượt mà & Chuyên nghiệp */
+.slide {
+  position: absolute;
+  inset: 0;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity; /* Báo trước trình duyệt để tối ưu phần cứng */
+}
+
+.activeSlide {
+  opacity: 1;
+  z-index: 10;
+}
+
+.hiddenSlide {
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* 3. LỚP PHỦ & NỘI DUNG - Tối ưu nhận diện chữ */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
+  z-index: 11;
+}
+
+.contentWrapper {
+  position: relative;
+  max-width: var(--container-max-width);
+  height: 100%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 0 60px;
+  z-index: 12;
+}
+
+.textContent {
+  max-width: 550px;
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.topText {
+  color: var(--primary-color); /* Sử dụng màu vàng thương hiệu */
+  font-style: italic;
+  font-size: 18px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.mainTitle {
+  font-size: clamp(28px, 5vw, 46px);
+  color: #fff;
+  line-height: 1.1;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+}
+
+.highlightText {
+  color: var(--primary-color);
+  display: block;
+  font-size: 0.6em;
+  margin-top: 8px;
+  letter-spacing: 1px;
+}
+
+/* 4. NÚT KÊU GỌI HÀNH ĐỘNG (CTA) */
+.ctaButton {
+  margin-top: 30px;
+  display: inline-block;
+  background-color: var(--primary-color);
+  color: #000;
+  padding: 14px 35px;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.ctaButton:hover {
+  transform: translateY(-3px);
+  background-color: #fff;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+/* 5. ĐIỀU HƯỚNG MŨI TÊN (Chỉ hiện khi hover vào Hero) */
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  border: none;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+  transition: all 0.3s;
+  border-radius: 50%;
+  opacity: 0; /* Mặc định ẩn */
+}
+
+.hero:hover .arrow {
+  opacity: 1;
+}
+
+.arrow:hover {
+  background: var(--primary-color);
+  color: #000;
+}
+
+.leftArrow { left: 20px; }
+.rightArrow { right: 20px; }
+
+/* 6. DOTS ĐIỀU HƯỚNG */
+.dots {
+  position: absolute;
+  bottom: 25px;
+  left: 50%; /* Căn trái cùng hàng với text nội dung */
+  display: flex;
+  gap: 10px;
+  z-index: 20;
+  transform: translateX(-50%);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s;
+}
+
+.activeDot {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  width: 30px;
+  border-radius: 5px;
+}
+
+/* 7. RESPONSIVE MOBILE */
+@media (max-width: 768px) {
+  .hero { 
+    height: 40vh; /* Thay 320px bằng 55% chiều cao màn hình để banner cao ráo hơn */
+    border-radius: 0;
+    margin: 0; 
+  }
+
+  /* Đẩy nội dung lên trên một chút để không che mất phần chân bàn trong ảnh */
+  .contentWrapper { 
+    padding: 0 20px; 
+    align-items: flex-start; /* Đổi từ center sang flex-start */
+    padding-top: 40px;      /* Khoảng cách từ đỉnh banner xuống chữ */
+    justify-content: center; 
+  }
+
+  .textContent { 
+    text-align: center; 
+    background: rgba(0, 0, 0, 0.2); /* Thêm lớp nền mờ nhẹ để chữ nổi bật trên nền ảnh */
+    padding: 15px;
+    border-radius: 8px;
+  }
+
+  .mainTitle { 
+    font-size: 22px; 
+    line-height: 1.3;
+  }
+
+  .topText {
+    font-size: 14px;
+    margin-bottom: 5px;
+  }
+
+  /* Làm cho nút bấm to hơn một chút để khách dễ ấn bằng tay */
+  .ctaButton {
+    padding: 10px 20px;
+    font-size: 13px;
+    margin-top: 15px;
+  }
+
+  .dots { 
+    /* bottom: 15px; */
+     
+    transform: translateX(-50%) !important; 
+    left: 50% !important; 
+  }
+
+  .arrow { display: none; }
+ 
+
+  /* Chỉnh lại dot trên mobile cho cân đối */
+  .dot, .activeDot {
+    width: 8px;
+    height: 8px;
+  }
+}

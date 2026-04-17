@@ -1,0 +1,147 @@
+.nav {
+  background-color: #005aab;
+  border-bottom: 3px solid #f39200;
+}
+
+.menuList {
+  display: flex;
+  list-style: none;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+}
+
+.menuList > li {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.menuItem {
+  display: block;
+  padding: 15px 20px;
+  color: white;
+  text-decoration: none;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 14px;
+  position: relative;
+}
+
+.menuItem:hover, .active {
+  background-color: #f39200;
+}
+
+.menuItem::after {
+  content: none !important;
+}
+
+/* Dropdown */
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #f1f1f1;
+  min-width: 230px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  display: none;
+  z-index: 9999;
+  border-top: 3px solid #f39200;
+}
+
+.hasDropdown:hover .dropdownMenu {
+  display: block;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.dropdownMenu li {
+  width: 100%;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.dropdownMenu li a {
+  display: block;
+  padding: 12px 20px;
+  color: #333 !important;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.dropdownMenu li a:hover {
+  background-color: #ffffff;
+  color: #005aab !important;
+  padding-left: 28px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile Sidebar Logic */
+@media (max-width: 768px) {
+  .nav {
+    position: fixed;
+    top: 0;
+    left: -100%; /* Mặc định ẩn sang trái */
+    width: 280px;
+    height: 100vh;
+    transition: 0.3s ease-in-out;
+    z-index: 10002;
+    overflow-y: auto;
+    background-color: #005aab;
+    display: block; /* Đảm bảo bao phủ chiều dọc */
+  }
+
+  .navActive {
+    left: 0 !important;
+    visibility: visible !important;
+  }
+
+  .menuList {
+    flex-direction: column; /* ÉP MENU HIỆN DỌC */
+    width: 100%;
+  }
+
+  .menuList > li {
+    display: block; /* Mỗi mục chiếm 1 hàng */
+    width: 100%;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .menuItem {
+    padding: 18px 20px;
+    width: 100%;
+    text-align: left;
+  }
+
+  /* --- LOGIC BẤM ĐỂ MỞ MENU CON --- */
+  .dropdownMenu {
+    position: static; /* Không đè lên menu chính */
+    width: 100%;
+    background-color: #004a8c; /* Màu xanh đậm hơn để phân cấp */
+    box-shadow: none;
+    border-top: none;
+    display: none; /* Mặc định ẩn, React sẽ thêm class để hiện */
+  }
+
+  /* Class này sẽ được React thêm vào khi người dùng BẤM vào menu cha */
+  .showMobileSub {
+    display: block !important;
+  }
+
+  .dropdownMenu li a {
+    padding: 12px 20px 12px 40px !important; /* Thụt lề 40px để tạo phân cấp dọc */
+    color: #ffffff !important;
+    background-color: transparent;
+  }
+
+  /* Màu vàng cam cho mục đang được chọn mở */
+  .itemActive {
+    background-color: #f39200 !important;
+  }
+}

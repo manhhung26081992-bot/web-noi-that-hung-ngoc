@@ -1,0 +1,270 @@
+/* --- 1. TỔNG THỂ & STICKY --- */
+.header {
+  width: 100%;
+  background-color: #ffffff; /* Hoặc var(--background) */
+  z-index: 1000;
+  position: relative;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Loại bỏ ký tự lạ */
+.menuItem::after {
+  content: none !important;
+}
+.logoContainer {
+  display: flex;       /* Đưa ảnh và chữ nằm trên cùng một hàng ngang */
+  align-items: center;  /* Căn giữa chữ theo chiều dọc so với ảnh Logo */
+  gap: 10px;           /* Khoảng cách giữa ảnh Logo và khối chữ */
+  text-decoration: none;
+}
+.sticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background-color: rgba(255, 255, 255, 0.98);
+  animation: slideInDown 0.4s ease forwards;
+}
+
+@keyframes slideInDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+/* --- 2. LAYOUT CHÍNH (TOP BAR) --- */
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem;
+  max-width: 1200px; /* Hoặc var(--container-max-width) */
+  margin: 0 auto;
+  gap: 1.5rem;
+  
+}
+
+.sticky .topBar {
+  padding: 8px 1rem;
+}
+
+/* Logo & Brand */
+.logoWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+/* --- 3. TÌM KIẾM (DESKTOP) --- */
+.desktopSearch {
+  flex: 1;
+  max-width: 450px;
+  display: block;
+}
+
+/* Xử lý ẩn các thành phần mobile trên Desktop */
+.mobileMenuSearch, 
+.mobileSearchBtn, 
+.mobileSearchDropdown {
+  display: none !important;
+}
+
+/* --- 4. TIỆN ÍCH (HOTLINE/GIỎ HÀNG) --- */
+.contactInfo {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.hotline {
+  color: #d0021b;
+  font-weight: 700;
+  font-size: 16px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+/* Container bao quanh cả ảnh và chữ */
+.logoContainer {
+  display: flex;       /* Đưa ảnh và chữ nằm trên cùng một hàng ngang */
+  align-items: center;  /* Căn giữa chữ theo chiều dọc so với ảnh Logo */
+  gap: 10px;           /* Khoảng cách giữa ảnh Logo và khối chữ */
+  text-decoration: none;
+  margin-left: -180px;
+}
+
+/* Khối văn bản thương hiệu */
+.brandText {
+  display: flex;
+  flex-direction: column; /* Chữ "NỘI THẤT" nằm trên chữ "HÙNG NGỌC" */
+  justify-content: center;
+  line-height: 1.1;       /* Thu hẹp khoảng cách dòng cho giống mẫu */
+}
+
+.mainName {
+  margin: 0 0 -5px;
+  color: #585757;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding-top: 5px;
+}
+
+.subName {
+  margin: 0;
+  color: #005aab;         /* Màu xanh thương hiệu chủ đạo */
+  font-size: 23px;        /* Chữ "HÙNG NGỌC" to và nổi bật hơn */
+  font-weight: 800;
+  text-transform: uppercase;
+  padding-top: 10px;
+}
+.cartBtn {
+  position: relative;
+  background-color: #005aab;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: none;
+  
+}
+
+/* --- 5. GIAO DIỆN MÀN HÌNH NHỎ (MOBILE < 768px) --- */
+@media (max-width: 1200px) {
+  .topBar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    height: 65px !important;
+    padding: 0 15px !important;
+    gap: 0 !important;
+  }
+
+  /* 1. Hamburger sang kịch bên TRÁI */
+  .hamburger {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    order: 1 !important; /* Đổi từ 2 thành 1 để ra bên trái */
+    background: none !important;
+    border: none !important;
+    width: 30px !important;
+    height: 30px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    cursor: pointer;
+  }
+
+  .bar {
+    display: block !important;
+    width: 22px !important;
+    height: 2px !important;
+    background-color: #333333 !important;
+    border-radius: 2px;
+    margin: 0 auto !important;
+  }
+
+  /* 2. Logo nằm ở CHÍNH GIỮA */
+  .logoWrapper {
+    order: 2 !important; 
+    flex: 1 !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+
+  .logoWrapper img {
+    height: 60px !important;
+    width: auto;
+   
+  }
+
+  /* 3. Cụm Tìm kiếm & Giỏ hàng sang bên PHẢI */
+  .contactInfo {
+  order: 3 !important;
+    flex: 0 0 auto;
+    display: flex !important;
+    justify-content: flex-end;
+    align-items: center !important;
+    gap: 15px !important;
+  }
+/* CHỈNH GIỎ HÀNG TO HƠN QUA CLASS CỦA COMPONENT CON */
+  .contactInfo :global(.cartBtn) { 
+    display: flex !important;
+    background: none !important;
+    color: #005aab !important;
+    font-size: 30px !important; /* Tăng kích thước icon giỏ hàng */
+    width: auto !important;
+    height: auto !important;
+    padding: 0 !important;
+    position: relative !important;
+  }
+  .mobileSearchBtn {
+    display: flex !important;
+    background-color: white !important;
+    color: rgb(113, 161, 94) !important;
+    padding: 4px !important;
+    border-radius: 6px;
+    border: none !important;
+    font-size: 18px;
+justify-content: center !important;
+  }
+
+ .cartBtn {
+    display: flex !important;
+    background: none !important;
+    color: #005aab !important;
+    font-size: 28px !important; /* Tăng cỡ icon giỏ hàng lên 28px */
+    width: auto !important;
+    height: auto !important;
+    padding: 0 !important;  
+    margin-right: 5px !important; /* Tạo khoảng cách với mép phải */
+  }
+
+  /* Ẩn các thành phần desktop */
+  .mainName, .subName, .desktopSearch, .hotline {
+    display: none !important;
+  }
+  /* Ô tìm kiếm thả xuống trên Mobile */
+.mobileSearchDropdown {
+  display: none; /* Mặc định ẩn */
+  position: absolute;
+  top: 65px; /* Ngay dưới Header */
+  left: 0;
+  width: 100%;
+  background-color: #ffffff;
+  padding: 10px 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  z-index: 9999; /* Đảm bảo nằm trên cùng */
+}
+.logoContainer {
+  margin-left: 50px;
+}
+/* Khi có class searchActive thì mới hiện */
+.searchActive {
+  display: block !important;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+}
+
+/* Utils */
+.hiddenH1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
+}

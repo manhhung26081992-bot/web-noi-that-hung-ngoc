@@ -1,0 +1,12 @@
+import { MetadataRoute } from 'next';
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: {
+      userAgent: '*',
+      allow: '/',
+      disallow: '/admin/', // Chặn Google index trang quản trị (nếu có)
+    },
+    sitemap: 'https://noithathungngoc.com/sitemap.xml',
+  };
+}

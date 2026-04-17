@@ -1,0 +1,52 @@
+.searchWrapper {
+  display: flex;
+  height: 40px;
+  border: 2px solid #aba800;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+ 
+}
+
+.searchWrapper:focus-within {
+  border-color: #f39200;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  padding: 0 12px;
+  outline: none;
+  font-size: 14px;
+}
+
+.searchBtn {
+  background-color: #f39200;
+  color: white;
+  border: none;
+  padding: 0 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Tùy chỉnh hiển thị trong wrapper của Header */
+.desktopSearch {
+  flex: 1;
+  max-width: 450px;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .desktopSearch {
+    display: none !important;
+  }
+  .searchBtn {
+    color: aqua;
+    padding-bottom: 5px;
+    
+  }
+
+  
+}

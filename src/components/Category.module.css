@@ -1,0 +1,45 @@
+.container {
+  max-width: 1200px;
+  margin: 20px auto 60px;
+  padding: 0 15px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 30px;
+  font-size: 14px;
+}
+
+.breadcrumb h1 {
+  font-size: 20px;
+  color: #005aab;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.headerInfo {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+  margin-bottom: 30px;
+}
+
+.productCount {
+  color: #666;
+  font-style: italic;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .productGrid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .productGrid { grid-template-columns: repeat(2, 1fr); }
+}

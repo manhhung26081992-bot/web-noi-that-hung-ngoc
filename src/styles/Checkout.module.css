@@ -1,0 +1,279 @@
+/* --- PHẦN CSS GỐC CỦA BẠN (GIỮ NGUYÊN) --- */
+.container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 15px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.checkoutForm {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+.leftCol {
+  flex: 1.4;
+}
+
+.rightCol {
+  flex: 1;
+  position: sticky;
+  top: 20px;
+}
+
+.sectionTitle {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #eee;
+  text-transform: uppercase;
+  color: #333;
+}
+
+/* Form Styles */
+.row {
+  display: flex;
+  gap: 15px;
+}
+
+.inputGroup {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.inputGroup label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.inputGroup input,
+.inputGroup textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.inputGroup input:focus {
+  border-color: #005aab;
+  outline: none;
+}
+
+.inputGroup textarea {
+  min-height: 100px;
+}
+
+/* Order Summary Box */
+.orderSummary {
+  border: 2px solid #005aab; /* Viền xanh thương hiệu Hùng Ngọc */
+  padding: 20px;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.orderTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orderTable th {
+  text-align: left;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+  font-size: 14px;
+}
+
+.orderTable td {
+  padding: 15px 0;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+/* Product Cell Layout */
+.productCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.productThumbnail {
+  border: 1px solid #eee;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9f9f9;
+}
+
+.productThumbnail img {
+  object-fit: cover;
+}
+
+.productInfo {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.4;
+}
+
+.productName {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.productPrice {
+  text-align: right;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Footer Table */
+.orderTable tfoot td {
+  padding: 10px 0;
+  font-size: 15px;
+}
+
+.orderTable tfoot td:last-child {
+  text-align: right;
+  font-weight: 600;
+}
+
+.totalRow td {
+  border-top: 2px solid #eee;
+  padding-top: 15px !important;
+  font-size: 18px !important;
+  color: #d0021b !important; /* Màu đỏ nổi bật cho tổng tiền chuẩn SEO */
+  font-weight: bold !important;
+}
+
+/* Payment Methods */
+.paymentMethods {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.methodItem {
+  margin-bottom: 10px;
+}
+
+.methodItem label {
+  font-weight: bold;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.methodDesc {
+  font-size: 13px;
+  color: #666;
+  margin-top: 8px;
+  padding: 10px;
+  background: #fff;
+  border: 1px dashed #005aab;
+  line-height: 1.5;
+}
+
+/* Zalo Submit Button */
+.zaloSubmitBtn {
+  width: 100%;
+  background-color: #0068ff;
+  color: white;
+  padding: 15px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 16px;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: background 0.3s;
+  text-transform: uppercase;
+}
+
+.zaloSubmitBtn:hover {
+  background-color: #0056d2;
+  box-shadow: 0 4px 12px rgba(0, 104, 255, 0.2);
+}
+
+.zaloSubmitBtn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* --- BỔ SUNG CSS CHO CÁC NÚT ĐIỀU KHIỂN GIỎ HÀNG --- */
+
+.removeBtn {
+  border: none;
+  background: none;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 5px;
+  transition: color 0.3s;
+  margin-right: 5px;
+}
+
+.removeBtn:hover {
+  color: #d0021b; /* Đổi sang đỏ khi di chuột vào nút xóa */
+}
+
+.quantityControl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.qtyBtn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 3px;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.qtyBtn:hover {
+  background: #005aab;
+  color: #fff;
+  border-color: #005aab;
+}
+
+.productQty {
+  font-size: 14px;
+  color: #005aab;
+  font-weight: bold;
+  min-width: 15px;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .checkoutForm {
+    flex-direction: column;
+  }
+  
+  .rightCol {
+    position: static;
+    width: 100%;
+  }
+  
+  .row {
+    flex-direction: column;
+    gap: 0;
+  }
+}

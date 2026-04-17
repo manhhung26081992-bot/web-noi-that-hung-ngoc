@@ -1,0 +1,160 @@
+.contactInfo {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.hotline {
+  color: #d0021b;
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cartBtn {
+  position: relative;
+  /* background-color: #005aab; */
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Container bọc ngoài icon để badge đỏ bám theo */
+.cartWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cartCount {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #f39200;
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+}
+.cartIcon {
+  font-size: 30px;
+  color: #132a77; /* ĐỔI MÀU ICON GIỎ HÀNG THÀNH XANH THƯƠNG HIỆU */
+  transition: color 0.2s ease;
+}
+/* Hamburger Mobile */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.bar {
+  width: 22px;
+  height: 2px;
+  background-color: #333;
+}
+/* Nút kính lúp trên Mobile */
+.mobileSearchBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px;
+}
+
+/* Các thành phần khác trong ActionButtons */
+.contactInfo {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  
+}
+@media (max-width: 1024px) {
+  .topBar {
+    display: flex !important;
+    flex-direction: row !important; /* Đảm bảo nằm trên một hàng ngang */
+    justify-content: space-between !important;
+    align-items: center !important;
+    height: 65px !important;
+    padding: 0 10px !important;
+  }
+.cartIcon {
+    font-size: 25px !important; /* TĂNG KÍCH THƯỚC GIỎ HÀNG Ở ĐÂY */
+    color: #005aab; /* Màu xanh chủ đạo */
+    
+  }
+  /* 1. Logo đưa về bên TRÁI */
+  .logoWrapper {
+    order: 1 !important; 
+    flex: 0 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .logoWrapper img {
+    height: 45px !important; /* Chỉnh lại kích thước logo cho cân đối */
+    width: auto;
+  }
+
+  /* 2. Nhóm chức năng (Search, Cart, Menu) đưa sang bên PHẢI */
+  .contactInfo {
+    order: 2 !important;
+    flex: 1 !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  /* Sửa lỗi nút tìm kiếm bị to quá khổ */
+  .mobileSearchBtn {
+    display: flex !important;
+    order: 1 !important;
+    background-color: #f39200 !important;
+    color: white !important;
+    padding: 8px !important;
+    border-radius: 8px;
+    font-size: 18px !important;
+  }
+
+  /* Sửa lỗi giỏ hàng bị rơi xuống dưới */
+  .cartBtn {
+    display: flex !important;
+    order: 2 !important;
+    background: none !important;
+    color: #005aab !important;
+    padding: 5px !important;
+    font-size: 22px !important;
+    margin: 0 !important;
+  }
+
+  /* Nút Menu Hamburger */
+  .hamburger {
+    display: flex !important;
+    order: 3 !important;
+    margin: 0 !important; /* Xóa bỏ margin-top 25px gây lệch hàng */
+    padding-left: 5px !important;
+  }
+
+  /* Ẩn các thành phần không cần thiết trên mobile */
+  .hotline, .mainName, .subName {
+    display: none !important;
+  }
+}

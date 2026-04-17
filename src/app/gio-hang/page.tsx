@@ -65,18 +65,58 @@ const loadAndCalculateCart = () => {
       window.dispatchEvent(new Event("cartUpdate"));
     }
   };
-
-  const handleZaloOrder = (e: React.FormEvent) => {
+const handleZaloOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    const phoneNumber = "0347227377"; // Hotline Hùng Ngọc
-    let message = `🔔 ĐƠN HÀNG MỚI\n👤 Khách: ${formData.lastName} ${formData.firstName}\n📞 SĐT: ${formData.phone}\n📍 ĐC: ${formData.address}\n\n🛒 CHI TIẾT:\n`;
-    cart.forEach((item, i) => message += `${i + 1}. ${item.name} x ${item.quantity}\n`);
-    message += `\n💰 TỔNG: ${totalPrice.toLocaleString()}₫`;
     
-    window.open(`https://zalo.me/${phoneNumber}?text=${encodeURIComponent(message)}`, '_blank');
-    localStorage.removeItem('cart');
-    window.dispatchEvent(new Event("cartUpdate"));
+    // 1. Kiểm tra giỏ hàng có trống không
+    if (cart.length === 0) {
+      alert("Giỏ hàng của bạn đang trống!");
+      return;
+    }
+
+    const phoneNumber = "0347227377"; // Hotline Hùng Ngọc
+    
+    // 2. Tạo nội dung tin nhắn có cấu trúc rõ ràng
+    let message = `🔔 ĐƠN HÀNG MỚI TỪ WEBSITE\n`;
+    message += `--------------------------\n`;
+    message += `👤 Khách hàng: ${formData.lastName} ${formData.firstName}\n`;
+    message += `📞 Số điện thoại: ${formData.phone}\n`;
+    message += `📍 Địa chỉ: ${formData.address}\n`;
+    if (formData.note) message += `📝 Ghi chú: ${formData.note}\n`;
+    message += `💳 Thanh toán: ${paymentMethod === 'bank' ? 'Chuyển khoản MB Bank' : 'Trả tiền mặt (COD)'}\n`;
+    
+    message += `\n🛒 CHI TIẾT ĐƠN HÀNG:\n`;
+    cart.forEach((item, i) => {
+      const itemPrice = typeof item.price === 'string' 
+        ? parseInt(item.price.replace(/\D/g, "")) 
+        : (Number(item.price) || 0);
+      message += `${i + 1}. ${item.name}\n   Số lượng: ${item.quantity} x ${itemPrice.toLocaleString()}₫\n`;
+    });
+    
+    message += `--------------------------\n`;
+    message += `💰 TỔNG CỘNG: ${totalPrice.toLocaleString()}₫`;
+
+    // 3. Sử dụng link zalo.me kèm tham số text đã được mã hóa
+    const zaloUrl = `https://zalo.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    
+    // 4. Mở Zalo
+    window.open(zaloUrl, '_blank');
+
+    // Tùy chọn: Xóa giỏ hàng sau khi đặt (Nên cân nhắc nếu khách muốn quay lại sửa)
+    // localStorage.removeItem('cart');
+    // window.dispatchEvent(new Event("cartUpdate"));
   };
+  // const handleZaloOrder = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   const phoneNumber = "0347227377"; // Hotline Hùng Ngọc
+  //   let message = `🔔 ĐƠN HÀNG MỚI\n👤 Khách: ${formData.lastName} ${formData.firstName}\n📞 SĐT: ${formData.phone}\n📍 ĐC: ${formData.address}\n\n🛒 CHI TIẾT:\n`;
+  //   cart.forEach((item, i) => message += `${i + 1}. ${item.name} x ${item.quantity}\n`);
+  //   message += `\n💰 TỔNG: ${totalPrice.toLocaleString()}₫`;
+    
+  //   window.open(`https://zalo.me/${phoneNumber}?text=${encodeURIComponent(message)}`, '_blank');
+  //   localStorage.removeItem('cart');
+  //   window.dispatchEvent(new Event("cartUpdate"));
+  // };
 
   return (
     <main className={styles.container}>

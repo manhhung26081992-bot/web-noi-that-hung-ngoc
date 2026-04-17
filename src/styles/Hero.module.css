@@ -175,32 +175,47 @@
 
 
 /* 6.5. RESPONSIVE TABLET (Dành riêng cho máy tính bảng) */
-@media (min-width: 769px) and (max-width: 1024px) {
+/* Phủ rộng từ 768px đến 1280px để "bắt" dính máy tính bảng 10.1 inch */
+@media screen and (min-width: 768px) and (max-width: 1280px) {
   .hero {
-    height: 350px; /* Thu hẹp chiều cao một chút để cân đối */
+    height: 450px !important; /* Tăng thêm chiều cao để không gian rộng rãi */
   }
 
   .contentWrapper {
-    padding: 0 40px; /* Giảm padding hai bên */
+    padding: 0 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important; /* Đảm bảo nội dung căn lề trái chuẩn */
   }
 
   .textContent {
-    max-width: 450px; /* Bóp độ rộng text lại để không bị đè lên các thành phần khác */
+    max-width: 60% !important; /* Cho phép nội dung chiếm 60% chiều ngang màn hình */
+    background: rgba(0, 0, 0, 0.4) !important; /* Thêm nền mờ nhẹ để chữ nổi bật trên ảnh */
+    padding: 25px !important;
+    border-radius: 12px !important;
+    transform: none !important; /* Loại bỏ các hiệu ứng dịch chuyển có thể gây lỗi */
   }
 
   .mainTitle {
-    font-size: 32px; /* Giảm cỡ chữ xuống (thay vì 46px) */
-    line-height: 1.2;
+    font-size: 32px !important; /* Cỡ chữ vừa vặn, không quá to gây đè hàng */
+    line-height: 1.2 !important;
+    margin-bottom: 15px !important;
   }
 
   .topText {
-    font-size: 16px;
-    margin-bottom: 8px;
+    font-size: 16px !important;
+    display: block !important;
   }
 
   .ctaButton {
-    padding: 12px 25px;
-    margin-top: 20px;
+    padding: 12px 25px !important;
+    font-size: 14px !important;
+    margin-top: 15px !important;
+  }
+
+  /* Ẩn các mũi tên nếu chúng đè lên chữ trên tablet */
+  .arrow {
+    display: none !important;
   }
 }
 /* 7. RESPONSIVE MOBILE */

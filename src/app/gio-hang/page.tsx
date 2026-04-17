@@ -204,7 +204,7 @@ const handleZaloOrder = async (e: React.FormEvent) => {
               </div>
               <div className={styles.methodItem}>
                 <input type="radio" id="cod" name="pay" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} />
-                <label htmlFor="cod">Thanh toán khi nhận hàng (COD)</label>
+                <label htmlFor="cod">Thanh toán khi nhận hàng (COD)</label>git commit -m "fix: responsive hero banner"
               </div>
             </div>
 

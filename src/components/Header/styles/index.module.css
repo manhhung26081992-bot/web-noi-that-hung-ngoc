@@ -133,7 +133,9 @@
   border: none;
   
 }
-
+.hamburger {
+  display: none !important; /* PHẢI ẨN để nhường chỗ cho menu xanh */
+}
 /* --- 5. GIAO DIỆN MÀN HÌNH NHỎ (MOBILE < 768px) --- */
 @media (max-width: 1024px) {
   .topBar {

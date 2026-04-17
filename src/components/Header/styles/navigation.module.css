@@ -85,16 +85,16 @@
 /* Mobile Sidebar Logic */
 @media (max-width: 1024px) {
   .nav {
-    position: fixed;
-    top: 0;
-    left: -100%; /* Mặc định ẩn sang trái */
-    width: 280px;
-    height: 100vh;
-    transition: 0.3s ease-in-out;
-    z-index: 10002;
-    overflow-y: auto;
+    position: fixed !important;
+    top: 0 !important;
+    left: -100% !important; /* Mặc định ẩn sang trái */
+    width: 280px !important;
+    height: 100vh !important;
+    transition: 0.3s ease-in-out !important;
+    z-index: 10002 !important;
+    overflow-y: auto !important;
     background-color: #005aab;
-    display: block; /* Đảm bảo bao phủ chiều dọc */
+    display: block !; /* Đảm bảo bao phủ chiều dọc */
   }
 
   .navActive {

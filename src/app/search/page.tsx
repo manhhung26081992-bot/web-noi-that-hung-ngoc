@@ -137,7 +137,7 @@ function SearchContent() {
         <div className={styles.noResultBox}>
           <p>Không tìm thấy sản phẩm bạn yêu cầu?</p>
           <div className={styles.contactActions}>
-            <a href="tel:0347227377" className={styles.hotlineBtn}>📞 Gọi tư vấn: 0974.336.571</a>
+            <a href="tel:0347227377" className={styles.hotlineBtn}>📞 Gọi tư vấn: 0347.227.377</a>
           </div>
         </div>
       )}
@@ -277,7 +277,7 @@ export default function SearchPage() {
 //         <div className={styles.noResultBox}>
 //           <p>Không tìm thấy sản phẩm bạn yêu cầu?</p>
 //           <div className={styles.contactActions}>
-//             <a href="tel:0347227377" className={styles.hotlineBtn}>📞 Gọi tư vấn: 0974.336.571</a>
+//             <a href="tel:0347227377" className={styles.hotlineBtn}>📞 Gọi tư vấn: 0347.227.377</a>
 //           </div>
 //         </div>
 //       )}

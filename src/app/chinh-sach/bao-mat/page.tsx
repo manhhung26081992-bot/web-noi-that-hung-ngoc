@@ -37,7 +37,7 @@ export default function PrivacyPolicy() {
           <section className={styles.contactInfo}>
             <p>Mọi thắc mắc về chính sách bảo mật, vui lòng liên hệ:</p>
             <p><strong>Nội Thất Hùng Ngọc</strong></p>
-            <p>Hotline: 0974.336.571</p>
+            <p>Hotline: 0347.227.377</p>
             <p>Địa chỉ: Số 211 Nguyễn Văn Giáp, Cầu Diễn, Nam Từ Liêm, Hà Nội</p>
           </section>
         </article>

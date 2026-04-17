@@ -38,7 +38,7 @@ export default function ReturnPolicy() {
             <p>Để đảm bảo quyền lợi nhanh nhất, quý khách vui lòng thực hiện theo các bước:</p>
             <ul>
               <li><strong>Bước 1:</strong> Chụp ảnh hoặc quay video tình trạng sản phẩm lỗi ngay khi nhận hàng.</li>
-              <li><strong>Bước 2:</strong> Liên hệ Hotline <strong>0974.336.571</strong> để thông báo tình trạng.</li>
+              <li><strong>Bước 2:</strong> Liên hệ Hotline <strong>0347.227.377</strong> để thông báo tình trạng.</li>
               <li><strong>Bước 3:</strong> Kỹ thuật viên sẽ xác nhận và tiến hành đổi mới sản phẩm tại nhà cho quý khách trong vòng 24h - 48h.</li>
             </ul>
           </section>
@@ -54,7 +54,7 @@ export default function ReturnPolicy() {
           <section className={Style.contactInfo}>
             <p>Chúng tôi luôn nỗ lực để mang lại trải nghiệm mua sắm tốt nhất. Mọi khiếu nại vui lòng liên hệ:</p>
             <p><strong>Phòng Chăm Sóc Khách Hàng - Nội Thất Hùng Ngọc</strong></p>
-            <p>Hotline hỗ trợ: <a href="tel:0347227377">0974 336 571</a></p>
+            <p>Hotline hỗ trợ: <a href="tel:0347227377">0347 227 377</a></p>
             <p>Địa chỉ: Số 211 Nguyễn Văn Giáp, P. Cầu Diễn, Q. Nam Từ Liêm, Hà Nội</p>
           </section>
         </article>

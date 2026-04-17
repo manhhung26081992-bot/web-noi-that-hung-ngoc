@@ -74,7 +74,7 @@ export default function RootLayout({
     'image': 'https://noithathungngoc.com/logo.png',
     '@id': 'https://noithathungngoc.com',
     'url': 'https://noithathungngoc.com',
-    'telephone': '0974 336 571',
+    'telephone': '0347 227 377',
     'priceRange': 'VND',
     'address': {
       '@type': 'PostalAddress',

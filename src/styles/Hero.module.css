@@ -173,6 +173,36 @@
   border-radius: 5px;
 }
 
+
+/* 6.5. RESPONSIVE TABLET (Dành riêng cho máy tính bảng) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .hero {
+    height: 350px; /* Thu hẹp chiều cao một chút để cân đối */
+  }
+
+  .contentWrapper {
+    padding: 0 40px; /* Giảm padding hai bên */
+  }
+
+  .textContent {
+    max-width: 450px; /* Bóp độ rộng text lại để không bị đè lên các thành phần khác */
+  }
+
+  .mainTitle {
+    font-size: 32px; /* Giảm cỡ chữ xuống (thay vì 46px) */
+    line-height: 1.2;
+  }
+
+  .topText {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .ctaButton {
+    padding: 12px 25px;
+    margin-top: 20px;
+  }
+}
 /* 7. RESPONSIVE MOBILE */
 @media (max-width: 768px) {
   .hero { 

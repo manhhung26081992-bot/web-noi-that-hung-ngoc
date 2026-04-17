@@ -197,7 +197,7 @@ const handleZaloOrder = async (e: React.FormEvent) => {
                 <label htmlFor="bank">Chuyển khoản ngân hàng</label>
                 {paymentMethod === 'bank' && (
                   <div className={styles.methodDesc}>
-                    🏦 MB Bank - <strong>0347227377</strong><br/>
+                    🏦 MB Bank - <strong>0777353192</strong><br/>
                     👤 Chủ TK: Bùi Văn Hùng
                   </div>
                 )}

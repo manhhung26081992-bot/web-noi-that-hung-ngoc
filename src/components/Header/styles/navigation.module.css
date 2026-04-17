@@ -83,7 +83,7 @@
 }
 
 /* Mobile Sidebar Logic */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .nav {
     position: fixed;
     top: 0;

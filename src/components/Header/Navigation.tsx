@@ -18,7 +18,7 @@ export default function Navigation({ isOpen, setIsOpen, children }: NavigationPr
   const [activeSubmenu, setActiveSubmenu] = useState<number | null>(null);
 
   const handleToggleSubmenu = (e: React.MouseEvent, index: number, hasSub: boolean) => {
-    if (window.innerWidth <= 768 && hasSub) {
+    if (window.innerWidth <= 1024 && hasSub) {
       e.preventDefault();
       e.stopPropagation(); 
       setActiveSubmenu(activeSubmenu === index ? null : index);

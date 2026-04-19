@@ -19,7 +19,9 @@
   --container-max-width: 1200px;
   --transition-fast: 0.2s ease;
 }
-
+.main {
+  padding-top: 70px;
+}
 /* Chế độ tối (Dark Mode) - Tối ưu cho thiết bị hiện đại */
 @media (prefers-color-scheme: dark) {
   :root {
@@ -103,6 +105,10 @@ a:hover {
   white-space: nowrap;
   border-width: 0;
 }
+.mainContent {
+  min-height: 100vh;
+  padding-top: 80px; /* đúng chiều cao header desktop */
+}
 
 /* 6. RESPONSIVE OPTIMIZATION (Mobile First) */
 @media (max-width: 768px) {
@@ -114,7 +120,9 @@ a:hover {
   p, span, li, input, textarea { 
     font-size: 16px; 
   }
-  
+   .mainContent {
+    padding-top: 65px; /* đúng chiều cao mobile */
+  }
   /* Tăng diện tích bấm cho mobile (SEO Mobile Friendliness) */
   a, button {
     min-height: 44px;
@@ -122,9 +130,8 @@ a:hover {
     display: flex;
     align-items: center;
   }
+  .main {
+    padding-top: 60px;
+  }
 }
-.mainContent {
-  min-height: 100vh;
-  /* Bạn có thể thêm padding-top nếu Header của bạn là sticky/fixed */
-  /* padding-top: 80px;  */
-}
+

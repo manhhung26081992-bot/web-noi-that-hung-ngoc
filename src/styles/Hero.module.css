@@ -1,260 +1,129 @@
-/* 1. KHUNG CHỨA HERO - Tối ưu Layout Stability */
 .hero {
-  position: relative;
-  max-width: var(--container-max-width); /* Đồng bộ 1200px từ globals */
-  height: 400px;
-  background-color: #222;
-  overflow: hidden;
-  margin: 20px auto; /* Thêm khoảng cách với Header */
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-.slideContainer {
+ position: relative;
   width: 100%;
-  height: 100%;
-  position: relative;
+
+  /* GIỚI HẠN CHIỀU RỘNG */
+  max-width: 1200px;
+  margin: 20px auto; /* căn giữa + tạo khoảng thở */
+
+  height: 420px;
+
+  border-radius: 12px;
+  overflow: hidden;
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
-/* 2. HIỆU ỨNG CHUYỂN SLIDE */
-.slide {
-  position: absolute;
-  inset: 0;
-  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: opacity;
-}
-
-.activeSlide {
-  opacity: 1;
-  z-index: 10;
-}
-
-.hiddenSlide {
-  opacity: 0;
+/* ảnh */
+.img {
+  object-fit: cover;
   z-index: 1;
-  pointer-events: none;
 }
 
-/* 2.5. ĐỊNH DẠNG ẢNH BANNER - Sửa lỗi ảnh nhỏ trên Tablet */
-.bannerImg {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important; /* Ép ảnh phủ kín khung hình */
-  object-position: center !important;
-}
-
-/* 3. LỚP PHỦ & NỘI DUNG */
+/* ===== overlay thông minh ===== */
 .overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
-  z-index: 11;
+  z-index: 2;
+
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.65) 0%,
+    rgba(0,0,0,0.4) 40%,
+    rgba(0,0,0,0) 100%
+  );
 }
 
-.contentWrapper {
-  position: relative;
-  max-width: var(--container-max-width);
-  height: 100%;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  padding: 0 60px;
-  z-index: 12;
-}
-
-.textContent {
-  max-width: 550px;
-  animation: fadeInUp 0.8s ease forwards;
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.topText {
-  color: var(--primary-color);
-  font-style: italic;
-  font-size: 18px;
-  margin-bottom: 12px;
-  display: block;
-}
-
-.mainTitle {
-  font-size: clamp(28px, 5vw, 46px);
-  color: #fff;
-  line-height: 1.1;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: -0.5px;
-}
-
-.highlightText {
-  color: var(--primary-color);
-  display: block;
-  font-size: 0.6em;
-  margin-top: 8px;
-  letter-spacing: 1px;
-}
-
-/* 4. NÚT KÊU GỌI HÀNH ĐỘNG (CTA) */
-.ctaButton {
-  margin-top: 30px;
-  display: inline-block;
-  background-color: var(--primary-color);
-  color: #000;
-  padding: 14px 35px;
-  font-weight: 700;
-  text-transform: uppercase;
-  text-decoration: none;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  font-size: 14px;
-}
-
-.ctaButton:hover {
-  transform: translateY(-3px);
-  background-color: #fff;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-}
-
-/* 5. ĐIỀU HƯỚNG MŨI TÊN */
-.arrow {
+/* ===== content ===== */
+.content {
   position: absolute;
+  z-index: 3;
   top: 50%;
+  left: 6%;
   transform: translateY(-50%);
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(4px);
+}
+
+/* 🔥 KHỐI NỀN CHỮ (điểm khác biệt lớn nhất) */
+.box {
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px);
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 480px;
+}
+
+/* TITLE */
+.title {
   color: #fff;
-  border: none;
-  width: 45px;
-  height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 20;
-  transition: all 0.3s;
-  border-radius: 50%;
-  opacity: 0;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 10px;
 }
 
-.hero:hover .arrow {
-  opacity: 1;
+/* SUB */
+.sub {
+  color: #ffd54f;
+  font-size: 15px;
+  margin-bottom: 16px;
 }
 
-.arrow:hover {
-  background: var(--primary-color);
-  color: #000;
-}
-
-.leftArrow { left: 20px; }
-.rightArrow { right: 20px; }
-
-/* 6. DOTS ĐIỀU HƯỚNG */
-.dots {
-  position: absolute;
-  bottom: 25px;
-  left: 50%;
+/* BUTTON GROUP */
+.actions {
   display: flex;
   gap: 10px;
-  z-index: 20;
-  transform: translateX(-50%);
 }
 
-.dot {
-  width: 10px;
-  height: 10px;
-  border: 1.5px solid #fff;
-  border-radius: 50%;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.3s;
+/* CTA */
+.cta {
+  background: #f39200;
+  color: #000;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-weight: 700;
 }
 
-.activeDot {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-  width: 30px;
-  border-radius: 5px;
+/* hotline */
+.hotline {
+  background: #fff;
+  color: #000;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-weight: 600;
 }
 
-/* 6.5. RESPONSIVE TABLET (Dành riêng cho máy tính bảng 10.1 inch) */
-@media screen and (min-width: 769px) and (max-width: 1280px) {
-  .hero {
-    height: 450px !important; /* Ép banner cao hơn để ảnh to ra */
-  }
-
-  .contentWrapper {
-    padding: 0 40px !important;
-    justify-content: flex-start !important;
-  }
-
-  .textContent {
-    max-width: 65% !important;
-    background: rgba(0, 0, 0, 0.4) !important;
-    padding: 25px !important;
-    border-radius: 12px !important;
-  }
-
-  .mainTitle {
-    font-size: 30px !important;
-    line-height: 1.2 !important;
-  }
-
-  .arrow {
-    display: none !important;
-  }
-}
-
-/* 7. RESPONSIVE MOBILE */
+/* ===== MOBILE ===== */
 @media (max-width: 768px) {
-  .hero { 
-    height: 45vh; 
-    border-radius: 0;
-    margin: 0; 
+
+  .hero {
+    height: 320px;
   }
 
-  .contentWrapper { 
-    padding: 0 20px; 
-    align-items: flex-start;
-    padding-top: 40px;
-    justify-content: center; 
+  .content {
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
   }
 
-  .textContent { 
-    text-align: center; 
-    background: rgba(0, 0, 0, 0.2);
-    padding: 15px;
-    border-radius: 8px;
+  .box {
+    padding: 16px;
+    text-align: center;
   }
 
-  .mainTitle { 
-    font-size: 22px; 
-    line-height: 1.3;
+  .title {
+    font-size: 20px;
   }
 
-  .topText {
-    font-size: 14px;
-    margin-bottom: 5px;
-  }
-
-  .ctaButton {
-    padding: 10px 20px;
+  .sub {
     font-size: 13px;
-    margin-top: 15px;
   }
 
-  .dots { 
-    transform: translateX(-50%) !important; 
-    left: 50% !important; 
+  .actions {
+    flex-direction: column;
   }
 
-  .arrow { display: none; }
-
-  .dot, .activeDot {
-    width: 8px;
-    height: 8px;
+  .cta,
+  .hotline {
+    width: 100%;
+    text-align: center;
   }
 }

@@ -1,29 +1,25 @@
-/* --- 1. TỔNG THỂ & STICKY --- */
+/* --- 1. HEADER & STICKY --- */
 .header {
   width: 100%;
-  background-color: #ffffff; /* Hoặc var(--background) */
-  z-index: 1000;
+  background-color: #fff;
   position: relative;
-  transition: transform 0.3s ease-in-out;
+  z-index: 1000;
+  transition: transform 0.3s ease;
 }
 
-/* Loại bỏ ký tự lạ */
+/* fix ký tự lạ */
 .menuItem::after {
   content: none !important;
 }
-.logoContainer {
-  display: flex;       /* Đưa ảnh và chữ nằm trên cùng một hàng ngang */
-  align-items: center;  /* Căn giữa chữ theo chiều dọc so với ảnh Logo */
-  gap: 10px;           /* Khoảng cách giữa ảnh Logo và khối chữ */
-  text-decoration: none;
-}
+
+/* sticky */
 .sticky {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  background-color: rgba(255, 255, 255, 0.98);
+  background: rgba(255,255,255,0.98);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   animation: slideInDown 0.4s ease forwards;
 }
 
@@ -32,23 +28,24 @@
   to { transform: translateY(0); }
 }
 
-/* --- 2. LAYOUT CHÍNH (TOP BAR) --- */
+/* --- 2. TOP BAR --- */
 .topBar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 1rem;
-  max-width: 1200px; /* Hoặc var(--container-max-width) */
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 16px 1rem;
   gap: 1.5rem;
-  
+  min-height: 80px;
 }
 
+/* sticky padding */
 .sticky .topBar {
-  padding: 8px 1rem;
+  padding: 8px 16px;
 }
 
-/* Logo & Brand */
+/* --- 3. LOGO WRAPPER --- */
 .logoWrapper {
   display: flex;
   align-items: center;
@@ -56,217 +53,166 @@
   text-decoration: none;
 }
 
-/* --- 3. TÌM KIẾM (DESKTOP) --- */
+/* --- 4. SEARCH DESKTOP --- */
 .desktopSearch {
   flex: 1;
   max-width: 450px;
-  display: block;
 }
 
-/* Xử lý ẩn các thành phần mobile trên Desktop */
-.mobileMenuSearch, 
-.mobileSearchBtn, 
-.mobileSearchDropdown {
-  display: none !important;
-}
-
-/* --- 4. TIỆN ÍCH (HOTLINE/GIỎ HÀNG) --- */
+/* --- 5. CONTACT / ACTION --- */
 .contactInfo {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
+  gap: 1rem;
 }
 
+/* hotline */
 .hotline {
   color: #d0021b;
   font-weight: 700;
   font-size: 16px;
-  text-decoration: none;
   display: flex;
   align-items: center;
   gap: 5px;
 }
-/* Container bao quanh cả ảnh và chữ */
-.logoContainer {
-  display: flex;       /* Đưa ảnh và chữ nằm trên cùng một hàng ngang */
-  align-items: center;  /* Căn giữa chữ theo chiều dọc so với ảnh Logo */
-  gap: 10px;           /* Khoảng cách giữa ảnh Logo và khối chữ */
-  text-decoration: none;
-  margin-left: -180px;
-}
 
-/* Khối văn bản thương hiệu */
-.brandText {
-  display: flex;
-  flex-direction: column; /* Chữ "NỘI THẤT" nằm trên chữ "HÙNG NGỌC" */
-  justify-content: center;
-  line-height: 1.1;       /* Thu hẹp khoảng cách dòng cho giống mẫu */
-}
-
-.mainName {
-  margin: 0 0 -5px;
-  color: #585757;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  padding-top: 5px;
-}
-
-.subName {
-  margin: 0;
-  color: #005aab;         /* Màu xanh thương hiệu chủ đạo */
-  font-size: 23px;        /* Chữ "HÙNG NGỌC" to và nổi bật hơn */
-  font-weight: 800;
-  text-transform: uppercase;
-  padding-top: 10px;
-}
+/* cart */
 .cartBtn {
   position: relative;
-  background-color: #005aab;
-  color: white;
+  background: #005aab;
+  color: #fff;
   width: 40px;
   height: 40px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-decoration: none;
-  border: none;
-  
 }
+
+/* --- HAMBURGER --- */
 .hamburger {
-  display: none !important; /* PHẢI ẨN để nhường chỗ cho menu xanh */
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
-/* --- 5. GIAO DIỆN MÀN HÌNH NHỎ (MOBILE < 768px) --- */
+
+.bar {
+  width: 22px;
+  height: 2px;
+  background: #333;
+}
+
+/* --- MOBILE SEARCH BTN --- */
+.mobileSearchBtn {
+  display: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* ẨN MOBILE ELEMENT TRÊN DESKTOP */
+.mobileMenuSearch,
+.mobileSearchDropdown {
+  display: none !important;
+}
+
+/* ================================================= */
+/* ================== MOBILE ======================= */
+/* ================================================= */
 @media (max-width: 768px) {
+
   .topBar {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    height: 65px !important;
-    padding: 0 15px !important;
-    gap: 0 !important;
+    height: 60px;
+    padding: 0 12px;
+    gap: 0;
   }
 
-  /* 1. Hamburger sang kịch bên TRÁI */
+  /* 1. HAMBURGER (TRÁI) */
   .hamburger {
-    display: flex !important;
-    flex-direction: column;
+    display: flex;
+    order: 1;
+    width: 30px;
+    height: 30px;
     justify-content: center;
-    gap: 4px;
-    order: 1 !important; /* Đổi từ 2 thành 1 để ra bên trái */
-    background: none !important;
-    border: none !important;
-    width: 30px !important;
-    height: 30px !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    cursor: pointer;
   }
 
-  .bar {
-    display: block !important;
-    width: 22px !important;
-    height: 2px !important;
-    background-color: #333333 !important;
-    border-radius: 2px;
-    margin: 0 auto !important;
-  }
-
-  /* 2. Logo nằm ở CHÍNH GIỮA */
+  /* 2. LOGO (GIỮA) */
   .logoWrapper {
-    order: 2 !important; 
-    flex: 1 !important;
-    display: flex !important;
-    justify-content: center !important;
+    order: 2;
+    flex: 1;
+    display: flex;
+    justify-content: center;
   }
 
+  /* FIX LOGO KHÔNG ĐÈ */
   .logoWrapper img {
-    height: 60px !important;
+    max-height: 38px !important;
     width: auto;
-   
+    object-fit: contain;
   }
 
-  /* 3. Cụm Tìm kiếm & Giỏ hàng sang bên PHẢI */
+  /* 3. RIGHT (SEARCH + CART) */
   .contactInfo {
-  order: 3 !important;
-    flex: 0 0 auto;
-    display: flex !important;
-    justify-content: flex-end;
-    align-items: center !important;
-    gap: 15px !important;
+    order: 3;
+    gap: 10px;
   }
-/* CHỈNH GIỎ HÀNG TO HƠN QUA CLASS CỦA COMPONENT CON */
-  .contactInfo :global(.cartBtn) { 
-    display: flex !important;
-    background: none !important;
-    color: #005aab !important;
-    font-size: 30px !important; /* Tăng kích thước icon giỏ hàng */
-    width: auto !important;
-    height: auto !important;
-    padding: 0 !important;
-    position: relative !important;
-  }
+
+  /* show search icon */
   .mobileSearchBtn {
-    display: flex !important;
-    background-color: white !important;
-    color: rgb(113, 161, 94) !important;
-    padding: 4px !important;
-    border-radius: 6px;
-    border: none !important;
-    font-size: 18px;
-justify-content: center !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
- .cartBtn {
-    display: flex !important;
+  /* cart mobile */
+  .cartBtn {
     background: none !important;
     color: #005aab !important;
-    font-size: 28px !important; /* Tăng cỡ icon giỏ hàng lên 28px */
     width: auto !important;
     height: auto !important;
-    padding: 0 !important;  
-    margin-right: 5px !important; /* Tạo khoảng cách với mép phải */
+    font-size: 22px !important;
   }
 
-  /* Ẩn các thành phần desktop */
-  .mainName, .subName, .desktopSearch, .hotline {
+  /* ẨN desktop */
+  .desktopSearch,
+  .hotline,
+  .mainName,
+  .subName {
     display: none !important;
   }
-  /* Ô tìm kiếm thả xuống trên Mobile */
-.mobileSearchDropdown {
-  display: none; /* Mặc định ẩn */
-  position: absolute;
-  top: 65px; /* Ngay dưới Header */
-  left: 0;
-  width: 100%;
-  background-color: #ffffff;
-  padding: 10px 15px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  z-index: 9999; /* Đảm bảo nằm trên cùng */
-}
-.logoContainer {
-  margin-left: 50px;
-}
-/* Khi có class searchActive thì mới hiện */
-.searchActive {
-  display: block !important;
-  animation: slideDown 0.3s ease-out;
+
+  /* SEARCH DROPDOWN */
+  .mobileSearchDropdown {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    background: #fff;
+    padding: 10px 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    z-index: 9999;
+    display: none;
+  }
+
+  .searchActive {
+    display: block !important;
+    animation: slideDown 0.3s ease;
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 }
 
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-}
-
-/* Utils */
+/* --- UTIL --- */
 .hiddenH1 {
   position: absolute;
   width: 1px;
   height: 1px;
-  padding: 0;
-  margin: -1px;
   overflow: hidden;
-  clip: rect(0,0,0,0);
-  border: 0;
 }

@@ -1,0 +1,54 @@
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+/* ẢNH LOGO */
+.logoContainer img {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* TEXT */
+.brandText {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.1;
+}
+
+/* HÙNG NGỌC */
+.subName {
+  font-size: 23px;
+  font-weight: 800;
+  color: #1a1a1a; /* 🔥 đen sang hơn xanh */
+  letter-spacing: 1px; /* 🔥 tạo cảm giác brand */
+  margin: 0;
+}
+
+/* furniture */
+.mainName {
+  font-size: 12px;
+  color: #b88e2f; /* 🔥 màu vàng thương hiệu */
+  letter-spacing: 2px; /* 🔥 kiểu luxury */
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .logo img {
+    height: 34px; /* QUAN TRỌNG: tránh đè banner */
+  }
+
+  .name {
+    font-size: 13px;
+  }
+.subName .mainName Ơ
+  .sub {
+    font-size: 10px;
+  }
+}

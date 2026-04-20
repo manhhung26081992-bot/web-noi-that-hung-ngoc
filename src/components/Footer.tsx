@@ -68,7 +68,7 @@ const footerData = [
       <div className={styles.bottomBar}>
         <div className={styles.infoWrapper}>
           <div className={styles.addressBox}>
-            <p><strong>Địa chỉ:</strong> Số 211 Đường Nguyễn Văn Giáp, P. Cầu Diễn, Q. Nam Từ Liêm, Hà Nội</p>git add .
+            <p><strong>Địa chỉ:</strong> Số 211 Đường Nguyễn Văn Giáp, P. Cầu Diễn, Q. Nam Từ Liêm, Hà Nội</p>
           </div>
           <div className={styles.copyrightBox}>
             <p>Hotline: <a href="tel:0347227377">0347 227 377</a> | <strong>© 2026 Nội Thất Hùng Ngọc</strong></p>

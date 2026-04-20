@@ -33,12 +33,16 @@ export default function ActionButtons() {
 
   return (
     <div className={styles.contactInfo}>
+      <span className={styles.iconPulse}>📞</span > 
       {/* Hotline chuẩn SEO: Giúp khách gọi ngay trên Mobile */}
-      <a href="tel:0347227377" className={styles.hotline} title="Gọi tư vấn Nội Thất Hùng Ngọc">
-        <span className={styles.iconPulse}>📞</span> 
-        <span className={styles.phoneNum}>0347227377</span>  
-      </a>
+    
+        <div className={styles.phoneContent}>
+             <a href="tel:0347227377" className={styles.hotline} title="Gọi tư vấn Nội Thất Hùng Ngọc">
       
+        <span className={styles.phoneNum}>0347 227 377</span> 
+      </a>
+      <span className={styles.phoneSubtext}>Tư vấn online 24/7</span>
+      </div>
       {/* Link giỏ hàng: Giữ nguyên class của bạn và thêm badge đỏ */}
       <Link href="/gio-hang" className={styles.cartBtn} title="Giỏ hàng của bạn">
         <div className={styles.cartWrapper}>

@@ -2,12 +2,25 @@
   display: flex;
   align-items: center;
   gap: 1.2rem;
+  
 }
-
+.phoneContent{
+    display: flex;
+  flex-direction: column; /* Đẩy chữ xuống dưới số điện thoại */
+  align-items: flex-start;
+  line-height: 1.2;
+}
+.phoneSubtext {
+  font-size: 12px;        /* Chữ nhỏ hơn để làm nền */
+  font-weight: 500;
+  color: #666;            /* Màu xám nhẹ cho tinh tế */
+  text-transform: uppercase; /* Viết hoa để nhìn chuyên nghiệp hơn */
+  letter-spacing: 0.5px;
+}
 .hotline {
   color: #d0021b;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 20px;
   display: flex;
   align-items: center;
   gap: 5px;

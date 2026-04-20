@@ -78,7 +78,7 @@ export default function RootLayout({
     'priceRange': 'VND',
     'address': {
       '@type': 'PostalAddress',
-      'streetAddress': 'Địa chỉ của bạn', // Bạn nhớ cập nhật địa chỉ thật vào đây
+      'streetAddress': '213 Nguyễn Văn Giáp', // Bạn nhớ cập nhật địa chỉ thật vào đây
       'addressLocality': 'Hà Nội',
       'addressRegion': 'HN',
       'postalCode': '100000',

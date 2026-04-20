@@ -15,6 +15,7 @@ const CATEGORY_GROUPS: { [key: string]: string[] } = {
   'sofa': ['sofa', 'ban-sofa', 'sofa-giuong', 'sofa-da', 'sofa-ni', 'sofa-vang'],
   'ghe-van-phong': ['ghe-xoay', 'ghe-chan-quy', 'ghe-giam-doc', 'ghe-gap', 'ghe-gaming', 'ghe-van-phong'],
   'tu-van-phong': ['tu-van-phong', 'tu-locker', 'tu-tai-lieu-go', 'tu-tai-lieu-sat', 'hoc-tu-tu-phu'],
+  'ke-trang-tri': ['ke-go', 'ke-sach', 'ke-ti-vi', 'ke-trang-tri'],
   'ke-go': ['ke-go', 'ke-sach', 'ke-ti-vi', 'ke-trang-tri'],
   'truong-hoc': ['ban-ghe-hoc-sinh', 'bang-tu', 'ban-ghe-giao-vien'],
   'ban-ghe-an': ['ban-ghe-an','bo-ban-an-mat-da','bo-ban-an-thong-minh','bo-ban-an-6-ghe','bo-ban-an-4-ghe','ghe-an'],

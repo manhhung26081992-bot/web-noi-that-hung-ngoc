@@ -1,114 +1,42 @@
 import { MetadataRoute } from 'next';
+import { supabase } from '@/lib/supabase'; // Đường dẫn tới file bạn tạo ở Bước 2
 import { MENU_ITEMS } from '@/components/Header/menuData';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://noithathungngoc.com';
 
+  // 1. Lấy toàn bộ sản phẩm từ Supabase
+  const { data: products } = await supabase
+    .from('products')
+    .select('slug');
+
+  const productUrls = (products || []).map((product) => ({
+    url: `${baseUrl}/san-pham/${product.slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.6,
+  }));
+
+  // 2. Trang chủ & Danh mục từ Menu (Giữ nguyên phần bạn đã làm tốt)
   const home = {
     url: baseUrl,
     lastModified: new Date(),
     changeFrequency: 'daily' as const,
-    priority: 1,
+    priority: 1.0,
   };
 
   const categoryUrls: MetadataRoute.Sitemap = [];
   MENU_ITEMS.forEach((item) => {
     if (item.link && item.link !== '/') {
-      categoryUrls.push({
-        url: `${baseUrl}${item.link}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly' as const,
-        priority: 0.8,
-      });
+      categoryUrls.push({ url: `${baseUrl}${item.link}`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 });
     }
     if (item.submenu) {
       item.submenu.forEach((sub) => {
-        categoryUrls.push({
-          url: `${baseUrl}${sub.link}`,
-          lastModified: new Date(),
-          changeFrequency: 'weekly' as const,
-          priority: 0.7,
-        });
+        categoryUrls.push({ url: `${baseUrl}${sub.link}`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 });
       });
     }
   });
 
-  const policies = [
-    '/chinh-sach/bao-hanh',
-    '/chinh-sach/van-chuyen',
-    '/chinh-sach/doi-tra',
-    '/chinh-sach/bao-mat',
-  ].map((path) => ({
-    url: `${baseUrl}${path}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly' as const,
-    priority: 0.3,
-  }));
-
-  return [home, ...categoryUrls, ...policies];
+  // Hợp nhất tất cả: Giờ đây Sitemap của bạn sẽ có hàng trăm link sản phẩm chi tiết
+  return [home, ...categoryUrls, ...productUrls];
 }
-
-
-// import { MetadataRoute } from 'next';
-// import { allProducts } from '@/data-m/products/index';
-// import { MENU_ITEMS } from '@/components/Header/menuData';
-
-// export default function sitemap(): MetadataRoute.Sitemap {
-//   const baseUrl = 'https://noithathungngoc.com';
-
-//   // 1. Trang chủ
-//   const home = {
-//     url: baseUrl,
-//     lastModified: new Date(),
-//     changeFrequency: 'daily' as const,
-//     priority: 1,
-//   };
-
-//   // 2. Lấy tất cả các danh mục từ MENU_ITEMS (cấp 1 và cấp 2)
-//   const categoryUrls: MetadataRoute.Sitemap = [];
-//   MENU_ITEMS.forEach((item) => {
-//     // Thêm menu chính (nếu không phải Trang chủ)
-//     if (item.link !== '/') {
-//       categoryUrls.push({
-//         url: `${baseUrl}${item.link}`,
-//         lastModified: new Date(),
-//         changeFrequency: 'weekly' as const,
-//         priority: 0.8,
-//       });
-//     }
-//     // Thêm các menu con (Submenu)
-//     if (item.submenu) {
-//       item.submenu.forEach((sub) => {
-//         categoryUrls.push({
-//           url: `${baseUrl}${sub.link}`,
-//           lastModified: new Date(),
-//           changeFrequency: 'weekly' as const,
-//           priority: 0.7,
-//         });
-//       });
-//     }
-//   });
-
-//   // 3. Lấy tất cả sản phẩm chi tiết
-//   const productUrls = allProducts.map((product) => ({
-//     url: `${baseUrl}/san-pham/${product.slug}`,
-//     lastModified: new Date(),
-//     changeFrequency: 'monthly' as const,
-//     priority: 0.6,
-//   }));
-
-//   // 4. Các trang chính sách
-//   const policies = [
-//     '/chinh-sach/bao-hanh',
-//     '/chinh-sach/van-chuyen',
-//     '/chinh-sach/doi-tra',
-//     '/chinh-sach/bao-mat',
-//   ].map((path) => ({
-//     url: `${baseUrl}${path}`,
-//     lastModified: new Date(),
-//     changeFrequency: 'monthly' as const,
-//     priority: 0.3,
-//   }));
-
-//   return [home, ...categoryUrls, ...productUrls, ...policies];
-// }

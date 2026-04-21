@@ -12,19 +12,12 @@ const supabase = createClient(
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://noithathungngoc.com'
 
-  const { data: products } = await supabase
-    .from('products')
-    .select('slug, updated_at')
-
-  const productUrls =
-    products?.map((product) => ({
-      url: `${baseUrl}/san-pham/${product.slug}`,
-      lastModified: product.updated_at
-        ? new Date(product.updated_at)
-        : new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    })) || []
+  const home = {
+    url: baseUrl,
+    lastModified: new Date(),
+    changeFrequency: 'daily' as const,
+    priority: 1,
+  }
 
   const categoryUrls: MetadataRoute.Sitemap = []
 
@@ -48,14 +41,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   })
 
+  const policies = [
+    '/chinh-sach/bao-hanh',
+    '/chinh-sach/van-chuyen',
+    '/chinh-sach/doi-tra',
+    '/chinh-sach/bao-mat',
+  ].map((path) => ({
+    url: `${baseUrl}${path}`,
+    lastModified: new Date(),
+    changeFrequency: 'monthly' as const,
+    priority: 0.3,
+  }))
+
+  const { data: products } = await supabase
+    .from('products')
+    .select('slug, updated_at')
+
+  const productUrls =
+    products?.map((product) => ({
+      url: `${baseUrl}/san-pham/${product.slug}`,
+      lastModified: product.updated_at
+        ? new Date(product.updated_at)
+        : new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    })) || []
+
   return [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1,
-    },
+    home,
     ...categoryUrls,
+    ...policies,
     ...productUrls,
   ]
 }

@@ -41,34 +41,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   })
 
-  const policies = [
-    '/chinh-sach/bao-hanh',
-    '/chinh-sach/van-chuyen',
-    '/chinh-sach/doi-tra',
-    '/chinh-sach/bao-mat',
-  ].map((path) => ({
-    url: `${baseUrl}${path}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly' as const,
-    priority: 0.3,
-  }))
-
   const { data: products } = await supabase
     .from('products')
     .select('slug, category')
 
-  const productUrls =
+  const productUrls: MetadataRoute.Sitemap =
     products?.map((product) => ({
       url: `${baseUrl}/${product.category}/${product.slug}`,
       lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
+      changeFrequency: 'weekly',
       priority: 0.8,
     })) || []
 
   return [
     home,
     ...categoryUrls,
-    ...policies,
     ...productUrls,
   ]
 }

@@ -27,6 +27,10 @@ export const metadata: Metadata = {
   },
   description: 'Chuyên cung cấp bàn ghế văn phòng, sofa giá rẻ, bền đẹp tại Hà Nội. Thiết kế thi công nội thất trọn gói, uy tín, giao hàng nhanh trong 24h.',
   keywords: ['nội thất hùng ngọc', 'bàn làm việc hà nội', 'ghế văn phòng giá rẻ', 'sofa phòng khách', 'thi công nội thất văn phòng'],
+  verification: {
+        google:"8sRs-CQPkINftAG1gd1zSkOtsIGquewoAeFpp7L0LM4", // Dán chính xác mã trong ngoặc kép ở ảnh trước của bạn vào đây
+    },
+  
   authors: [{ name: 'Nội Thất Hùng Ngọc' }],
   creator: 'Nội Thất Hùng Ngọc',
   publisher: 'Nội Thất Hùng Ngọc',

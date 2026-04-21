@@ -109,7 +109,9 @@ a:hover {
   min-height: 100vh;
   padding-top: 80px; /* đúng chiều cao header desktop */
 }
-
+@media (max-width: 1024px) {.mainContent {
+    padding-top: 0; /* đúng chiều cao mobile */
+  }}
 /* 6. RESPONSIVE OPTIMIZATION (Mobile First) */
 @media (max-width: 768px) {
   h1 { font-size: 1.75rem; }
@@ -121,7 +123,7 @@ a:hover {
     font-size: 16px; 
   }
    .mainContent {
-    padding-top: 65px; /* đúng chiều cao mobile */
+    padding-top: 0; /* đúng chiều cao mobile */
   }
   /* Tăng diện tích bấm cho mobile (SEO Mobile Friendliness) */
   a, button {

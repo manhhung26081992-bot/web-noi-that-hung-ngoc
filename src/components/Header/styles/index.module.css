@@ -119,6 +119,15 @@
 .mobileSearchDropdown {
   display: none !important;
 }
+@media (max-width: 1024px) {
+  .hamburger {
+    display: flex;
+    order: 1;
+    width: 30px;
+    height: 30px;
+    justify-content: center;
+  }
+}
 
 /* ================================================= */
 /* ================== MOBILE ======================= */

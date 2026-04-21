@@ -1,54 +1,65 @@
 .logoContainer {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: center; /* Giúp logo và chữ luôn thẳng hàng ngang */
+  gap: 8px;            /* Khoảng cách giữa logo và chữ (chỉnh nhỏ lại nếu muốn gần hơn) */
   text-decoration: none;
 }
 
-/* ẢNH LOGO */
-.logoContainer img {
-  height: 60px;
-  width: auto;
-  object-fit: contain;
+/* KHÔNG dùng width cố định cho wrapper trên mobile */
+.logoWrapper {
+  position: relative;
+  height: 50px;        /* Độ cao logo trên desktop */
+  width: 50px;         /* Độ rộng logo trên desktop */
+  flex-shrink: 0;      /* Giữ nguyên khối, không bị bóp méo */
+  display: flex;
+  align-items: center;
 }
 
-/* TEXT */
+.logoImage {
+  object-fit: contain;
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .brandText {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  line-height: 1.1;
+  line-height: 1.1;    /* Giảm khoảng cách giữa dòng HÙNG NGỌC và FURNITURE */
 }
 
-/* HÙNG NGỌC */
 .subName {
-  font-size: 23px;
+  font-size: 20px;
   font-weight: 800;
-  color: #1a1a1a; /* 🔥 đen sang hơn xanh */
-  letter-spacing: 1px; /* 🔥 tạo cảm giác brand */
+  color: #1a1a1a;
   margin: 0;
+  white-space: nowrap;
 }
 
-/* furniture */
 .mainName {
-  font-size: 12px;
-  color: #b88e2f; /* 🔥 màu vàng thương hiệu */
-  letter-spacing: 2px; /* 🔥 kiểu luxury */
+  font-size: 10px;
+  color: #b88e2f;
   text-transform: uppercase;
+  letter-spacing: 1px;
   margin: 0;
 }
 
-/* MOBILE */
+/* TỐI ƯU RIÊNG CHO MOBILE */
 @media (max-width: 768px) {
-  .logo img {
-    height: 34px; /* QUAN TRỌNG: tránh đè banner */
+  .logoContainer {
+    gap: 5px;          /* Mobile: cho chữ sát rạt vào logo */
   }
 
-  .name {
-    font-size: 13px;
+  .logoWrapper {
+    height: 40px;      /* Thu nhỏ logo để không chiếm diện tích */
+    width: 40px;
   }
-.subName .mainName Ơ
-  .sub {
-    font-size: 10px;
+
+  .subName {
+    font-size: 16px;   /* Chữ HÙNG NGỌC vừa vặn hơn */
+  }
+
+  .mainName {
+    font-size: 8px;
   }
 }

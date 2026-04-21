@@ -67,30 +67,45 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const businessSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FurnitureStore',
-    'name': 'Nội Thất Hùng Ngọc',
-    'image': 'https://noithathungngoc.com/logo.png',
-    '@id': 'https://noithathungngoc.com',
-    'url': 'https://noithathungngoc.com',
-    'telephone': '0347 227 377',
-    'priceRange': 'VND',
-    'address': {
-      '@type': 'PostalAddress',
-      'streetAddress': '213 Nguyễn Văn Giáp', // Bạn nhớ cập nhật địa chỉ thật vào đây
-      'addressLocality': 'Hà Nội',
-      'addressRegion': 'HN',
-      'postalCode': '100000',
-      'addressCountry': 'VN'
-    },
-    'openingHoursSpecification': {
-      '@type': 'OpeningHoursSpecification',
-      'dayOfWeek': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-      'opens': '08:00',
-      'closes': '21:00'
-    }
-  };
+const businessSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FurnitureStore',
+  'name': 'Nội Thất Hùng Ngọc',
+  'alternateName': 'Nội Thất Mạnh Hùng', // Thêm tên thay thế nếu khách hay tìm cả tên này
+  'image': 'https://noithathungngoc.com/logo.png',
+  '@id': 'https://noithathungngoc.com/#furniturestore', // Định danh duy nhất cho thực thể
+  'url': 'https://noithathungngoc.com',
+  'telephone': '0347227377',
+  'priceRange': '₫₫-₫₫₫', // Định dạng chuẩn của Google (VND là tiền tệ, priceRange dùng ký hiệu)
+  'address': {
+    '@type': 'PostalAddress',
+    'streetAddress': '213 Nguyễn Văn Giáp,Từ Liêm', // Cập nhật đầy đủ quận huyện
+    'addressLocality': 'Hà Nội',
+    'addressRegion': 'HN',
+    'postalCode': '100000',
+    'addressCountry': 'VN'
+  },
+  // Bổ sung tọa độ để Google Maps xác minh vị trí chính xác
+  'geo': {
+    '@type': 'GeoCoordinates',
+    'latitude': 21.037416, 
+    'longitude': 105.759451
+  },
+  'openingHoursSpecification': {
+    '@type': 'OpeningHoursSpecification',
+    'dayOfWeek': [
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday', 
+      'Friday', 'Saturday', 'Sunday'
+    ],
+    'opens': '08:00',
+    'closes': '21:00'
+  },
+  // Bổ sung liên kết mạng xã hội để tạo niềm tin với Google
+  'sameAs': [
+    'https://web.facebook.com/profile.php?id=61579413113220e', 
+    'https://zalo.me/0347227377'
+  ]
+};
 
   return (
     <html lang="vi" className={inter.variable} suppressHydrationWarning>

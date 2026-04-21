@@ -94,13 +94,19 @@
 /* ===== MOBILE ===== */
 @media (max-width: 768px) {
 
-  .hero {
-    height: 320px;
+.hero {
+    /* 1. Loại bỏ margin dư thừa để sát Header */
+    margin: 0 auto 10px; 
+    width: 100%; /* Tràn viền mobile nhìn sẽ thoáng hơn */
+    border-radius: 0; /* Bỏ bo góc để banner liền mạch với Header */
+    
+    /* 2. Giảm chiều cao xuống mức hợp lý (240px - 260px là chuẩn mobile) */
+    height: 260px; 
   }
 
   .content {
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%); 
     width: 90%;
   }
 
@@ -123,7 +129,7 @@
 
   .cta,
   .hotline {
-    width: 100%;
+    width: 50%;
     text-align: center;
   }
 }

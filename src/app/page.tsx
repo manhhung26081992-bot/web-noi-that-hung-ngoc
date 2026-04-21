@@ -30,7 +30,7 @@ export default async function Home() {
     <>
       <main className={styles.mainContainer}>
         <section className="sr-only">
-          <h1>Nội Thất Hùng Ngọc - Xưởng Sản Xuất Bàn Ghế Văn Phòng & Sofa Tại Hà Nội</h1>
+          <h1>Nội Thất Hùng Ngọc - Chuyên Cung Cấp Bàn Ghế Văn Phòng & Sofa Tại Hà Nội</h1>
         </section>
 
         {/* Banner chính */}
@@ -93,7 +93,7 @@ export default async function Home() {
             <div className={styles.aboutContent}>
               <h2 className={styles.footerBrandTitle}>Nội Thất Hùng Ngọc - Uy tín tạo niềm tin</h2>
               <p>
-                Tự hào là <strong>xưởng sản xuất trực tiếp</strong> nội thất văn phòng và sofa hàng đầu Hà Nội. 
+                Tự hào là <strong>nhà phân phối </strong> nội thất văn phòng và sofa giá rẻ hàng đầu Hà Nội. 
                 Chúng tôi cam kết sản phẩm <strong>giá gốc tại kho</strong>, hỗ trợ vận chuyển nhanh và bảo hành dài hạn.
               </p>
             </div>

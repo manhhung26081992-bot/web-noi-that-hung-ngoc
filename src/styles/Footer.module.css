@@ -26,8 +26,22 @@
 .mapText strong { display: block; color: #ffb400; font-size: 13px; }
 
 /* COPYRIGHT */
-.bottomBar { text-align: center; padding: 20px; background: #000; color: #666; font-size: 13px; }
-
+.bottomBar {
+  background-color: #000;
+  padding: 20px 15px;
+  text-align: center;
+  display: flex;
+  flex-direction: column; /* Ép chia làm 2 dòng trên Mobile */
+  align-items: center;    /* Căn giữa đều cả 2 dòng */
+  gap: 10px;              /* Khoảng cách giữa dòng Hotline và Bản quyền */
+  border-top: 1px solid #222;
+}
+/* Dòng Hotline */
+.hotlineRow {
+  white-space: nowrap;    /* QUAN TRỌNG: Cấm ngắt dòng số điện thoại lẻ loi */
+  font-size: 14px;
+  color: #fff;
+}
 /* KHUNG CHAT - DIỆT MẢNG TRẮNG */
 .chatWrapper {
   position: fixed; bottom: 90px; left: 20px; width: 280px;
@@ -65,4 +79,13 @@
   .container { grid-template-columns: repeat(2, 1fr); }
   .brandGrid { grid-template-columns: 1fr; }
   .footer { padding-bottom: 80px; } /* Tránh đè nút nổi */
+  
+}
+@media (min-width: 768px) {
+  .bottomBar {
+    flex-direction: row;  /* Nằm ngang */
+    justify-content: center;
+    gap: 20px;
+    padding-bottom: 20px;
+  }
 }

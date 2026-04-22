@@ -98,10 +98,15 @@ export default function Footer() {
       </div>
 
       {/* KHỐI 3: COPYRIGHT */}
-      <div className={styles.bottomBar}>
-        <p>Hotline: <a href="tel:0347227377">0347 227 377</a> | © 2026 Nội Thất Hùng Ngọc</p>
-      </div>
-
+     {/* KHỐI 3: COPYRIGHT - ĐÃ CHIA 2 DÒNG */}
+<div className={styles.bottomBar}>
+  <div className={styles.hotlineRow}>
+    Hotline: <a href="tel:0347227377">0347 227 377</a>
+  </div>
+  <div className={styles.copyrightRow}>
+    © 2026 Nội Thất Hùng Ngọc
+  </div>
+</div>
       {/* KHUNG CHAT (Sửa lỗi mảng trắng) */}
       <div className={`${styles.chatWrapper} ${isChatOpen ? styles.showChat : ''}`}>
         <div className={styles.chatHeader}>

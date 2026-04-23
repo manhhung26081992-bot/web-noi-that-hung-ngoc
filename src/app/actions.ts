@@ -117,6 +117,15 @@ export async function getAllCategoriesFromSupabase() {
     title: cat.charAt(0).toUpperCase() + cat.slice(1) // Viết hoa chữ cái đầu làm tiêu đề tạm
   }));
 }
+//
+export async function getProductBySlug(slug: string) {
+  const { data, error } = await supabase
+    .from('products')
+    .select(PRODUCT_FIELDS)
+    .eq('slug', slug)
+    .single();
+  return data;
+}
 // 'use server'
 
 // import { supabase } from '@/lib/supabase'

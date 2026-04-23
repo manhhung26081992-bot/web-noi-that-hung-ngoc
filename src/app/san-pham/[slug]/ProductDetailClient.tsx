@@ -106,6 +106,7 @@ export default function ProductDetailClient({ params, allProducts, allCategories
               onMouseLeave={() => setIsZooming(false)}
             >
              <Image 
+             
   src={allImages[activeImgIndex]} 
   alt={product.alt || product.name} 
   width={700} 
@@ -137,7 +138,7 @@ export default function ProductDetailClient({ params, allProducts, allCategories
                   className={`${styles.thumbItem} ${idx === activeImgIndex ? styles.thumbActive : ''}`} 
                   onClick={() => setActiveImgIndex(idx)}
                 >
-                  <Image src={img ||'/logo.png'} alt={`${product.name} thumbnail ${idx + 1}`} width={80} height={80} />
+                  <Image src={img ||'/logo.png'} alt={`${product.name} thumbnail ${idx + 1}`} width={80} height={80} loading="lazy"/>
                 </div>
               ))}
             </div>
@@ -236,6 +237,7 @@ export default function ProductDetailClient({ params, allProducts, allCategories
                         alt={`Ảnh thực tế ${product.name}`} 
                         width={600} height={450} 
                         className={styles.realImage} 
+                        loading="lazy"
                       />
                       <div className={styles.imageBadge}>Ảnh thực tế</div>
                     </div>
@@ -248,6 +250,7 @@ export default function ProductDetailClient({ params, allProducts, allCategories
                       alt={`Hình ảnh thực tế ${product.name}`} 
                       width={800} height={600} 
                       className={styles.realImage} 
+                      loading="lazy"
                     />
                     <div className={styles.imageBadge}>Hùng Ngoc Furniture</div>
                   </div>

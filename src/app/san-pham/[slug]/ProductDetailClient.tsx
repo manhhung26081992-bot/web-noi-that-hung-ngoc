@@ -30,6 +30,17 @@ export default function ProductDetailClient({ params, allProducts, allCategories
     setMousePosition({ x, y });
   };
 
+  const getOptimizedUrl = (url: string) => {
+  if (!url || url.startsWith('/') || url.includes('logo.png')) return url;
+  
+  try {
+    const separator = url.includes('?') ? '&' : '?';
+    // Thêm các tham số nén của Supabase
+    return `${url}${separator}width=800&quality=75`;
+  } catch (e) {
+    return url;
+  }
+};
   const allImages = useMemo(() => {
   // Ưu tiên mảng images, sau đó đến image đơn lẻ
   const images = product?.images?.length ? product.images : 
@@ -105,18 +116,34 @@ export default function ProductDetailClient({ params, allProducts, allCategories
               onMouseEnter={() => setIsZooming(true)}
               onMouseLeave={() => setIsZooming(false)}
             >
-             <Image 
-             
-  src={allImages[activeImgIndex]} 
-  alt={product.alt || product.name} 
-  width={700} 
-  height={700} 
-  priority 
-  className={styles.actualImage} 
-  // Thêm đoạn này để chống lỗi ảnh vỡ (hiện logo thay thế)
+             <img 
+  src={getOptimizedUrl(allImages[activeImgIndex] || '/logo.png')} 
+  alt={product.name}
+  className={styles.actualImage}
+  style={{ 
+    width: '100%', 
+    height: 'auto', 
+    aspectRatio: '1/1', 
+    objectFit: 'contain' 
+  }}
   onError={(e) => {
     const target = e.target as HTMLImageElement;
-    target.src = '/logo.png';
+    
+    // Nếu nén bị lỗi (402/404), quay về dùng ảnh gốc không nén
+    if (target.src.includes('width=')) {
+      target.src = target.src.split('?')[0];
+      return;
+    }
+
+    // Nếu ảnh gốc vẫn lỗi, thử đổi đuôi file (xử lý vụ terminal đổi tên)
+    if (target.src.includes('.webp')) {
+      target.src = target.src.replace('.webp', '.jpg');
+    } else if (target.src.includes('.jpg')) {
+      target.src = target.src.replace('.jpg', '.png');
+    } else {
+      // Cuối cùng mới hiện logo dự phòng
+      target.src = '/logo.png';
+    }
   }}
 />
               {isZooming && (

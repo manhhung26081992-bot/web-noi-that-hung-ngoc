@@ -31,11 +31,13 @@ export default function ProductDetailClient({ params, allProducts, allCategories
   };
 
   const allImages = useMemo(() => {
-    if (product?.images?.length) return product.images;
-    if (Array.isArray(product?.image)) return product.image;
-    if (typeof product?.image === 'string') return [product.image];
-    return ['/default-product.png'];
-  }, [product]);
+  // Ưu tiên mảng images, sau đó đến image đơn lẻ
+  const images = product?.images?.length ? product.images : 
+                 Array.isArray(product?.image) ? product.image : 
+                 typeof product?.image === 'string' && product.image !== "" ? [product.image] : 
+                 ['/logo.png']; // Dùng logo làm ảnh mặc định thay vì default-product.png
+  return images;
+}, [product]);
 
   useEffect(() => {
     setActiveImgIndex(0);
@@ -103,13 +105,19 @@ export default function ProductDetailClient({ params, allProducts, allCategories
               onMouseEnter={() => setIsZooming(true)}
               onMouseLeave={() => setIsZooming(false)}
             >
-              <Image 
-                src={allImages[activeImgIndex]} 
-                alt={product.alt || product.name} 
-                width={700} height={700} 
-                priority 
-                className={styles.actualImage} 
-              />
+             <Image 
+  src={allImages[activeImgIndex]} 
+  alt={product.alt || product.name} 
+  width={700} 
+  height={700} 
+  priority 
+  className={styles.actualImage} 
+  // Thêm đoạn này để chống lỗi ảnh vỡ (hiện logo thay thế)
+  onError={(e) => {
+    const target = e.target as HTMLImageElement;
+    target.src = '/logo.png';
+  }}
+/>
               {isZooming && (
                 <div 
                   className={styles.magnifiedImage}
@@ -129,7 +137,7 @@ export default function ProductDetailClient({ params, allProducts, allCategories
                   className={`${styles.thumbItem} ${idx === activeImgIndex ? styles.thumbActive : ''}`} 
                   onClick={() => setActiveImgIndex(idx)}
                 >
-                  <Image src={img} alt={`${product.name} thumbnail ${idx + 1}`} width={80} height={80} />
+                  <Image src={img ||'/logo.png'} alt={`${product.name} thumbnail ${idx + 1}`} width={80} height={80} />
                 </div>
               ))}
             </div>

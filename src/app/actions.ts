@@ -85,7 +85,38 @@ export async function seedAllProductsAction(
     }
   }
 }
+// Thêm vào cuối file src/app/actions.ts
 
+// Hàm lấy toàn bộ sản phẩm
+export async function getAllProductsFromSupabase() {
+  const { data, error } = await supabase
+    .from('products')
+    .select(PRODUCT_FIELDS)
+    .order('id', { ascending: true });
+
+  if (error) {
+    console.error("Lỗi lấy sản phẩm:", error);
+    return [];
+  }
+  return data ?? [];
+}
+
+// Hàm lấy toàn bộ danh mục (Dựa trên dữ liệu duy nhất từ bảng sản phẩm nếu bạn chưa có bảng categories riêng)
+export async function getAllCategoriesFromSupabase() {
+  const { data, error } = await supabase
+    .from('products')
+    .select('category')
+    .not('category', 'is', null);
+
+  if (error) return [];
+  
+  // Lọc ra các category duy nhất và tạo object có slug/title
+  const uniqueCategories = Array.from(new Set(data.map(item => item.category)));
+  return uniqueCategories.map(cat => ({
+    slug: cat,
+    title: cat.charAt(0).toUpperCase() + cat.slice(1) // Viết hoa chữ cái đầu làm tiêu đề tạm
+  }));
+}
 // 'use server'
 
 // import { supabase } from '@/lib/supabase'

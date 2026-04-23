@@ -44,12 +44,18 @@ export default async function CategoryPage({ params }: Props) {
 
   if (!category) notFound();
 
-  const isMainGroup = Object.keys(CATEGORY_GROUPS).includes(cleanSlug);
-  const finalSlugs = isMainGroup ? CATEGORY_GROUPS[cleanSlug] : [cleanSlug];
+  
+const isMainGroup = Object.keys(CATEGORY_GROUPS).includes(cleanSlug.toLowerCase());
+const finalSlugs = isMainGroup ? CATEGORY_GROUPS[cleanSlug.toLowerCase()] : [cleanSlug];
 
   // LẤY DỮ LIỆU TỪ SUPABASE
   const productsFromSupabase = await getProductsByMultipleCategories(finalSlugs);
-
+// --- CHÈN ĐOẠN NÀY VÀO ĐỂ KIỂM TRA (DEBUG) ---
+  console.log("---------------------------------");
+  console.log("Slug đang xem:", cleanSlug);
+  console.log("Mảng Slugs gửi đi:", finalSlugs);
+  console.log("Số lượng sản phẩm lấy được:", productsFromSupabase?.length);
+  console.log("---------------------------------");
   return (
     <main className={styles.container}>
       <nav className={styles.breadcrumb}>

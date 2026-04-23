@@ -13,6 +13,7 @@ export interface Product {
   
   price: number | string; 
   category: string;
+  parent_slug?: string;
   description: string;
   specs: {
     material?: string;

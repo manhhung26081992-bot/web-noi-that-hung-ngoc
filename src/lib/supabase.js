@@ -8,4 +8,9 @@ if (!supabaseUrl || !supabaseKey) {
   console.error("Thiếu cấu hình Supabase trong file .env.local")
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true
+  }
+})

@@ -1,65 +1,71 @@
+/* ===== Khu vực liên hệ ===== */
 .contactInfo {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
-  
+  gap: 15px;
 }
-.phoneContent{
-    display: flex;
-  flex-direction: column; /* Đẩy chữ xuống dưới số điện thoại */
+
+.phoneContent {
+  display: flex;
+  flex-direction: column;
   align-items: flex-start;
   line-height: 1.2;
 }
+
 .phoneSubtext {
-  font-size: 11px;        /* Chữ nhỏ hơn để làm nền */
+  font-size: 11px;
   font-weight: 500;
-  color: #666;            /* Màu xám nhẹ cho tinh tế */
-  text-transform: uppercase; /* Viết hoa để nhìn chuyên nghiệp hơn */
+  color: #666;
+  text-transform: uppercase;
   letter-spacing: 0.5px;
 }
+
 .hotline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: #d0021b;
   font-weight: 700;
   font-size: 18px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.iconPulse {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 30px !important;
-  height: 30px !important;
-  border: 2px solid #ff0000 !important;
-  border-radius: 50% !important;
-  vertical-align: middle;
-  margin-right: 8px;
-  
-  /* --- PHẦN QUAN TRỌNG: HIỆU ỨNG NHẤP NHÁY --- */
-  position: relative;
-  animation: ripple 1.5s infinite; /* Nhấp nháy liên tục mỗi 1.5 giây */
 }
 
-/* Định nghĩa chuyển động nhấp nháy lan tỏa */
+/* ===== Phone Icon Animation ===== */
+.iconPulse {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid #ff0000;
+  border-radius: 50%;
+  margin-right: 8px;
+  animation: ripple 1.5s infinite;
+}
+
 @keyframes ripple {
   0% {
     box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4);
     transform: scale(1);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); /* Lan tỏa vòng đỏ ra ngoài rồi mờ dần */
-    transform: scale(1.1); /* Hơi nở nhẹ ra */
+    box-shadow: 0 0 0 10px rgba(255, 0, 0, 0);
+    transform: scale(1.08);
   }
   100% {
     box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
     transform: scale(1);
   }
 }
-.cartBtn {
+
+/* ===== Cart ===== */
+.cartWrapper {
   position: relative;
-  /* background-color: #005aab; */
-  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cartBtn {
   width: 40px;
   height: 40px;
   border-radius: 6px;
@@ -67,35 +73,43 @@
   align-items: center;
   justify-content: center;
 }
-/* Container bọc ngoài icon để badge đỏ bám theo */
-.cartWrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+
 .cartCount {
   position: absolute;
   top: -6px;
   right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
   background: #f39200;
   color: #fff;
   font-size: 10px;
   font-weight: bold;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px solid #fff;
 }
+
 .cartIcon {
   font-size: 30px;
-  color: #132a77; /* ĐỔI MÀU ICON GIỎ HÀNG THÀNH XANH THƯƠNG HIỆU */
-  transition: color 0.2s ease;
+  color: #132a77;
+  transition: 0.2s ease;
 }
-/* Hamburger Mobile */
+
+/* ===== Search Button ===== */
+.mobileSearchBtn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px;
+}
+
+/* ===== Hamburger ===== */
 .hamburger {
   display: none;
   flex-direction: column;
@@ -108,100 +122,72 @@
 .bar {
   width: 22px;
   height: 2px;
-  background-color: #333;
-}
-/* Nút kính lúp trên Mobile */
-.mobileSearchBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 5px;
+  background: #333;
 }
 
-/* Các thành phần khác trong ActionButtons */
-.contactInfo {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  
-}
+/* ===== Tablet / Mobile ===== */
 @media (max-width: 1024px) {
- 
-    .iconPulse{display: none;}
-
-  .phoneSubtext {display: none;}
   .topBar {
-    display: flex !important;
-    flex-direction: row !important; /* Đảm bảo nằm trên một hàng ngang */
-    justify-content: space-between !important;
-    align-items: center !important;
-    height: 65px !important;
-    padding: 0 10px !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 65px;
+    padding: 0 10px;
   }
-.cartIcon {
-    font-size: 25px !important; /* TĂNG KÍCH THƯỚC GIỎ HÀNG Ở ĐÂY */
-    color: #005aab; /* Màu xanh chủ đạo */
-    
-  }
-  /* 1. Logo đưa về bên TRÁI */
+
+  /* Logo left */
   .logoWrapper {
-    order: 1 !important; 
-    flex: 0 0 auto !important;
-    display: flex !important;
-    align-items: center !important;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
   }
 
   .logoWrapper img {
-    height: 45px !important; /* Chỉnh lại kích thước logo cho cân đối */
+    height: 45px;
     width: auto;
   }
 
-  /* 2. Nhóm chức năng (Search, Cart, Menu) đưa sang bên PHẢI */
+  /* Right buttons */
   .contactInfo {
-    order: 2 !important;
-    flex: 1 !important;
-    display: flex !important;
-    justify-content: flex-end !important;
-    align-items: center !important;
-    gap: 10px !important;
+    flex: 1;
+    justify-content: flex-end;
+    gap: 12px;
   }
 
-  /* Sửa lỗi nút tìm kiếm bị to quá khổ */
+  /* Hide text info */
+  .iconPulse,
+  .phoneSubtext,
+  .hotline,
+  .mainName,
+  .subName {
+    display: none;
+  }
+
+  /* Search */
   .mobileSearchBtn {
-    display: flex !important;
-    order: 1 !important;
-    background-color: #f39200 !important;
-    color: white !important;
-    padding: 8px !important;
+    display: flex;
+    width: 38px;
+    height: 38px;
     border-radius: 8px;
-    font-size: 18px !important;
+    background: #f39200;
+    color: #fff;
+    font-size: 18px;
   }
 
-  /* Sửa lỗi giỏ hàng bị rơi xuống dưới */
+  /* Cart */
   .cartBtn {
-    display: flex !important;
-    order: 2 !important;
-    background: none !important;
-    color: #005aab !important;
-    padding: 5px !important;
-    font-size: 22px !important;
-    margin: 0 !important;
+    width: 38px;
+    height: 38px;
+    padding: 0;
   }
 
-  /* Nút Menu Hamburger */
+  .cartIcon {
+    font-size: 24px;
+    color: #005aab;
+  }
+
+  /* Menu */
   .hamburger {
-    display: flex !important;
-    order: 3 !important;
-    margin: 0 !important; /* Xóa bỏ margin-top 25px gây lệch hàng */
-    padding-left: 5px !important;
-  }
-
-  /* Ẩn các thành phần không cần thiết trên mobile */
-  .hotline, .mainName, .subName {
-    display: none !important;
+    display: flex;
   }
 }

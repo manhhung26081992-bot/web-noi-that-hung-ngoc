@@ -259,7 +259,7 @@ export default function ProductDetailClient({ params, allProducts, allCategories
                 {(product as any).realInstallImages && (product as any).realInstallImages.length > 0 ? (
                   (product as any).realInstallImages.map((img: string, index: number) => (
                     <div key={index} className={styles.realImageCard}>
-                      <Image 
+                      <img 
                         src={img} 
                         alt={`Ảnh thực tế ${product.name}`} 
                         width={600} height={450} 
@@ -272,7 +272,7 @@ export default function ProductDetailClient({ params, allProducts, allCategories
                 ) : (
                   /* Nếu không có, dùng tạm ảnh đầu tiên nhưng hiển thị theo style thực tế */
                   <div className={styles.realImageCard}>
-                    <Image 
+                    <img
                       src={allImages[0]} 
                       alt={`Hình ảnh thực tế ${product.name}`} 
                       width={800} height={600} 

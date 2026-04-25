@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { getAllBlogs } from "@/lib/blog";
 
@@ -23,16 +22,16 @@ export default async function NewsPage() {
           <p className="text-slate-500 italic">Hiện chưa có bài viết nào.</p>
         </div>
       ) : (
-        /* GRID 3 CỘT: ÉP CÁC BÀI VIẾT NẰM CẠNH NHAU */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {posts.map((post: any) => {
+            const imageSrc = post.image || '/logo.png';
             const isLogo = !post.image || post.image.includes('logo.png');
 
             return (
               <Link key={post.id} href={`/tin-tuc/${post.slug}`} className="group">
                 <article className="h-full border rounded-xl overflow-hidden bg-white hover:shadow-lg transition-all flex flex-col">
                   
-                  {/* KHUNG ẢNH: DÙNG CHIỀU CAO CỐ ĐỊNH 220PX ĐỂ KHÔNG BỊ TRÀN */}
+                  {/* KHUNG ẢNH: Cố định 220px, chống tràn, chống lỗi 402 */}
                   <div style={{ 
                     position: 'relative', 
                     width: '100%', 
@@ -40,13 +39,14 @@ export default async function NewsPage() {
                     overflow: 'hidden',
                     backgroundColor: '#f1f5f9' 
                   }}>
-                    <Image
-                      src={post.image || '/logo.png'}
-                      alt={post.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={imageSrc}
+                      /* SEO 0 đồng: Tự động dùng tiêu đề làm mô tả ảnh */
+                      alt={post.title} 
                       style={{ 
-                        // Nếu là ảnh thật thì phủ kín, nếu là logo thì thu nhỏ ở giữa
+                        width: '100%',
+                        height: '100%',
                         objectFit: isLogo ? 'contain' : 'cover',
                         padding: isLogo ? '40px' : '0'
                       }}

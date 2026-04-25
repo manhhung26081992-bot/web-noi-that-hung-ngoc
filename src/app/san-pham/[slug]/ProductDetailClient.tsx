@@ -306,7 +306,7 @@ const product = useMemo(() => {
                 <tbody>
                   <tr>
                     <td><strong>Chất liệu : </strong></td>
-                    <td>{product.specs?.material || "Gỗ MDF phủ Melamine cao cấp"}</td>
+                    <td>{product.specs?.material || "theo yêu cẩu cảu khách hàng"}</td>
                   </tr>
                   <tr>
                     <td><strong>Kích thước :</strong></td>
@@ -318,7 +318,7 @@ const product = useMemo(() => {
                   </tr>
                   <tr>
                     <td><strong>Màu sắc : </strong></td>
-                    <td>{product.specs?.color || "Vân gỗ / Trắng / Theo mẫu"}</td>
+                    <td>{product.specs?.color || "Theo mẫu/theo yêu cầu khách hành"}</td>
                   </tr>
                 </tbody>
               </table>

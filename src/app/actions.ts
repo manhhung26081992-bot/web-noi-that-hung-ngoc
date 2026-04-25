@@ -8,8 +8,14 @@ const PRODUCT_FIELDS = `
   name,
   slug,
   image,
+  images,
   price,
-  category
+  category,
+  specs,
+  description,
+  detailDescription,
+  features,
+  parent_slug
 `
 
 export async function getProductsByMultipleCategories(

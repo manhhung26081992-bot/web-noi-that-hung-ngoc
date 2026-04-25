@@ -13,7 +13,20 @@ export default function ProductDetailClient({ params, allProducts, allCategories
   const products = (allProducts as any) as Product[];
   const categories = (allCategories as any) as any[];
 
-  const product = useMemo(() => products.find((p) => p.slug === slug), [slug, products]);
+  // const product = useMemo(() => products.find((p) => p.slug === slug), [slug, products]);
+  // Sửa lại đoạn useMemo để xử lý specs ngay khi nhận dữ liệu
+const product = useMemo(() => {
+  const found = products.find((p) => p.slug === slug);
+  if (found && found.specs && typeof found.specs === 'string') {
+    try {
+      // Nếu specs là chuỗi, ta chuyển nó về dạng Object
+      found.specs = JSON.parse(found.specs);
+    } catch (e) {
+      console.error("Lỗi giải mã specs:", e);
+    }
+  }
+  return found;
+}, [slug, products]);
   const isCategory = useMemo(() => categories.some((c) => c.slug === slug), [slug, categories]);
   const categoryProducts = useMemo(() => products.filter((p) => p.category === slug), [slug, products]);
 
@@ -285,7 +298,8 @@ export default function ProductDetailClient({ params, allProducts, allCategories
               </div>
               <p className={styles.articleImageCaption}>Sản phẩm được thi công và bàn giao hoàn thiện bởi đội ngũ Nội Thất Hùng Ngoc</p>
             </div>
-
+{/* Chỉ hiện bảng nếu có ít nhất một thông số nào đó */}
+{product.specs && Object.keys(product.specs).length > 0 && (
             <div className={styles.specsTableWrapper}>
               <h3 className={styles.subTitle}>Thông số kỹ thuật chi tiết:</h3>
               <table className={styles.specsTable}>
@@ -300,7 +314,7 @@ export default function ProductDetailClient({ params, allProducts, allCategories
                   </tr>
                   <tr>
                     <td><strong>Bảo hành :</strong></td>
-                    <td>{product.specs?.warranty || "12 tháng"}</td>
+                    <td>{product.specs?.warranty || "6 tháng"}</td>
                   </tr>
                   <tr>
                     <td><strong>Màu sắc : </strong></td>
@@ -309,7 +323,7 @@ export default function ProductDetailClient({ params, allProducts, allCategories
                 </tbody>
               </table>
             </div>
-
+) }
             {product.features && product.features.length > 0 && (
               <div className={styles.featuresSection}>
                 <h3 className={styles.featuresTitle}>Đặc điểm nổi bật:</h3>

@@ -94,6 +94,7 @@ export default function Header() {
               <SearchBar query={searchQuery} setQuery={setSearchQuery} onSearch={handleSearch} />
           </div>
       </Navigation>
+      
     </header>
   );
 }

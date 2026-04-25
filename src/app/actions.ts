@@ -2,6 +2,32 @@
 
 import { supabase } from '@/lib/supabase'
 import type { Product } from '@/types/types'
+// bolg . tin tức
+export async function getAllBlogPosts() {
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Lỗi lấy blog:', error);
+    return [];
+  }
+
+  return data ?? [];
+}
+
+export async function getBlogBySlug(slug: string) {
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  if (error) return null;
+
+  return data;
+}
 
 const PRODUCT_FIELDS = `
   id,

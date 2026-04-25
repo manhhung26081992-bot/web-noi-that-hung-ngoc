@@ -1,0 +1,53 @@
+/* Khung chứa toàn bộ bài viết */
+.container {
+  max-width: 800px; /* Khống chế độ rộng bài viết để dễ đọc */
+  margin: 40px auto;
+  padding: 0 20px;
+  font-family: 'Inter', sans-serif;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #1a202c;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+/* KHUNG ẢNH - CHỐNG TRÀN, CHỐNG VỠ */
+.imageWrapper {
+  position: relative;
+  width: 100%;
+  max-width: 600px; /* Ảnh không bao giờ rộng quá 600px */
+  height: 400px;    /* Chiều cao cố định */
+  margin: 0 auto 40px auto; /* Căn giữa khung ảnh */
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #f7fafc;
+  border: 1px solid #eee;
+}
+
+/* Nội dung bài viết */
+.content {
+  line-height: 1.8;
+  color: #2d3748;
+  font-size: 1.15rem;
+}
+
+.content h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 32px 0 16px;
+  color: #111;
+}
+
+.content p {
+  margin-bottom: 20px;
+}
+
+/* Mobile: thu nhỏ khung ảnh lại */
+@media (max-width: 640px) {
+  .title { font-size: 1.8rem; }
+  .imageWrapper { height: 250px; }
+}

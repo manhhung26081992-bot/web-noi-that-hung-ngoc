@@ -1,5 +1,5 @@
 import Style from "@/styles/Policy.module.css";
-import Footer from '@/components/Footer';
+// import Footer from '@/components/Footer';
 
 export const metadata = {
   title: 'Chính Sách Bảo Hành Sản Phẩm | Nội Thất Hùng Ngọc',
@@ -47,7 +47,7 @@ export default function WarrantyPolicy() {
           </section>
         </article>
       </main>
-      <Footer />
+    
     </>
   );
 }

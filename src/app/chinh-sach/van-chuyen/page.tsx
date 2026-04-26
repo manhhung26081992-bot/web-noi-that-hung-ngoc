@@ -1,5 +1,5 @@
 import Style from "@/styles/Policy.module.css";
-import Footer from '@/components/Footer';
+// import Footer from '@/components/Footer';
 
 export const metadata = {
   title: 'Chính Sách Vận Chuyển & Lắp Đặt | Nội Thất Hùng Ngọc',
@@ -58,7 +58,7 @@ export default function ShippingPolicy() {
           </section>
         </article>
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 }

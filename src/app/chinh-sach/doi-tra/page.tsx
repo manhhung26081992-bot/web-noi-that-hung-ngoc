@@ -1,5 +1,5 @@
 import Style from "@/styles/Policy.module.css";
-import Footer from '@/components/Footer';
+// import Footer from '@/components/Footer';
 
 export const metadata = {
   title: 'Chính Sách Đổi Trả & Hoàn Tiền | Nội Thất Hùng Ngọc',
@@ -59,7 +59,7 @@ export default function ReturnPolicy() {
           </section>
         </article>
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 }

@@ -1,5 +1,5 @@
 import styles from '@/styles/Policy.module.css';
-import Footer from '@/components/Footer';
+// import Footer from '@/components/Footer';
 
 export const metadata = {
   title: 'Chính Sách Bảo Mật Thông Tin | Nội Thất Hùng Ngọc',
@@ -42,7 +42,7 @@ export default function PrivacyPolicy() {
           </section>
         </article>
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 }

@@ -206,7 +206,7 @@ const allImages = useMemo(() => {
             {product.price && Number(String(product.price).replace(/\D/g, '')) > 0 ? (
               <p className={styles.priceValue}>{Number(String(product.price).replace(/\D/g, '')).toLocaleString('vi-VN')}₫</p>
             ) : (
-              <a href="tel:0347227377" className={styles.contactPrice}>Giá liên hệ: 0777.353.192</a>
+              <a href="tel:0347227377" className={styles.contactPrice}>Giá liên hệ: 0347.227.377</a>
             )}
           </div>
           

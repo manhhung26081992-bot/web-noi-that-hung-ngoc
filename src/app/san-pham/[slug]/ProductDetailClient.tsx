@@ -54,14 +54,28 @@ const product = useMemo(() => {
     return url;
   }
 };
-  const allImages = useMemo(() => {
-  // Ưu tiên mảng images, sau đó đến image đơn lẻ
-  const images = product?.images?.length ? product.images : 
-                 Array.isArray(product?.image) ? product.image : 
-                 typeof product?.image === 'string' && product.image !== "" ? [product.image] : 
-                 ['/logo.png']; // Dùng logo làm ảnh mặc định thay vì default-product.png
-  return images;
+const allImages = useMemo(() => {
+  // 1. Lấy mảng ảnh mẫu (images)
+  const baseImages = Array.isArray(product?.images) ? product.images : 
+                     (typeof product?.image === 'string' && product.image !== "" ? [product.image] : []);
+
+  // 2. Lấy mảng ảnh thực tế lắp đặt (realInstallImages từ Supabase)
+  const realImages = Array.isArray((product as any)?.realInstallImages) ? (product as any).realInstallImages : [];
+
+  // 3. Gộp tất cả lại thành một danh sách duy nhất
+  const combined = [...baseImages, ...realImages].filter(Boolean);
+
+  // 4. Nếu không có ảnh nào thì mới dùng logo mặc định
+  return combined.length > 0 ? combined : ['/logo.png'];
 }, [product]);
+//   const allImages = useMemo(() => {
+//   // Ưu tiên mảng images, sau đó đến image đơn lẻ
+//   const images = product?.images?.length ? product.images : 
+//                  Array.isArray(product?.image) ? product.image : 
+//                  typeof product?.image === 'string' && product.image !== "" ? [product.image] : 
+//                  ['/logo.png']; // Dùng logo làm ảnh mặc định thay vì default-product.png
+//   return images;
+// }, [product]);
 
   useEffect(() => {
     setActiveImgIndex(0);

@@ -1,5 +1,5 @@
 "use client";
-
+import { supabase } from '@/lib/supabase'; // Đường dẫn tới file config supabase của bạn
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import styles from '@/styles/Checkout.module.css';
@@ -62,6 +62,21 @@ export default function CheckoutClient() {
     }
 
     try {
+      // --- BƯỚC A.1: LƯU VÀO SUPABASE (THÊM MỚI VÀO ĐÂY) ---
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([
+          {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            phone_number: formData.phone,
+            address_detail: formData.address,
+            payment_method: paymentMethod === 'bank' ? 'VietQR' : 'COD',
+            total_amount: totalPrice,
+            order_items: cart, // Lưu nguyên mảng giỏ hàng vào jsonb
+            status: 'Chờ xác nhận'
+          }
+        ]);
       // BƯỚC A: Gửi Mail thông báo qua API Route
       await fetch('/api/checkout', {
         method: 'POST',

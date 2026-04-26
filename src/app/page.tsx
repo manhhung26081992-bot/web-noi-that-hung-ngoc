@@ -13,7 +13,7 @@ export default async function Home() {
   const decorShelfGroup = ['ke-go', 'ke-sach', 'ke-ti-vi', 'ke-trang-tri']
   const cafeTableGroup = ['ban-ghe-cafe', 'cafe']
   const officeTableGroup = ['ban-chan-sat', 'ban-giam-doc', 'ban-hop', 'ban-nhan-vien', 'ban-module']
-
+const bunkBedGroup = ['giuong-tang-sat', 'giuong-tang']
   // Tải dữ liệu song song để nhanh hơn
   const [
     officeCabinetProducts,
@@ -21,14 +21,16 @@ export default async function Home() {
     decorShelfProducts,
     officeChairProducts,
     cafeProducts,
-    sofaProducts
+    sofaProducts,
+    bunkBedProducts
   ] = await Promise.all([
     getProductsByMultipleCategories(officeCabinetGroup, 8),
     getProductsByMultipleCategories(officeTableGroup, 8),
     getProductsByMultipleCategories(decorShelfGroup, 8),
     getProductsByMultipleCategories(officeChairGroup, 8),
     getProductsByMultipleCategories(cafeTableGroup, 8),
-    getProductsByMultipleCategories(sofaGroup, 8)
+    getProductsByMultipleCategories(sofaGroup, 8),
+    getProductsByMultipleCategories(bunkBedGroup, 8)
   ])
 
   return (
@@ -62,7 +64,24 @@ export default async function Home() {
               limit={8}
               viewAllLink="/ban-van-phong"
             />
-
+             <ProductList
+              title="GHẾ VĂN PHÒNG"
+              products={officeChairProducts}
+              limit={8}
+              viewAllLink="/ghe-van-phong"
+            />
+            <ProductList
+  title="GIƯỜNG TẦNG SẮT"
+  products={bunkBedProducts} // ĐÚNG: Đây mới là mảng dữ liệu sản phẩm lấy từ Promise.all
+  limit={8}
+  viewAllLink="/giuong-tang-sat"
+/>
+            {/* <ProductList
+              title="GIƯỜNG TẦNG SẮT"
+              products={bunkBedGroup}
+              limit={8}
+              viewAllLink="/giuong-tang-sat"
+            /> */}
             <ProductList
               title="KỆ TRANG TRÍ & KỆ GỖ"
               products={decorShelfProducts}
@@ -70,12 +89,7 @@ export default async function Home() {
               viewAllLink="/ke-trang-tri"
             />
 
-            <ProductList
-              title="GHẾ VĂN PHÒNG"
-              products={officeChairProducts}
-              limit={8}
-              viewAllLink="/ghe-van-phong"
-            />
+           
 
             <ProductList
               title="BÀN GHẾ CAFE"

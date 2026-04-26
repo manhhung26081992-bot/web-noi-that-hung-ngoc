@@ -97,8 +97,8 @@ const businessSchema = {
   // Bổ sung tọa độ để Google Maps xác minh vị trí chính xác
   'geo': {
     '@type': 'GeoCoordinates',
-    'latitude': 21.037416, 
-    'longitude': 105.759451
+    'latitude': 21.02747653968819, 
+    'longitude': 105.75671738124595
   },
   'openingHoursSpecification': {
     '@type': 'OpeningHoursSpecification',
@@ -111,7 +111,7 @@ const businessSchema = {
   },
   // Bổ sung liên kết mạng xã hội để tạo niềm tin với Google
   'sameAs': [
-    'https://web.facebook.com/profile.php?id=61579413113220e', 
+    'https://web.facebook.com/profile.php?id=61579413113220e',  
     'https://zalo.me/0347227377'
   ]
 };

@@ -28,7 +28,7 @@ export const MENU_ITEMS: MenuItem[] = [
       { name: "Ghế xoay văn phòng", link: "/ghe-xoay" },
       { name: "Ghế chân quỳ", link: "/ghe-chan-quy" },
       { name: "Ghế giám đốc", link: "/ghe-giam-doc" },
-      { name: "Ghế gấp", link: "/ghe-gap" },
+      { name: "Ghế gấp", link: "/ghe-gap" },  
       { name: "Ghế Gaming", link: "/ghe-gaming" },
     ]
   },

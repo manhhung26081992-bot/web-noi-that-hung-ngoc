@@ -1,4 +1,4 @@
-/* --- PHẦN CSS GỐC CỦA BẠN (GIỮ NGUYÊN) --- */
+/* --- GIAO DIỆN MÁY TÍNH (GIỮ NGUYÊN PHONG CÁCH CỦA BẠN) --- */
 .container {
   max-width: 1200px;
   margin: 40px auto;
@@ -32,7 +32,6 @@
   color: #333;
 }
 
-/* Form Styles */
 .row {
   display: flex;
   gap: 15px;
@@ -57,24 +56,15 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
-  transition: border-color 0.3s;
 }
 
-.inputGroup input:focus {
-  border-color: #005aab;
-  outline: none;
-}
-
-.inputGroup textarea {
-  min-height: 100px;
-}
-
-/* Order Summary Box */
 .orderSummary {
-  border: 2px solid #005aab; /* Viền xanh thương hiệu Hùng Ngọc */
+  border: 2px solid #005aab;
   padding: 20px;
   border-radius: 4px;
   background-color: #fff;
+  display: flex;
+  flex-direction: column; /* Quan trọng để điều khiển nút bấm */
 }
 
 .orderTable {
@@ -82,20 +72,11 @@
   border-collapse: collapse;
 }
 
-.orderTable th {
-  text-align: left;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 10px;
-  font-size: 14px;
-}
-
 .orderTable td {
   padding: 15px 0;
   border-bottom: 1px solid #eee;
-  vertical-align: middle;
 }
 
-/* Product Cell Layout */
 .productCell {
   display: flex;
   align-items: center;
@@ -107,26 +88,6 @@
   border-radius: 4px;
   overflow: hidden;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f9f9f9;
-}
-
-.productThumbnail img {
-  object-fit: cover;
-}
-
-.productInfo {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.4;
-}
-
-.productName {
-  font-size: 14px;
-  color: #333;
-  font-weight: 500;
 }
 
 .productPrice {
@@ -135,26 +96,14 @@
   font-size: 14px;
 }
 
-/* Footer Table */
-.orderTable tfoot td {
-  padding: 10px 0;
-  font-size: 15px;
-}
-
-.orderTable tfoot td:last-child {
-  text-align: right;
-  font-weight: 600;
-}
-
 .totalRow td {
   border-top: 2px solid #eee;
-  padding-top: 15px !important;
-  font-size: 18px !important;
-  color: #d0021b !important; /* Màu đỏ nổi bật cho tổng tiền chuẩn SEO */
-  font-weight: bold !important;
+  padding-top: 15px;
+  font-size: 18px;
+  color: #d0021b;
+  font-weight: bold;
 }
 
-/* Payment Methods */
 .paymentMethods {
   margin-top: 20px;
   padding: 15px;
@@ -162,27 +111,6 @@
   border-radius: 4px;
 }
 
-.methodItem {
-  margin-bottom: 10px;
-}
-
-.methodItem label {
-  font-weight: bold;
-  margin-left: 8px;
-  cursor: pointer;
-}
-
-.methodDesc {
-  font-size: 13px;
-  color: #666;
-  margin-top: 8px;
-  padding: 10px;
-  background: #fff;
-  border: 1px dashed #005aab;
-  line-height: 1.5;
-}
-
-/* Zalo Submit Button */
 .zaloSubmitBtn {
   width: 100%;
   background-color: #0068ff;
@@ -191,38 +119,18 @@
   border: none;
   border-radius: 4px;
   font-weight: bold;
-  font-size: 16px;
+  text-transform: uppercase;
   margin-top: 20px;
   cursor: pointer;
   transition: background 0.3s;
-  text-transform: uppercase;
 }
 
-.zaloSubmitBtn:hover {
-  background-color: #0056d2;
-  box-shadow: 0 4px 12px rgba(0, 104, 255, 0.2);
-}
-
-.zaloSubmitBtn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-/* --- BỔ SUNG CSS CHO CÁC NÚT ĐIỀU KHIỂN GIỎ HÀNG --- */
-
+/* Nút xóa và tăng giảm */
 .removeBtn {
   border: none;
   background: none;
   color: #ccc;
   cursor: pointer;
-  font-size: 14px;
-  padding: 5px;
-  transition: color 0.3s;
-  margin-right: 5px;
-}
-
-.removeBtn:hover {
-  color: #d0021b; /* Đổi sang đỏ khi di chuột vào nút xóa */
 }
 
 .quantityControl {
@@ -235,45 +143,68 @@
 .qtyBtn {
   width: 22px;
   height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
   border: 1px solid #ddd;
   background: #fff;
   border-radius: 3px;
-  font-size: 14px;
-  color: #333;
-  transition: all 0.2s;
+  cursor: pointer;
 }
 
-.qtyBtn:hover {
-  background: #005aab;
-  color: #fff;
-  border-color: #005aab;
-}
-
-.productQty {
-  font-size: 14px;
-  color: #005aab;
-  font-weight: bold;
-  min-width: 15px;
-  text-align: center;
-}
-
-/* Responsive */
-@media (max-width: 992px) {
-  .checkoutForm {
+/* --- GIAO DIỆN MOBILE (THÔNG TIN TRÊN - ĐƠN HÀNG DƯỚI) --- */
+@media (max-width: 768px) {
+  /* Tăng độ ưu tiên bằng bộ chọn kép để không cần dùng important */
+  .container .checkoutForm {
     flex-direction: column;
+    gap: 30px;
   }
-  
-  .rightCol {
-    position: static;
+
+  /* Thông tin thanh toán hiện ĐẦU TIÊN (Mặc định theo code của bạn) */
+  .container .leftCol {
     width: 100%;
+    order: 1; 
   }
-  
-  .row {
+
+  /* Đơn hàng hiện THỨ HAI */
+  .container .rightCol {
+    width: 100%;
+    order: 2;
+    position: static; /* Bỏ sticky trên mobile */
+  }
+
+  /* Xử lý phần lồng nhau của nút bấm */
+  .container .orderSummary {
+    border: 1px solid #005aab; /* Giảm độ dày viền trên mobile cho tinh tế */
+    padding: 15px;
+  }
+
+  /* Đảm bảo nút bấm luôn nằm dưới cùng trong khối đơn hàng */
+  .container .orderTable { order: 1; }
+  .container .paymentMethods { order: 2; }
+  .container .zaloSubmitBtn { 
+    order: 3; 
+    margin-top: 25px;
+    padding: 18px; /* To hơn để dễ bấm */
+    font-size: 16px;
+  }
+
+  /* Tinh chỉnh form cho mobile */
+  .container .row {
     flex-direction: column;
     gap: 0;
+  }
+
+  .container .inputGroup input {
+    font-size: 16px; /* Chống zoom trên iPhone */
+    padding: 14px;
+  }
+
+  /* Chừa khoảng trống dưới cùng tránh đè bởi các nút Zalo/Chat nổi */
+  .container {
+    padding-bottom: 80px;
+  }
+
+  .container .sectionTitle {
+    text-align: left;
+    font-size: 1.1rem;
+    color: #005aab;
   }
 }

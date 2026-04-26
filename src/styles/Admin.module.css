@@ -1,0 +1,149 @@
+.adminContainer {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #f9f9f9;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 15px;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0;
+}
+
+.refreshBtn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.refreshBtn:hover {
+  background-color: #0056b3;
+}
+
+/* Định dạng Bảng */
+.orderTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.orderTable th, .orderTable td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.orderTable th {
+  background-color: #f1f1f1;
+  font-weight: 600;
+  color: #555;
+}
+
+/* Màu sắc cho giá tiền và thẻ */
+.price {
+  font-weight: bold;
+  color: #d32f2f;
+}
+
+.bankTag, .codTag {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.bankTag { background: #e3f2fd; color: #1976d2; }
+.codTag { background: #fff3e0; color: #f57c00; }
+
+.phoneLink {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* Nút Zalo */
+.zaloBtn {
+  display: inline-block;
+  background-color: #0068ff;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  text-decoration: none;
+  font-size: 13px;
+  transition: 0.3s;
+}
+
+.zaloBtn:hover {
+  background-color: #0051cc;
+  transform: translateY(-2px);
+}
+
+.productCell {
+  max-width: 250px;
+  line-height: 1.4;
+  color: #666;
+}
+
+/* TỐI ƯU CHO MOBILE */
+@media (max-width: 768px) {
+  .orderTable thead {
+    display: none; /* Ẩn tiêu đề bảng trên mobile */
+  }
+
+  .orderTable, .orderTable tbody, .orderTable tr, .orderTable td {
+    display: block;
+    width: 100%;
+  }
+
+  .orderTable tr {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+  }
+
+  .orderTable td {
+    border: none;
+    padding: 5px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .orderTable td::before {
+    content: attr(data-label); /* Bạn có thể thêm data-label vào thẻ td nếu muốn hiện tên cột */
+    font-weight: bold;
+    color: #888;
+  }
+
+  .productCell {
+    max-width: 100%;
+    display: block;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+}   

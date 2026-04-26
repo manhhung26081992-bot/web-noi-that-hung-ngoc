@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* 1. Tối ưu hóa hình ảnh */
   images: {
+    unoptimized:true,
      remotePatterns: [
       {
         protocol: 'https',

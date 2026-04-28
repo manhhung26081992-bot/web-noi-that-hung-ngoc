@@ -20,7 +20,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://noithathungngoc.com'),
+  // Sửa lại thành bản có www để đồng nhất với link chuẩn của bạn
+metadataBase: new URL('https://www.noithathungngoc.com'), 
+alternates: {
+  canonical: '/',
+},
+ ,
   title: {
     default: 'Nội Thất Hùng Ngọc | Nội Thất Văn Phòng & Gia Đình Giá Rẻ Hà Nội',
     template: '%s | Nội Thất Hùng Ngọc'

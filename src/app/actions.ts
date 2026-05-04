@@ -35,7 +35,6 @@ const PRODUCT_FIELDS = `
   slug,
   image,
   images,
-  realInstallImages,
   price,
   category,
   specs,

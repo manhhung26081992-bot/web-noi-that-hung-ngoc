@@ -312,8 +312,8 @@ const allImages = useMemo(() => {
               </div>
               <p className={styles.articleImageCaption}>Sản phẩm được thi công và bàn giao hoàn thiện bởi đội ngũ Nội Thất Hùng Ngoc</p>
             </div>
-            {/* Chỉ hiện bảng nếu có ít nhất một thông số nào đó */}
-            {product.specs && Object.keys(product.specs).length > 0 && (
+{/* Chỉ hiện bảng nếu có ít nhất một thông số nào đó */}
+{product.specs && Object.keys(product.specs).length > 0 && (
             <div className={styles.specsTableWrapper}>
               <h3 className={styles.subTitle}>Thông số kỹ thuật chi tiết:</h3>
               <table className={styles.specsTable}>

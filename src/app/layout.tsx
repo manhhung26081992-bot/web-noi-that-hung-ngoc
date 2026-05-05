@@ -41,12 +41,22 @@ export const metadata: Metadata = {
     'sofa phòng khách',
     'thi công nội thất văn phòng',
   ],
-
-  icons: {
-    icon: '/icon.png',
-    shortcut: '/icon.png',
-    apple: '/icon.png',
-  },
+icons: {
+  icon: [
+    { url: '/favicon.ico' },
+    { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+  ],
+  apple: [
+    { url: '/apple-touch-icon.png', sizes: '180x180' },
+  ],
+},
+manifest: '/site.webmanifest',
+  // icons: {
+  //   icon: '/icon.png',
+  //   shortcut: '/icon.png',
+  //   apple: '/icon.png',
+  // },
 
   verification: {
     google: '8sRs-CQPkINftAG1gd1zSkOtsIGquewoAeFpp7L0LM4',

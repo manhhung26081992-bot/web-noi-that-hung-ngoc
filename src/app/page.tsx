@@ -50,19 +50,17 @@ const bunkBedGroup = ['giuong-tang-sat', 'giuong-tang']
                 Mẫu mới nhất 2026 - Chất lượng bền bỉ, giá xưởng trực tiếp
               </p>
             </header>
-
-            <ProductList
-              title="TỦ VĂN PHÒNG"
-              products={officeCabinetProducts}
-              limit={8}
-              viewAllLink="/tu-van-phong"
-            />
-
             <ProductList
               title="BÀN VĂN PHÒNG"
               products={officeTableProducts}
               limit={8}
               viewAllLink="/ban-van-phong"
+            />
+            <ProductList
+              title="TỦ VĂN PHÒNG"
+              products={officeCabinetProducts}
+              limit={8}
+              viewAllLink="/tu-van-phong"
             />
              <ProductList
               title="GHẾ VĂN PHÒNG"

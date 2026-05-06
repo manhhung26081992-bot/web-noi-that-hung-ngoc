@@ -35,9 +35,17 @@ export default function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    // Ghi nhận chuyển đổi Thêm vào giỏ hàng
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'conversion', {
+        'send_to': 'AW-18110246759/5w0kCNDuo6gcEOfe0btD',
+      });
+    }
     try {
       const cart = JSON.parse(localStorage.getItem('cart') || '[]');
       const productIndex = cart.findIndex((item: any) => item.slug === product.slug);
+
+
       if (productIndex > -1) {
         cart[productIndex].quantity += 1;
       } else {

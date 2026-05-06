@@ -128,9 +128,33 @@ export default function Footer() {
         <button className={`${styles.contactBtn} ${styles.chatbot}`} onClick={() => setIsChatOpen(!isChatOpen)}>
           💬
         </button>
-        <a href="https://zalo.me/0347227377" className={`${styles.contactBtn} ${styles.zaloBtn}`} target="_blank" rel="noreferrer">
+        <a 
+  href="https://zalo.me/0347227377" 
+  className={`${styles.contactBtn} ${styles.zaloBtn}`} 
+  target="_blank" 
+  rel="noreferrer"
+  onClick={(e) => {
+    // Chặn chuyển hướng ngay lập tức
+    e.preventDefault(); 
+    
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'conversion', {
+        'send_to': 'AW-18110246759',
+        'event_callback': () => {
+          // Mở Zalo sau khi gửi tín hiệu thành công
+          window.open('https://zalo.me/0347227377', '_blank');
+        }
+      });
+    } else {
+      window.open('https://zalo.me/0347227377', '_blank');
+    }
+  }}
+>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg" alt="Zalo" />
+</a>
+        {/* <a href="https://zalo.me/0347227377" className={`${styles.contactBtn} ${styles.zaloBtn}`} target="_blank" rel="noreferrer">
           <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg" alt="Zalo" />
-        </a>
+        </a> */}
         <a href="tel:0347227377" className={`${styles.contactBtn} ${styles.phone}`}>📞</a>
       </div>
     </footer>

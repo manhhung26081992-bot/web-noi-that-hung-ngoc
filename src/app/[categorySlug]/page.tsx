@@ -20,7 +20,8 @@ const CATEGORY_GROUPS: { [key: string]: string[] } = {
   'truong-hoc': ['ban-ghe-hoc-sinh', 'bang-tu', 'ban-ghe-giao-vien'],
   'ban-ghe-an': ['ban-ghe-an','ban-an-mat-da','bo-ban-an-thong-minh','bo-ban-an-6-ghe','bo-ban-an-4-ghe','ghe-an'],
   'ban-ghe-cafe': ['ban-ghe-cafe', 'cafe'],
-  'ban-van-phong': ['ban-van-phong','ban-chan-sat', 'ban-giam-doc', 'ban-hop', 'ban-nhan-vien', 'ban-module', 'cum-ban-lam-viec', 'ban-lam-viec'],
+  'ban-van-phong': ['ban-van-phong','ban-chan-sat', 'ban-giam-doc', 'ban-hop', 'ban-nhan-vien', 'ban-module', 'cum-ban-lam-viec',],
+  'ban-lam-viec':['ban-lam-viec'],
   'gia-dinh': ['giuong-tang-sat', 'giuong-tang', 'tu-quan-ao', 'tu-giay', 'ban-trang-diem', 'giuong-go', 'ke-go', 'ban-hoc-sinh'],
 };
 

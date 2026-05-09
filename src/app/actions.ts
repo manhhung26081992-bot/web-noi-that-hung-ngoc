@@ -44,22 +44,28 @@ const PRODUCT_FIELDS = `
   features,
   parent_slug
 `
-
 export async function getProductsByMultipleCategories(
   slugs: string[],
-  limit = 50 // Tăng limit lên để khi ấn "Xem tất cả" sẽ hiện đầy đủ sản phẩm
+  limit = 50 
 ) {
-  // slugs lúc này có thể là ['tu-van-phong'] hoặc ['tu-locker', 'tu-sat']
-  
-  // Chuyển mảng slugs thành chuỗi để dùng trong lệnh .or() của Supabase
-  const slugQuery = slugs.map(s => `category.eq.${s},parent_slug.eq.${s}`).join(',');
-
-  const { data, error } = await supabase
+  let query = supabase
     .from('products')
     .select(PRODUCT_FIELDS)
-    .or(slugQuery) // Tìm kiếm thông minh: khớp mục con HOẶC mục cha
     .order('id', { ascending: true })
     .limit(limit);
+
+  // NẾU CHỈ CÓ 1 SLUG (Ví dụ: khách bấm đúng vào 'ban-lam-viec')
+  if (slugs.length === 1) {
+    // Chỉ lấy sản phẩm khớp chính xác category đó, không quét theo parent_slug
+    query = query.eq('category', slugs[0]);
+  } 
+  // NẾU CÓ NHIỀU SLUGS (Ví dụ: khách bấm vào 'ban-van-phong')
+  else {
+    const slugQuery = slugs.map(s => `category.eq.${s},parent_slug.eq.${s}`).join(',');
+    query = query.or(slugQuery);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Lỗi lấy sản phẩm từ Supabase:", error);
@@ -68,6 +74,29 @@ export async function getProductsByMultipleCategories(
 
   return data ?? [];
 }
+// export async function getProductsByMultipleCategories(
+//   slugs: string[],
+//   limit = 50 // Tăng limit lên để khi ấn "Xem tất cả" sẽ hiện đầy đủ sản phẩm
+// ) {
+//   // slugs lúc này có thể là ['tu-van-phong'] hoặc ['tu-locker', 'tu-sat']
+  
+//   // Chuyển mảng slugs thành chuỗi để dùng trong lệnh .or() của Supabase
+//   const slugQuery = slugs.map(s => `category.eq.${s},parent_slug.eq.${s}`).join(',');
+
+//   const { data, error } = await supabase
+//     .from('products')
+//     .select(PRODUCT_FIELDS)
+//     .or(slugQuery) // Tìm kiếm thông minh: khớp mục con HOẶC mục cha
+//     .order('id', { ascending: true })
+//     .limit(limit);
+
+//   if (error) {
+//     console.error("Lỗi lấy sản phẩm từ Supabase:", error);
+//     return [];
+//   }
+
+//   return data ?? [];
+// }
 
 export async function seedAllProductsAction(
   allProductsFromFile: Product[] = []

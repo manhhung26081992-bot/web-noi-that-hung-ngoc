@@ -1,8 +1,9 @@
+
 "use client";
 import { useState } from 'react';
 import Link from 'next/link';
 import styles from '@/styles/Footer.module.css';
-
+declare var window: any;
 export default function Footer() {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -118,7 +119,16 @@ export default function Footer() {
           <p>Chào bạn! Hùng Ngọc có thể giúp gì cho bạn ạ?</p>
           <div className={styles.autoReplies}>
             <button onClick={() => window.location.href='tel:0347227377'}>📞 Gọi Hotline</button>
-            <button onClick={() => window.open('https://zalo.me/0347227377')}>✉️ Nhắn Zalo</button>
+            <button onClick={() => {
+  // Thêm window. để trình duyệt hiểu đây là biến toàn cục
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag('event', 'conversion', {
+      'send_to': 'AW-18110246759/ID_CUA_NGOC' 
+    });
+  }
+  window.open('https://zalo.me/0347227377', '_blank');
+}}>💬 Nhắn Zalo</button>
+            {/* <button onClick={() => window.open('https://zalo.me/0347227377')}>✉️ Nhắn Zalo</button> */}
           </div>
         </div>
       </div>

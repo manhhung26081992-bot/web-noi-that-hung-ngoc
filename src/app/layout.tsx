@@ -31,9 +31,7 @@ export const metadata: Metadata = {
     template: '%s | Nội Thất Hùng Ngọc',
   },
 
-  description:
-    'Chuyên cung cấp bàn ghế văn phòng, sofa giá rẻ, bền đẹp tại Hà Nội. Thiết kế thi công nội thất trọn gói, uy tín, giao hàng nhanh trong 24h.',
-
+  description:'Nội Thất Hùng Ngọc - Chuyên cung cấp bàn ghế văn phòng, giường tủ gia đình giá rẻ tại xưởng Hà Nội. Uy tín, giao hàng nhanh 24h.',
   keywords: [
     'nội thất hùng ngọc',
     'bàn làm việc hà nội',
@@ -80,7 +78,7 @@ manifest: '/site.webmanifest',
 
   openGraph: {
     title: 'Nội Thất Hùng Ngọc - Nội Thất Văn Phòng & Gia Đình Giá Xưởng',
-    description: 'Bàn ghế sofa cao cấp, bền đẹp, mẫu mã đa dạng tại Hà Nội.',
+    description: 'Nội Thất Hùng Ngọc chuyên cung cấp bàn ghế văn phòng, bàn làm việc, giường tủ gia đình giá rẻ tại xưởng Hà Nội. Sản phẩm bền đẹp, mẫu mã đa dạng, giao hàng nhanh 24h',
     url: 'https://www.noithathungngoc.com',
     siteName: 'Nội Thất Hùng Ngọc',
     images: [

@@ -64,7 +64,7 @@ export async function getProductsByMultipleCategories(
     const slugQuery = slugs.map(s => `category.eq.${s},parent_slug.eq.${s}`).join(',');
     query = query.or(slugQuery);
   }
-
+  
   const { data, error } = await query;
 
   if (error) {

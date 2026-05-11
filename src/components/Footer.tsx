@@ -123,7 +123,7 @@ export default function Footer() {
   // Thêm window. để trình duyệt hiểu đây là biến toàn cục
   if (typeof window !== "undefined" && window.gtag) {
     window.gtag('event', 'conversion', {
-      'send_to': 'AW-18110246759/ID_CUA_NGOC' 
+     'send_to': 'AW-18110246759/cY9cCNiU6aYCEOfe0btD'
     });
   }
   window.open('https://zalo.me/0347227377', '_blank');

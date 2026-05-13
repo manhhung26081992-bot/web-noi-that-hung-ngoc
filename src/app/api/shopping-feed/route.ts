@@ -9,7 +9,7 @@ export async function GET() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     
-    // Lấy đúng cột 'image' mà mình thấy trong ảnh image_2d261a.png của bạn
+    // Lấy dữ liệu từ bảng products
     const { data: products, error } = await supabase
       .from('products')
       .select('id, name, slug, image, price')
@@ -23,40 +23,45 @@ export async function GET() {
     <link>https://noithathungngoc.com</link>
     <description>Sản phẩm từ noithathungngoc.com</description>
     ${products?.map(p => {
-      // XỬ LÝ LỖI UNDEFINED Ở ĐÂY:
+      // 1. Xử lý Image URL cực sạch
       let imageUrl = '';
-      
       if (p.image) {
         if (typeof p.image === 'string') {
           imageUrl = p.image;
         } else if (Array.isArray(p.image)) {
           imageUrl = p.image[0];
         } else if (typeof p.image === 'object') {
-          // Nếu image là object kiểu { url: '...' } hoặc trả về trực tiếp link
-          imageUrl = (p.image as any).url || Object.values(p.image)[0];
+          imageUrl = (p.image as any).url || Object.values(p.image)[0] || '';
         }
       }
 
-      // Xử lý bỏ dấu ngoặc kép dư thừa nếu có
-      imageUrl = imageUrl.replace(/"/g, '');
+      // Xóa dấu ngoặc kép, khoảng trắng và mã hóa URL chuẩn Google
+      const cleanImageUrl = encodeURI(imageUrl.replace(/"/g, '').trim());
+
+      // 2. Xử lý Giá (Tránh lỗi null trong image_2d1338.png)
+      // Nếu không có giá, để mặc định là 0 hoặc một giá trị an toàn
+      const displayPrice = p.price && p.price !== 'null' ? p.price : '0';
 
       return `
     <item>
       <g:id>${p.id}</g:id>
       <g:title><![CDATA[${p.name}]]></g:title>
       <g:link>https://noithathungngoc.com/product/${p.slug}</g:link>
-      <g:image_link>${imageUrl}</g:image_link>
+      <g:image_link>${cleanImageUrl}</g:image_link>
       <g:availability>in_stock</g:availability>
-      <g:price>${p.price} VND</g:price>
+      <g:price>${displayPrice} VND</g:price>
       <g:brand>Nội Thất Hùng Ngọc</g:brand>
       <g:condition>new</g:condition>
     </item>`;
-    }).join('')}
+    }).join('').trim()}
   </channel>
 </rss>`
 
     return new Response(xml, {
-      headers: { 'Content-Type': 'application/xml; charset=utf-8' }
+      headers: { 
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'no-store, max-age=0' 
+      }
     })
   } catch (err: any) {
     return new Response(`Lỗi server: ${err.message}`, { status: 500 })

@@ -9,7 +9,7 @@ export async function GET() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     
-    // Lấy đúng các cột: id, name, slug, image, price từ bảng products
+    // Lấy đúng cột 'image' mà mình thấy trong ảnh image_2d261a.png của bạn
     const { data: products, error } = await supabase
       .from('products')
       .select('id, name, slug, image, price')
@@ -23,9 +23,23 @@ export async function GET() {
     <link>https://noithathungngoc.com</link>
     <description>Sản phẩm từ noithathungngoc.com</description>
     ${products?.map(p => {
-      // Xử lý cột image dạng jsonb để lấy link sạch
-      const imageUrl = typeof p.image === 'string' ? p.image : p.image?.[0] || '';
+      // XỬ LÝ LỖI UNDEFINED Ở ĐÂY:
+      let imageUrl = '';
       
+      if (p.image) {
+        if (typeof p.image === 'string') {
+          imageUrl = p.image;
+        } else if (Array.isArray(p.image)) {
+          imageUrl = p.image[0];
+        } else if (typeof p.image === 'object') {
+          // Nếu image là object kiểu { url: '...' } hoặc trả về trực tiếp link
+          imageUrl = (p.image as any).url || Object.values(p.image)[0];
+        }
+      }
+
+      // Xử lý bỏ dấu ngoặc kép dư thừa nếu có
+      imageUrl = imageUrl.replace(/"/g, '');
+
       return `
     <item>
       <g:id>${p.id}</g:id>

@@ -46,7 +46,7 @@ export async function GET() {
     <item>
       <g:id>${p.id}</g:id>
       <g:title><![CDATA[${p.name}]]></g:title>
-      <g:link>https://noithathungngoc.com/product/${p.slug}</g:link>
+      <g:link>https://www.noithathungngoc.com/${p.slug}</g:link>
       <g:image_link>${cleanImageUrl}</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>${displayPrice} VND</g:price>

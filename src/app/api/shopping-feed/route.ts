@@ -4,13 +4,15 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // Sửa lại tên biến môi trường để khớp với ảnh image_2e0b71.png của bạn
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '', 
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+      process.env.NEXT_PUBLIC_SUPABASE_URL!, 
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     
-    const { data: products, error } = await supabase.from('products').select('*')
+    // Lấy đúng các cột: id, name, slug, image, price từ bảng products
+    const { data: products, error } = await supabase
+      .from('products')
+      .select('id, name, slug, image, price')
 
     if (error) throw error;
 
@@ -20,18 +22,22 @@ export async function GET() {
     <title>Nội Thất Hùng Ngọc</title>
     <link>https://noithathungngoc.com</link>
     <description>Sản phẩm từ noithathungngoc.com</description>
-    ${products?.map(p => `
+    ${products?.map(p => {
+      // Xử lý cột image dạng jsonb để lấy link sạch
+      const imageUrl = typeof p.image === 'string' ? p.image : p.image?.[0] || '';
+      
+      return `
     <item>
       <g:id>${p.id}</g:id>
       <g:title><![CDATA[${p.name}]]></g:title>
-      <g:description><![CDATA[${p.description || 'Nội thất chất lượng cao'}]]></g:description>
       <g:link>https://noithathungngoc.com/product/${p.slug}</g:link>
-      <g:image_link>${p.image_url}</g:image_link>
+      <g:image_link>${imageUrl}</g:image_link>
       <g:availability>in_stock</g:availability>
       <g:price>${p.price} VND</g:price>
       <g:brand>Nội Thất Hùng Ngọc</g:brand>
       <g:condition>new</g:condition>
-    </item>`).join('')}
+    </item>`;
+    }).join('')}
   </channel>
 </rss>`
 
@@ -39,7 +45,6 @@ export async function GET() {
       headers: { 'Content-Type': 'application/xml; charset=utf-8' }
     })
   } catch (err: any) {
-    // Sẽ trả về lỗi cụ thể giúp bạn dễ debug hơn
     return new Response(`Lỗi server: ${err.message}`, { status: 500 })
   }
 }

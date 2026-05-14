@@ -9,10 +9,10 @@ export async function GET() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     
-    // 1. Lấy thêm cột 'images' từ Supabase
+    // 1. Phải thêm 'description' vào lệnh select
     const { data: products, error } = await supabase
       .from('products')
-      .select('id, name, slug, image, images, price')
+      .select('id, name, slug, image, images, price, description')
 
     if (error) throw error;
 
@@ -23,33 +23,30 @@ export async function GET() {
     <link>https://www.noithathungngoc.com</link>
     <description>Sản phẩm từ noithathungngoc.com</description>
     ${products?.map(p => {
-      // 2. Xử lý Ảnh chính (g:image_link)
-      let mainImageUrl = '';
-      if (p.image) {
-        mainImageUrl = typeof p.image === 'string' ? p.image : (Array.isArray(p.image) ? p.image[0] : '');
-      }
+      // 2. Xử lý Mô tả sạch sẽ (Xóa code HTML nếu có)
+      const cleanDescription = p.description 
+        ? p.description.replace(/<[^>]*>?/gm, '').trim() 
+        : `Sản phẩm chất lượng từ Nội Thất Hùng Ngọc - ${p.name}`;
+
+      // 3. Xử lý Ảnh chính và Ảnh phụ
+      const mainImageUrl = typeof p.image === 'string' ? p.image : (Array.isArray(p.image) ? p.image[0] : '');
       const cleanMainImage = encodeURI(mainImageUrl.replace(/"/g, '').trim());
 
-      // 3. Xử lý Ảnh bổ sung (g:additional_image_link) từ cột images
       let additionalImagesXml = '';
       if (Array.isArray(p.images)) {
-        // Lấy từ ảnh thứ 2 trở đi (vì ảnh 1 thường trùng với ảnh chính)
-        const extraImages = p.images.slice(1, 11); 
-        additionalImagesXml = extraImages
-          .map(img => {
-            const cleanImg = encodeURI(String(img).replace(/"/g, '').trim());
-            return cleanImg ? `<g:additional_image_link>${cleanImg}</g:additional_image_link>` : '';
-          })
+        additionalImagesXml = p.images.slice(1, 11)
+          .map(img => `<g:additional_image_link>${encodeURI(String(img).replace(/"/g, '').trim())}</g:additional_image_link>`)
           .join('');
       }
 
-      // 4. Xử lý Giá và Link
-      const displayPrice = p.price && p.price !== 'null' ? String(p.price).replace(/[^\d]/g, '') : '0';
+      // 4. Xử lý Giá
+      const displayPrice = p.price ? String(p.price).replace(/[^\d]/g, '') : '0';
 
       return `
     <item>
       <g:id>${p.id}</g:id>
       <g:title><![CDATA[${p.name}]]></g:title>
+      <g:description><![CDATA[${cleanDescription}]]></g:description>
       <g:link>https://www.noithathungngoc.com/san-pham/${p.slug}</g:link>
       <g:image_link>${cleanMainImage}</g:image_link>
       ${additionalImagesXml}
@@ -63,12 +60,9 @@ export async function GET() {
 </rss>`
 
     return new Response(xml, {
-      headers: { 
-        'Content-Type': 'application/xml; charset=utf-8',
-        'Cache-Control': 'no-store, max-age=0' 
-      }
+      headers: { 'Content-Type': 'application/xml; charset=utf-8' }
     })
   } catch (err: any) {
-    return new Response(`Lỗi server: ${err.message}`, { status: 500 })
+    return new Response(`Lỗi: ${err.message}`, { status: 500 })
   }
 }

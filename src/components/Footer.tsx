@@ -108,65 +108,64 @@ export default function Footer() {
           © 2026 Nội Thất Hùng Ngọc
         </div>
       </div>
-
-      {/* KHUNG CHAT */}
-      <div className={`${styles.chatWrapper} ${isChatOpen ? styles.showChat : ''}`}>
-        <div className={styles.chatHeader}>
-          <span>Hỗ trợ Hùng Ngọc</span>
-          <button onClick={() => setIsChatOpen(false)} className={styles.closeChat}>×</button>
-        </div>
-        <div className={styles.chatBody}>
-          <p>Chào bạn! Hùng Ngọc có thể giúp gì cho bạn ạ?</p>
-          <div className={styles.autoReplies}>
-            <button onClick={() => window.location.href='tel:0347227377'}>📞 Gọi Hotline</button>
-            <button onClick={() => {
-  // Thêm window. để trình duyệt hiểu đây là biến toàn cục
-  if (typeof window !== "undefined" && window.gtag) {
-    window.gtag('event', 'conversion', {
-     'send_to': 'AW-18110246759/cY9cCNiU6aYCEOfe0btD'
-    });
-  }
-  window.open('https://zalo.me/0347227377', '_blank');
-}}>💬 Nhắn Zalo</button>
-            {/* <button onClick={() => window.open('https://zalo.me/0347227377')}>✉️ Nhắn Zalo</button> */}
-          </div>
-        </div>
-      </div>
-
-      {/* NÚT LIÊN HỆ NỔI */}
-      <div className={styles.fixedContact}>
-        <button className={`${styles.contactBtn} ${styles.chatbot}`} onClick={() => setIsChatOpen(!isChatOpen)}>
-          💬
-        </button>
-        <a 
-  href="https://zalo.me/0347227377" 
-  className={`${styles.contactBtn} ${styles.zaloBtn}`} 
-  target="_blank" 
-  rel="noreferrer"
-  onClick={(e) => {
-    // Chặn chuyển hướng ngay lập tức
-    e.preventDefault(); 
-    
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'conversion', {
-        'send_to': 'AW-18110246759',
-        'event_callback': () => {
-          // Mở Zalo sau khi gửi tín hiệu thành công
+/* Bọc tất cả vào MỘT container duy nhất */
+<div className={styles.fixedContact}>
+  
+  {/* KHỐI 1: KHUNG CHAT (Nằm trên các nút) */}
+  <div className={`${styles.chatWrapper} ${isChatOpen ? styles.showChat : ''}`}>
+    <div className={styles.chatHeader}>
+      <span>Hỗ trợ Hùng Ngọc</span>
+      <button onClick={() => setIsChatOpen(false)} className={styles.closeChat}>×</button>
+    </div>
+    <div className={styles.chatBody}>
+      <p>Chào bạn! Hùng Ngọc có thể giúp gì cho bạn ạ?</p>
+      <div className={styles.autoReplies}>
+        <button onClick={() => window.location.href='tel:0347227377'}>📞 Gọi Hotline</button>
+        <button onClick={() => {
+          if (typeof window !== "undefined" && window.gtag) {
+            window.gtag('event', 'conversion', {
+              'send_to': 'AW-18110246759/cY9cCNiU6aYCEOfe0btD'
+            });
+          }
           window.open('https://zalo.me/0347227377', '_blank');
-        }
-      });
-    } else {
-      window.open('https://zalo.me/0347227377', '_blank');
-    }
-  }}
->
-  <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg" alt="Zalo" />
-</a>
-        {/* <a href="https://zalo.me/0347227377" className={`${styles.contactBtn} ${styles.zaloBtn}`} target="_blank" rel="noreferrer">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg" alt="Zalo" />
-        </a> */}
-        <a href="tel:0347227377" className={`${styles.contactBtn} ${styles.phone}`}>📞</a>
+        }}>💬 Nhắn Zalo</button>
       </div>
+    </div>
+  </div>
+
+  {/* KHỐI 2: DÀN HÀNG CÁC NÚT BẤM (Không bọc thêm div trùng tên class) */}
+  <button 
+    className={`${styles.contactBtn} ${styles.chatbot}`} 
+    onClick={() => setIsChatOpen(!isChatOpen)}
+  >
+    💬
+  </button>
+
+  <a 
+    href="https://zalo.me/0347227377" 
+    className={`${styles.contactBtn} ${styles.zaloBtn}`} 
+    target="_blank" 
+    rel="noreferrer"
+    onClick={(e) => {
+      e.preventDefault(); 
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'conversion', {
+          'send_to': 'AW-18110246759',
+          'event_callback': () => {
+            window.open('https://zalo.me/0347227377', '_blank');
+          }
+        });
+      } else {
+        window.open('https://zalo.me/0347227377', '_blank');
+      }
+    }}
+  >
+    <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Icon_of_Zalo.svg" alt="Zalo" />
+  </a>
+
+  <a href="tel:0347227377" className={`${styles.contactBtn} ${styles.phone}`}>📞</a>
+
+</div>
     </footer>
   );
 }

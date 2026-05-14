@@ -44,9 +44,18 @@
 }
 /* KHUNG CHAT - DIỆT MẢNG TRẮNG */
 .chatWrapper {
-  position: fixed; bottom: 90px; left: 20px; width: 280px;
-  background: #1a1a1a; border-radius: 10px; border: 1px solid #333;
-  display: none; z-index: 10000; overflow: hidden;
+  position: fixed;
+  bottom: 100px; /* Nằm phía trên các nút bấm */
+  right: 30px;   /* Căn theo lề phải */
+  left: auto;    /* Hủy bỏ vị trí bên trái cũ */
+  width: 300px;
+  background: #1a1a1a;
+  border-radius: 12px;
+  border: 1px solid #333;
+  display: none;
+  z-index: 10000;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
 }
 .showChat { display: block; }
 .chatHeader { background: #ffb400; padding: 10px; display: flex; justify-content: space-between; color: #000; }
@@ -65,7 +74,16 @@
 
 
 /* NÚT LIÊN HỆ NỔI */
-.fixedContact { position: fixed; bottom: 20px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 9999; }
+
+.fixedContact {
+  position: fixed;
+  bottom: 30px; /* Cách đáy màn hình */
+  right: 30px;  /* Đưa sang bên phải mặc định */
+  display: flex;
+  flex-direction: column; /* Xếp dọc các nút */
+  gap: 15px; /* Khoảng cách giữa các nút */
+  z-index: 10001; /* Phải cao hơn z-index của chatWrapper (10000) */
+}
 .contactBtn {
   width: 45px; height: 45px; border-radius: 50%; border: none !important;
   display: flex; align-items: center; justify-content: center; cursor: pointer;
@@ -136,7 +154,47 @@
   .container { grid-template-columns: repeat(2, 1fr); }
   .brandGrid { grid-template-columns: 1fr; }
   .footer { padding-bottom: 80px; } /* Tránh đè nút nổi */
-  
+  .fixedContact {
+    position: fixed;
+    bottom: 15px;
+    left: 15px;
+    right: 15px;
+    width: auto;
+    height: 65px;
+    /* Nền trắng nhưng độ trong suốt thấp (0.4 - 0.6) */
+    background: rgba(255, 255, 255, 0.5); 
+    /* Quan trọng: tạo độ nhòe cho nội dung bên dưới tấm kính */
+    backdrop-filter: blur(12px); 
+    -webkit-backdrop-filter: blur(12px); /* Hỗ trợ Safari trên iPhone */
+    
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    border-radius: 50px;
+    padding: 0 10px;
+    
+    /* Viền mảnh màu trắng để giả lập cạnh kính */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    /* Đổ bóng nhẹ để thanh bar không bị chìm hẳn vào nền */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    z-index: 9999;
+  }
+
+  /* Selector phân cấp để bỏ hẳn important */
+  .fixedContact .contactBtn {
+    position: static;
+    background: none; /* Bỏ nền của từng nút để dùng nền chung của bar */
+    width: 45px;
+    height: 45px;
+    margin: 0;
+  }
+
+  /* Giữ màu đặc trưng cho icon để khách dễ nhận diện */
+  .fixedContact .zaloBtn img {
+    width: 32px;
+    height: 32px;
+  }
 }
 @media (min-width: 768px) {
   .bottomBar {

@@ -83,6 +83,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         href={`/san-pham/${product.slug}`} 
         title={`Chi tiết sản phẩm ${product.name}`}
         className={styles.productLink}
+        prefetch={false}
       >
         <div className={styles.imgBox} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', overflow: 'hidden' }}>
           {/* DÙNG THẺ IMG THUẦN ĐỂ NÉ LỖI 402 */}

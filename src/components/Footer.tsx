@@ -108,7 +108,7 @@ export default function Footer() {
           © 2026 Nội Thất Hùng Ngọc
         </div>
       </div>
-/* Bọc tất cả vào MỘT container duy nhất */
+ {/* Bọc tất cả vào MỘT container duy nhất  */}
 <div className={styles.fixedContact}>
   
   {/* KHỐI 1: KHUNG CHAT (Nằm trên các nút) */}

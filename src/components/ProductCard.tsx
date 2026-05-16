@@ -98,17 +98,38 @@ export default function ProductCard({ product }: ProductCardProps) {
             }}
             loading="lazy"
             onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              // Nếu link nén lỗi, thử dùng link gốc không nén
-              if (target.src.includes('width=')) {
-                target.src = target.src.split('?')[0];
-              } else if (target.src.includes('.webp')) {
-                // Thử đổi sang .jpg nếu file gốc lỗi đuôi
-                target.src = target.src.replace('.webp', '.jpg');
-              } else {
-                target.src = '/default-product.webp';
-              }
-            }}
+  const target = e.target as HTMLImageElement;
+  
+  // 1. Nếu dính bẫy lặp vô hạn (đã thử đổi sang logo mà vẫn lỗi), ngắt ngay lập tức
+  if (target.dataset.error === "final") return;
+
+  // 2. Nếu link nén lỗi, thử dùng link gốc không nén
+  if (target.src.includes('width=')) {
+    target.src = target.src.split('?')[0];
+  } 
+  // 3. Nếu ảnh gốc .webp lỗi, thử đổi sang .jpg
+  else if (target.src.includes('.webp') && target.dataset.error !== "swapped") {
+    target.dataset.error = "swapped"; // Đánh dấu đã thử đổi đuôi một lần
+    target.src = target.src.replace('.webp', '.jpg');
+  } 
+  // 4. Nếu tất cả các phương án trên đều thất bại, đưa về ảnh logo hệ thống online chắc chắn sống
+  else {
+    target.dataset.error = "final"; // Đặt lính gác tối cao để ngắt vòng lặp
+    target.src = "https://oytmbjoxetmbjsvlyiph.supabase.co/storage/v1/object/public/product-images/logo.png";
+  }
+}}
+            // onError={(e) => {
+            //   const target = e.target as HTMLImageElement;
+            //   // Nếu link nén lỗi, thử dùng link gốc không nén
+            //   if (target.src.includes('width=')) {
+            //     target.src = target.src.split('?')[0];
+            //   } else if (target.src.includes('.webp')) {
+            //     // Thử đổi sang .jpg nếu file gốc lỗi đuôi
+            //     target.src = target.src.replace('.webp', '.jpg');
+            //   } else {
+            //     target.src = '/default-product.webp';
+            //   }
+            // }}
           />
         </div>
         

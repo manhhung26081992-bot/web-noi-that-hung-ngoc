@@ -267,13 +267,19 @@ const allImages = useMemo(() => {
             <h2 className={styles.descTitle}>
               <span className={styles.orangeBar}>|</span> Chi tiết sản phẩm {product.name}
             </h2>
-            
+            <div 
+  className={`${styles.descriptionText} prose max-w-none`} 
+  dangerouslySetInnerHTML={{ 
+    __html: product.detailDescription || product.description || "Thông tin sản phẩm đang được cập nhật." 
+  }}
+/>
+{/*             
             <div 
               className={styles.descriptionText} 
               dangerouslySetInnerHTML={{ 
                 __html: product.detailDescription || product.description || "Thông tin sản phẩm đang được cập nhật." 
               }}
-            />
+            /> */}
 
             {/* PHẦN ẢNH THỰC TẾ: Tối ưu chuyên nghiệp */}
             <div className={styles.realInstallSection}>

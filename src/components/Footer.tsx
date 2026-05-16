@@ -73,7 +73,7 @@ export default function Footer() {
           <div className={styles.brandCol}>
             <h4 className={styles.brandTitle}>NỘI THẤT HÙNG NGỌC</h4>
             <p className={styles.brandDesc}>
-              Nhà phân phối <strong>tủ sắt locker</strong>, <strong>bàn ghế văn phòng</strong> uy tín tại Hà Nội. Cam kết giá rẻ tận gốc, chất lượng bền bỉ.
+              Tổng kho phân phối<strong> tủ sắt locker</strong>,<strong> nội thất văn phòng</strong> & <strong>gia đình</strong> uy tín tại Hà Nội. Cam kết giá gốc đại lý, chất lượng bền bỉ.
             </p>
           </div>
 

@@ -8,18 +8,18 @@ import styles from "@/styles/Hero.module.css";
 
 const SLIDES = [
   {
-    img: "/banner.webp",
+    img: "/banner4.webp",
     title: "BÀN GHẾ VĂN PHÒNG GIÁ XƯỞNG",
     sub: "Giảm đến 30% - Giao nhanh trong ngày",
     cta: "MUA NGAY",
     link: "/ban-van-phong",
   },
   {
-    img: "/banner2.webp",
-    title: "SOFA CAO CẤP GIÁ RẺ",
-    sub: "Bảo hành 1 năm - Lắp đặt miễn phí",
+    img: "/banner5.webp",
+    title: "NỘI THẤT VĂN PHÒNG & GIA ĐÌNH",
+    sub: "Chuyên bàn ghế giám đốc, giường sắt, bàn ăn giá gốc tại kho",
     cta: "XEM NGAY",
-    link: "/sofa",
+    link: "/gia-dinh",
   },
 ];
 

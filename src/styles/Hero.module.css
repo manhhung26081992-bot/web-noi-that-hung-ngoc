@@ -33,39 +33,103 @@
     rgba(0,0,0,0) 100%
   );
 }
-
-/* ===== content ===== */
+/* Khung bọc ngoài */
 .content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 800px;
+  display: flex;
+  justify-content: center;
+  z-index: 2;
+  
+  /* 🔥 HIỆU ỨNG MỜ DẦN KHI ĐỔI SLIDE: */
+  animation: fadeInBlur 0.8s ease-in-out forwards;
+}
+
+/* Hộp chứa chữ và nút bên trong */
+.box {
+  /* Giảm hẳn độ đậm của nền xuống còn 30% để nhìn cực kỳ trong suốt và mờ ảo */
+  background-color: rgba(0, 0, 0, 0.3); 
+  
+  /* Hiệu ứng kính mờ xuyên thấu sang trọng */
+  backdrop-filter: blur(6px);           
+  -webkit-backdrop-filter: blur(6px);
+  
+  padding: 24px 32px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08); /* Viền mờ siêu mảnh */
+  text-align: center;
+  width: 100%;
+}
+
+/* 🎨 Giảm nhẹ độ sáng của chữ để tạo cảm giác dịu và mờ mịn hơn, không bị chói mắt */
+.title {
+  color: rgba(255, 255, 255, 0.95); /* Trắng mờ nhẹ 95% */
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.sub {
+  color: rgba(255, 255, 255, 0.8);  /* Trắng mờ 80% hòa vào nền ảnh */
+  font-size: 1.1rem;
+  margin-bottom: 24px;
+}
+
+/* 🚀 Khai báo hiệu ứng chuyển động mờ dần (Animation) */
+@keyframes fadeInBlur {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%); /* Hơi nhích nhẹ từ dưới lên */
+    filter: blur(4px);                 /* Chữ lúc mới hiện sẽ hơi nhòe mờ rồi nét dần */
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    filter: blur(0);
+  }
+}
+/* ===== content ===== */
+/* .content {
   position: absolute;
   z-index: 3;
   top: 50%;
   left: 6%;
-  transform: translateY(-50%);
-}
+  transform: translateY(-50% ); */
+  /* 🔥 HIỆU ỨNG MỜ DẦN KHI ĐỔI SLIDE: */
+  /* animation: fadeInBlur 0.8s ease-in-out forwards;
+} */
+
+
+
+
 
 /* 🔥 KHỐI NỀN CHỮ (điểm khác biệt lớn nhất) */
-.box {
+/* .box {
   background: rgba(0,0,0,0.35);
   backdrop-filter: blur(6px);
   padding: 24px;
   border-radius: 12px;
   max-width: 480px;
-}
+} */
 
 /* TITLE */
-.title {
+/* .title {
   color: #fff;
   font-size: 28px;
   font-weight: 800;
   margin-bottom: 10px;
-}
+} */
 
 /* SUB */
-.sub {
+/* .sub {
   color: #ffd54f;
   font-size: 15px;
   margin-bottom: 16px;
-}
+} */
 
 /* BUTTON GROUP */
 .actions {
@@ -108,6 +172,9 @@
     left: 50%;
     transform: translate(-50%, -50%); 
     width: 90%;
+    /* 🔥 ĐỔI ĐOẠN NÀY: Giảm độ đậm của lớp nền đen */
+  background-color: rgba(0, 0, 0, 0.4),
+  
   }
 
   .box {

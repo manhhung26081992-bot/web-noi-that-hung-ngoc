@@ -115,7 +115,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   // 4. Nếu tất cả các phương án trên đều thất bại, đưa về ảnh logo hệ thống online chắc chắn sống
   else {
     target.dataset.error = "final"; // Đặt lính gác tối cao để ngắt vòng lặp
-    target.src = "https://oytmbjoxetmbjsvlyiph.supabase.co/storage/v1/object/public/product-images/logo.png";
+    target.src = "/logo.png";
   }
 }}
             // onError={(e) => {

@@ -14,14 +14,29 @@ export default function Header() {
   const [isSticky, setIsSticky] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const router = useRouter();
+useEffect(() => {
+  let lastSticky = window.scrollY > 80;
+  setIsSticky(lastSticky);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsSticky(window.scrollY > 80);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const handleScroll = () => {
+    const nextSticky = window.scrollY > 80;
+
+    if (nextSticky !== lastSticky) {
+      lastSticky = nextSticky;
+      setIsSticky(nextSticky);
+    }
+  };
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  return () => window.removeEventListener('scroll', handleScroll);
+}, []);
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     setIsSticky(window.scrollY > 80);
+  //   };
+  //   window.addEventListener('scroll', handleScroll);
+  //   return () => window.removeEventListener('scroll', handleScroll);
+  // }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

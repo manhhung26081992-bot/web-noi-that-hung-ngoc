@@ -18,7 +18,9 @@ export default function Navigation({ isOpen, setIsOpen, children }: NavigationPr
   const [activeSubmenu, setActiveSubmenu] = useState<number | null>(null);
 
   const handleToggleSubmenu = (e: React.MouseEvent, index: number, hasSub: boolean) => {
-    if (window.innerWidth <= 1024 && hasSub) {
+    if (typeof window !== 'undefined' && window.innerWidth <= 1024 && hasSub) {
+    // if (window.innerWidth <= 1024 && hasSub) {
+
       e.preventDefault();
       e.stopPropagation(); 
       setActiveSubmenu(activeSubmenu === index ? null : index);
@@ -33,7 +35,8 @@ export default function Navigation({ isOpen, setIsOpen, children }: NavigationPr
       <nav className={`${styles.nav} ${isOpen ? styles.navActive : ''}`}>
         
         {/* HIỂN THỊ Ô TÌM KIẾM TRÊN MOBILE TẠI ĐÂY */}
-        {children}
+        {isOpen && children}
+        {/* {children} */}
 
         <ul className={styles.menuList}>
           {MENU_ITEMS.map((item, index) => {

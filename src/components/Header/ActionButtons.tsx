@@ -9,15 +9,33 @@ export default function ActionButtons() {
   const [count, setCount] = useState(0);
 
   // Hàm tính tổng số lượng (Xử lý đồng bộ dữ liệu)
-  const updateCartCount = () => {
-    if (typeof window !== 'undefined') {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      // Tính tổng quantity để hiện số chuẩn như ảnh mẫu
-      const total = cart.reduce((sum: number, item: any) => sum + (Number(item.quantity) || 1), 0);
-      setCount(total);
-    }
-  };
+  // const updateCartCount = () => {
+  //   if (typeof window !== 'undefined') {
+  //     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+  //     // Tính tổng quantity để hiện số chuẩn như ảnh mẫu
+  //     const total = cart.reduce((sum: number, item: any) => sum + (Number(item.quantity) || 1), 0);
+  //     setCount(total);
+  //   }
+  // };
+const updateCartCount = () => {
+  try {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
 
+    if (!Array.isArray(cart)) {
+      setCount(0);
+      return;
+    }
+
+    const total = cart.reduce(
+      (sum: number, item: any) => sum + (Number(item.quantity) || 1),
+      0
+    );
+
+    setCount(total);
+  } catch {
+    setCount(0);
+  }
+};
   useEffect(() => {
     updateCartCount();
     // Lắng nghe sự kiện để nhảy số ngay lập tức khi nhấn "Thêm vào giỏ"

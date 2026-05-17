@@ -38,12 +38,20 @@ export default function Hero() {
   return (
     <section className={styles.hero}>
       <Image
+  src={slide.img}
+  alt={slide.title}
+  fill
+  priority
+  sizes="(max-width: 768px) 100vw, 1200px"
+  className={styles.img}
+/>
+      {/* <Image
         src={slide.img}
         alt="banner nội thất"
         fill
         priority
         className={styles.img}
-      />
+      /> */}
 
       <div className={styles.overlay}></div>
 

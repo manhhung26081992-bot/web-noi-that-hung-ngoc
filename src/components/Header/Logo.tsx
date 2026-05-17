@@ -15,8 +15,6 @@ export default function Logo() {
             width={70} 
             height={70} 
             className={styles.logoImage}
-            // Logo là file tĩnh trong public nên không cần thêm query width/quality
-            loading="eager" // Ưu tiên tải logo trước các thành phần khác
           />
         </div>
         <div className={styles.brandText}>

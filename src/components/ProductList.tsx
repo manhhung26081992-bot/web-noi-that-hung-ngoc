@@ -44,6 +44,7 @@ export default function ProductList({ title, products, categorySlugs, limit, vie
           <Link 
             href={viewAllLink || (categorySlugs ? `/${categorySlugs[0]}` : '#')} 
             className={styles.viewAll}
+            prefetch={false}
           >
             + Xem tất cả
           </Link>

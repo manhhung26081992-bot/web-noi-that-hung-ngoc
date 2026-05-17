@@ -48,6 +48,7 @@ export default function Navigation({ isOpen, setIsOpen, children }: NavigationPr
                 <div className={styles.itemContainer}>
                   <Link 
                     href={item.link} 
+                    prefetch={false}
                     className={`${styles.menuItem} ${pathname === item.link ? styles.active : ''}`}
                     onClick={(e) => {
                       if (hasSub) {
@@ -72,6 +73,7 @@ export default function Navigation({ isOpen, setIsOpen, children }: NavigationPr
                       <li key={sIdx}>
                         <Link 
                           href={sub.link} 
+                          prefetch={false}
                           onClick={() => {
                             setIsOpen(false);
                             setActiveSubmenu(null);

@@ -5,8 +5,9 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: '/admin/', // Chặn Google index trang quản trị (nếu có)
+      disallow: '/admin/',
     },
-    sitemap: 'https://noithathungngoc.com/sitemap.xml',
+
+    sitemap: 'https://www.noithathungngoc.com/sitemap.xml',
   };
 }

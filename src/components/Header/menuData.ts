@@ -36,7 +36,7 @@ export const MENU_ITEMS: MenuItem[] = [
     name: "BÀN VĂN PHÒNG", 
     link: "/ban-van-phong",
     submenu: [
-      { name: "Bàn làm việc", link: "/ban-lam-viec" },
+      { name: "Bàn nhân viên", link: "/ban-nhan-vien" },
       { name: "Bàn giám đốc", link: "/ban-giam-doc" },
       { name: "Bàn họp", link: "/ban-hop" },
       { name: "Cụm bàn làm việc", link: "/cum-ban" },

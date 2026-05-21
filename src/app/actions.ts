@@ -29,6 +29,20 @@ export async function getBlogBySlug(slug: string) {
   return data;
 }
 
+export async function getCategoryBySlug(slug: string) {
+  const { data, error } = await supabase
+    .from('categories')
+    .select('slug, title, seo_title, seo_content')
+    .eq('slug', slug)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Lỗi lấy SEO danh mục:', error.message);
+    return null;
+  }
+
+  return data;
+}
 const PRODUCT_FIELDS = `
   id,
   name,

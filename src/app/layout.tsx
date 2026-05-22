@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://www.noithathungngoc.com'),
 
   alternates: {
-    canonical: 'https://www.noithathungngoc.com',
+    canonical: '/',
   },
 
   title: {

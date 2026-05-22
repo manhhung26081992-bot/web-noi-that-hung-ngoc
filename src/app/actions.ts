@@ -91,29 +91,6 @@ const shuffled = [...(data || [])].sort(() => Math.random() - 0.5);
 return shuffled;
   // return data ?? [];
 }
-// export async function getProductsByMultipleCategories(
-//   slugs: string[],
-//   limit = 50 // Tăng limit lên để khi ấn "Xem tất cả" sẽ hiện đầy đủ sản phẩm
-// ) {
-//   // slugs lúc này có thể là ['tu-van-phong'] hoặc ['tu-locker', 'tu-sat']
-  
-//   // Chuyển mảng slugs thành chuỗi để dùng trong lệnh .or() của Supabase
-//   const slugQuery = slugs.map(s => `category.eq.${s},parent_slug.eq.${s}`).join(',');
-
-//   const { data, error } = await supabase
-//     .from('products')
-//     .select(PRODUCT_FIELDS)
-//     .or(slugQuery) // Tìm kiếm thông minh: khớp mục con HOẶC mục cha
-//     .order('id', { ascending: true })
-//     .limit(limit);
-
-//   if (error) {
-//     console.error("Lỗi lấy sản phẩm từ Supabase:", error);
-//     return [];
-//   }
-
-//   return data ?? [];
-// }
 
 export async function seedAllProductsAction(
   allProductsFromFile: Product[] = []

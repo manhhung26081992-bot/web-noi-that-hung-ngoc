@@ -69,7 +69,6 @@ export const MENU_ITEMS: MenuItem[] = [
       { name: "Kệ treo quần áo", link: "/ke-treo-quan-ao" },
       { name: "Két sắt", link: "/ket-sat" },
       { name: "Kệ để hàng", link: "/ke-de-hang" },
-      { name: "Quầy lễ tân", link: "/quay-le-tan" },
     ]
   },
   { 

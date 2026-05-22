@@ -12,7 +12,7 @@ export default async function Home() {
   const officeCabinetGroup = ['tu-locker', 'tu-tai-lieu-go', 'tu-tai-lieu-sat', 'hoc-tu-tu-phu']
   const decorShelfGroup = ['ke-go', 'ke-sach', 'ke-ti-vi', 'ke-trang-tri']
   const cafeTableGroup = ['ban-ghe-cafe', 'cafe']
-  const officeTableGroup = ['ban-chan-sat', 'ban-giam-doc', 'ban-hop', 'ban-nhan-vien', 'ban-module']
+  const officeTableGroup = ['ban-chan-sat', 'ban-giam-doc', 'ban-hop', 'ban-nhan-vien', 'cum-ban']
 const bunkBedGroup = ['giuong-tang-sat', 'giuong-tang']
   // Tải dữ liệu song song để nhanh hơn
   const [

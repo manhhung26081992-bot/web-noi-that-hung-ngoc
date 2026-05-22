@@ -60,12 +60,12 @@ const PRODUCT_FIELDS = `
 `
 export async function getProductsByMultipleCategories(
   slugs: string[],
-  limit = 50 
+  limit = 200 
 ) {
   let query = supabase
     .from('products')
     .select(PRODUCT_FIELDS)
-    .order('id', { ascending: true })
+    // .order('id', { ascending: true })
     .limit(limit);
 
   // NẾU CHỈ CÓ 1 SLUG (Ví dụ: khách bấm đúng vào 'ban-lam-viec')
@@ -85,8 +85,11 @@ export async function getProductsByMultipleCategories(
     console.error("Lỗi lấy sản phẩm từ Supabase:", error);
     return [];
   }
+// RANDOM SẢN PHẨM
+const shuffled = [...(data || [])].sort(() => Math.random() - 0.5);
 
-  return data ?? [];
+return shuffled;
+  // return data ?? [];
 }
 // export async function getProductsByMultipleCategories(
 //   slugs: string[],

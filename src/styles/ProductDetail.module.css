@@ -327,3 +327,43 @@
   display: block;
 }
 }
+@media (max-width: 768px) {
+  .title {
+    color: #111 !important;
+    font-weight: 800;
+  }
+
+  .shortSpecs {
+    background: #fff !important;
+  }
+
+  .shortSpecs li {
+    color: #222 !important;
+    font-weight: 500;
+  }
+
+  .shortSpecs strong {
+    color: #111 !important;
+    font-weight: 800;
+  }
+
+  .contentBody,
+  .article,
+  .article p,
+  .article li {
+    color: #222 !important;
+    opacity: 1 !important;
+    -webkit-text-fill-color: #222;
+  }
+
+  .article h2 {
+    color: #005aab !important;
+    opacity: 1 !important;
+    -webkit-text-fill-color: #005aab;
+  }
+
+  .container {
+    color: #222;
+    -webkit-font-smoothing: antialiased;
+  }
+}

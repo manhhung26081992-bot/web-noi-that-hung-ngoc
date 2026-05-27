@@ -17,6 +17,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${post.title} - Nội Thất Hùng Ngọc`,
     description: postExcerpt,
+    type: "article",
     alternates: {
       canonical: `https://www.noithathungngoc.com/tin-tuc/${slug}`,
     },

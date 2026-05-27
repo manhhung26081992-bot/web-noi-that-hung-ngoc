@@ -8,7 +8,7 @@ import { notFound } from 'next/navigation';
 
 export const dynamic = 'force-static';
 export const dynamicParams = true; 
-export const revalidate = 8600; 
+export const revalidate = 604800; 
 
 // 🔥 Tạo sẵn trang tĩnh lúc Build
 export async function generateStaticParams() {

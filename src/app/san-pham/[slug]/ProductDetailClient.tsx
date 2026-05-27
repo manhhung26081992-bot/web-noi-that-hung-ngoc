@@ -162,7 +162,30 @@ const productSchema = {
               onMouseEnter={() => setIsZooming(true)}
               onMouseLeave={() => setIsZooming(false)}
             >
-             <img 
+              <img 
+  src={getOptimizedUrl(allImages[activeImgIndex] || '/logo.png')} 
+  alt={product.name}
+  width={800}
+  height={800}
+  decoding="async"
+  className={styles.actualImage} // 👈 Chỉ giữ lại class, XÓA BỎ DÒNG style={{...}} inline cũ
+  onError={(e) => {
+    // ... Giữ nguyên đoạn logic xử lý lỗi onError cực tốt này của Ngọc ...
+    const target = e.target as HTMLImageElement;
+    if (target.src.includes('width=')) {
+      target.src = target.src.split('?')[0];
+      return;
+    }
+    if (target.src.includes('.webp')) {
+      target.src = target.src.replace('.webp', '.jpg');
+    } else if (target.src.includes('.jpg')) {
+      target.src = target.src.replace('.jpg', '.png');
+    } else {
+      target.src = '/logo.png';
+    }
+  }}
+/>
+             {/* <img 
   src={getOptimizedUrl(allImages[activeImgIndex] || '/logo.png')} 
   alt={product.name}
    width={800}
@@ -194,7 +217,7 @@ const productSchema = {
       target.src = '/logo.png';
     }
   }}
-/>
+/> */}
               {isZooming && (
                 <div 
                   className={styles.magnifiedImage}

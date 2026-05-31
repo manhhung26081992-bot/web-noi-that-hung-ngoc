@@ -26,6 +26,22 @@ const nextConfig: NextConfig = {
   // swcMinify: true, <-- XÓA DÒNG NÀY VÌ NEXT.JS ĐÃ TỰ ĐỘNG BẬT
 
   /* 4. Thêm Header bảo mật */
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [
+          {
+            type: 'host',
+            value: 'noithathungngoc.com',
+          },
+        ],
+        destination: 'https://www.noithathungngoc.com/:path*',
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {

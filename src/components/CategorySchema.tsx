@@ -39,8 +39,14 @@ export default function CategorySchema({
   products,
 }: CategorySchemaProps) {
   const categoryUrl = `${siteUrl}/${categorySlug}`;
+  const schemaProducts = products
+    .map((product) => ({
+      ...product,
+      schemaPrice: normalizePrice(product.price),
+    }))
+    .filter((product) => product.schemaPrice);
 
-  // Giới hạn 24 sản phẩm đầu để schema gọn, tránh HTML quá nặng.
+  // Chỉ đưa sản phẩm có giá hợp lệ vào schema để Google không báo Product snippets invalid.
   const schemaData = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -48,10 +54,7 @@ export default function CategorySchema({
     url: categoryUrl,
     mainEntity: {
       '@type': 'ItemList',
-      itemListElement: products.slice(0, 24).map((product, index) => {
-        const price = normalizePrice(product.price);
-
-        return {
+      itemListElement: schemaProducts.slice(0, 24).map((product, index) => ({
           '@type': 'ListItem',
           position: index + 1,
           item: {
@@ -64,19 +67,16 @@ export default function CategorySchema({
               '@type': 'Brand',
               name: 'Nội Thất Hùng Ngọc',
             },
-            offers: price
-              ? {
-                  '@type': 'Offer',
-                  priceCurrency: 'VND',
-                  price,
-                  availability: 'https://schema.org/InStock',
-                  itemCondition: 'https://schema.org/NewCondition',
-                  url: `${siteUrl}/san-pham/${product.slug}`,
-                }
-              : undefined,
+            offers: {
+              '@type': 'Offer',
+              priceCurrency: 'VND',
+              price: product.schemaPrice,
+              availability: 'https://schema.org/InStock',
+              itemCondition: 'https://schema.org/NewCondition',
+              url: `${siteUrl}/san-pham/${product.slug}`,
+            },
           },
-        };
-      }),
+        })),
     },
   };
 

@@ -1,6 +1,7 @@
 import { MENU_ITEMS } from '@/components/Header/menuData'; 
 import { notFound } from 'next/navigation';
 import ProductList from '@/components/ProductList';
+import CategorySchema from '@/components/CategorySchema';
 import styles from '@/styles/Category.module.css';
 import Link from 'next/link';
 import { getProductsByMultipleCategories, getCategoryBySlug  } from '@/app/actions';
@@ -56,6 +57,13 @@ export default async function CategoryPage({ params }: Props) {
 
   return (
     <main className={styles.container}>
+      {/* Schema danh mục giúp Google hiểu trang này là danh sách sản phẩm có giá. */}
+      <CategorySchema
+        categoryName={category.name}
+        categorySlug={cleanSlug}
+        products={productsFromSupabase || []}
+      />
+
       <nav className={styles.breadcrumb}>
         <Link href="/">Trang chủ</Link> <span> / </span> 
         <strong className={styles.current}>{category.name}</strong>

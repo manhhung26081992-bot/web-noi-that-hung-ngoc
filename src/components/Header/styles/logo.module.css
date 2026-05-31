@@ -47,7 +47,7 @@
 /* TỐI ƯU RIÊNG CHO MOBILE */
 @media (max-width: 768px) {
   .logoContainer {
-    gap: 5px;          /* Mobile: cho chữ sát rạt vào logo */
+    gap: 5px;          /* Trên mobile: cho chữ sát logo hơn */
   }
 
   .logoWrapper {

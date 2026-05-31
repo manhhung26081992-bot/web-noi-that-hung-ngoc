@@ -50,7 +50,7 @@ export default async function BlogDetail({ params }: { params: Promise<{ slug: s
         {post.title}
       </h1>
       
-      {/* 2. ĐÃ BỎ PHẦN HIỂN THỊ LOGO/ẢNH TẠI ĐÂY */}
+      {/* Đã bỏ phần hiển thị logo/ảnh ở đầu bài viết. */}
 
       {/* 3. Nội dung bài viết (Chữ sẽ đẩy lên ngay dưới tiêu đề) */}
       <div 

@@ -60,7 +60,7 @@ useEffect(() => {
             <span className={styles.bar}></span>
             <span className={styles.bar}></span>
           </button> 
-        {/* 1. Logo đưa lên đầu để nằm bên TRÁI trên Mobile */}
+        {/* Logo đưa lên đầu để nằm bên trái trên mobile. */}
         <div className={styles.logoWrapper}>
           <Logo />
         </div>
@@ -72,7 +72,7 @@ useEffect(() => {
 
         {/* 3. Cụm chức năng đưa sang PHẢI (Tìm kiếm, Giỏ hàng, Menu) */}
         <div className={styles.contactInfo}>
-          {/* Nút Tìm kiếm Mobile */}
+          {/* Nút tìm kiếm trên mobile. */}
           <button 
             className={styles.mobileSearchBtn} 
             onClick={() => setIsSearchOpen(!isSearchOpen)} 
@@ -98,7 +98,7 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Ô tìm kiếm thả xuống khi bấm icon Search Mobile */}
+      {/* Ô tìm kiếm thả xuống khi bấm icon tìm kiếm trên mobile. */}
       <div className={`${styles.mobileSearchDropdown} ${isSearchOpen ? styles.searchActive : ''}`}>
           <SearchBar query={searchQuery} setQuery={setSearchQuery} onSearch={handleSearch} />
       </div>

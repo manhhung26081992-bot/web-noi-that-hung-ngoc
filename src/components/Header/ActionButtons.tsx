@@ -52,7 +52,7 @@ const updateCartCount = () => {
   return (
     <div className={styles.contactInfo}>
       <span className={styles.iconPulse}>📞</span > 
-      {/* Hotline chuẩn SEO: Giúp khách gọi ngay trên Mobile */}
+      {/* Hotline chuẩn SEO: giúp khách gọi ngay trên mobile. */}
     
         <div className={styles.phoneContent}>
              <a href="tel:0347227377" className={styles.hotline} title="Gọi tư vấn Nội Thất Hùng Ngọc">

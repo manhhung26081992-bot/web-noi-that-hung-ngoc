@@ -63,7 +63,7 @@
   border-radius: 8px;
 }
 
-/* --- Responsive cho Mobile & Tablet --- */
+/* --- Responsive cho mobile và tablet --- */
 @media (max-width: 1024px) {
   .productGrid {
     grid-template-columns: repeat(3, 1fr);

@@ -4,6 +4,7 @@ import { useState, use, useMemo, useEffect } from 'react';
 // import Image from 'next/image';
 import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
+import ProductSchema from '@/components/ProductSchema';
 import styles from '@/styles/ProductDetail.module.css';
 import { Product, CartItem } from '@/types/types';
 
@@ -30,7 +31,7 @@ const product = useMemo(() => {
   const isCategory = useMemo(() => categories.some((c) => c.slug === slug), [slug, categories]);
   const categoryProducts = useMemo(() => products.filter((p) => p.category === slug), [slug, products]);
 
-  // --- LOGIC ZOOM & SLIDER ---
+  // Xử lý zoom ảnh và slider ảnh sản phẩm.
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isZooming, setIsZooming] = useState(false);
   const [activeImgIndex, setActiveImgIndex] = useState(0);
@@ -121,26 +122,10 @@ const allImages = useMemo(() => {
   const relatedProducts = products.filter(p => p.category === product.category && p.slug !== slug).slice(0, 8);
   const numericPrice = Number(String(product.price).replace(/\D/g, '')) || 0;
 
-const productSchema = {
-  "@context": "https://schema.org/",
-  "@type": "Product",
-  name: product.name,
-  image: allImages[0],
-  description: product.description || `Mua ${product.name} tại Nội Thất Hùng Ngọc Hà Nội.`,
-  offers: {
-    "@type": "Offer",
-    priceCurrency: "VND",
-    price: numericPrice,
-    availability: "https://schema.org/InStock",
-  },
-};
-
   return (
     <main className={styles.container}>
-      <script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
-/>
+      {/* Schema sản phẩm dùng cho rich result và dữ liệu giá trên Google. */}
+      <ProductSchema product={{ ...product, image: allImages, price: numericPrice }} />
       {/* 1. Breadcrumb */}
       <nav className={styles.breadcrumb}>
         <ul>

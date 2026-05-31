@@ -153,7 +153,7 @@
 }
 
 /* =========================================
-   MEDIA QUERIES
+   ĐIỂM NGẮT RESPONSIVE
    ========================================= */
 @media (min-width: 768px) {
   .productGrid {
@@ -219,7 +219,7 @@
     padding: 6px 8px;
   }
 
-  /* Ẩn bớt các chữ không cần thiết trên Mobile để tránh tràn dòng */
+  /* Ẩn bớt các chữ không cần thiết trên mobile để tránh tràn dòng */
   .hideOnMobile {
     display: none;
   }
@@ -240,7 +240,7 @@
     gap: 10px;
   } */
 
-  /* Thu nhỏ nút phân trang trên Mobile để không bị tràn */
+  /* Thu nhỏ nút phân trang trên mobile để không bị tràn */
   /* .pageBtn {
     padding: 6px 10px;
     font-size: 12px;

@@ -1,0 +1,124 @@
+warning: in the working copy of 'src/app/[categorySlug]/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/actions.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/checkout/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/shopping-feed/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/gio-hang/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/globals.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/layout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/page.module.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/san-pham/[slug]/ProductDetailClient.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/san-pham/[slug]/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/search/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/tin-tuc/[slug]/news.module.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/tin-tuc/[slug]/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/Header/ActionButtons.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/Header/Navigation.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/Header/index.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/Header/styles/actionButtons.module.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/Header/styles/logo.module.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/Header/styles/navigation.module.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/ProductCard.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/ProductList.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/styles/Category.module.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/styles/Checkout.module.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/styles/Footer.module.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/styles/Header.module.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/styles/Product.module.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/styles/ProductDetail.module.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/styles/Search.module.css', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/src/app/[categorySlug]/page.tsx b/src/app/[categorySlug]/page.tsx[m
+[1mindex 5c876ad..101b8b9 100644[m
+[1m--- a/src/app/[categorySlug]/page.tsx[m
+[1m+++ b/src/app/[categorySlug]/page.tsx[m
+[36m@@ -1,6 +1,7 @@[m
+ import { MENU_ITEMS } from '@/components/Header/menuData'; [m
+ import { notFound } from 'next/navigation';[m
+ import ProductList from '@/components/ProductList';[m
+[32m+[m[32mimport CategorySchema from '@/components/CategorySchema';[m
+ import styles from '@/styles/Category.module.css';[m
+ import Link from 'next/link';[m
+ import { getProductsByMultipleCategories, getCategoryBySlug  } from '@/app/actions';[m
+[36m@@ -56,6 +57,13 @@[m [mexport default async function CategoryPage({ params }: Props) {[m
+ [m
+   return ([m
+     <main className={styles.container}>[m
+[32m+[m[32m      {/* Schema danh mục giúp Google hiểu trang này là danh sách sản phẩm có giá. */}[m
+[32m+[m[32m      <CategorySchema[m
+[32m+[m[32m        categoryName={category.name}[m
+[32m+[m[32m        categorySlug={cleanSlug}[m
+[32m+[m[32m        products={productsFromSupabase || []}[m
+[32m+[m[32m      />[m
+[32m+[m
+       <nav className={styles.breadcrumb}>[m
+         <Link href="/">Trang chủ</Link> <span> / </span> [m
+         <strong className={styles.current}>{category.name}</strong>[m
+[1mdiff --git a/src/app/actions.ts b/src/app/actions.ts[m
+[1mindex 930fb7f..638ce08 100644[m
+[1m--- a/src/app/actions.ts[m
+[1m+++ b/src/app/actions.ts[m
+[36m@@ -2,7 +2,7 @@[m
+ [m
+ import { supabase } from '@/lib/supabase'[m
+ import type { Product } from '@/types/types'[m
+[31m-// bolg . tin tức[m
+[32m+[m[32m// Lấy danh sách bài viết tin tức.[m
+ export async function getAllBlogPosts() {[m
+   const { data, error } = await supabase[m
+     .from('blog_posts')[m
+[36m@@ -85,7 +85,7 @@[m [mexport async function getProductsByMultipleCategories([m
+     console.error("Lỗi lấy sản phẩm từ Supabase:", error);[m
+     return [];[m
+   }[m
+[31m-// RANDOM SẢN PHẨM[m
+[32m+[m[32m// Xáo trộn sản phẩm để mỗi lần hiển thị danh mục có cảm giác mới hơn.[m
+ const shuffled = [...(data || [])].sort(() => Math.random() - 0.5);[m
+ [m
+ return shuffled;[m
+[36m@@ -146,9 +146,7 @@[m [mexport async function seedAllProductsAction([m
+     }[m
+   }[m
+ }[m
+[31m-// Thêm vào cuối file src/app/actions.ts[m
+[31m-[m
+[31m-// Hàm lấy toàn bộ sản phẩm[m
+[32m+[m[32m// Lấy toàn bộ sản phẩm.[m
+ export async function getAllProductsFromSupabase() {[m
+   const { data, error } = await supabase[m
+     .from('products')[m
+[36m@@ -162,7 +160,7 @@[m [mexport async function getAllProductsFromSupabase() {[m
+   return data ?? [];[m
+ }[m
+ [m
+[31m-// Hàm lấy toàn bộ danh mục (Dựa trên dữ liệu duy nhất từ bảng sản phẩm nếu bạn chưa có bảng categories riêng)[m
+[32m+[m[32m// Lấy toàn bộ danh mục từ cột category trong bảng products.[m
+ export async function getAllCategoriesFromSupabase() {[m
+   const { data, error } = await supabase[m
+     .from('products')[m
+[36m@@ -171,7 +169,7 @@[m [mexport async function getAllCategoriesFromSupabase() {[m
+ [m
+   if (error) return [];[m
+   [m
+[31m-  // Lọc ra các category duy nhất và tạo object có slug/title[m
+[32m+[m[32m  // Lọc category trùng và tạo object có slug/title để dùng cho route.[m
+   const uniqueCategories = Array.from(new Set(data.map(item => item.category)));[m
+   return uniqueCategories.map(cat => ({[m
+     slug: cat,[m
+[1mdiff --git a/src/app/api/checkout/route.ts b/src/app/api/checkout/route.ts[m
+[1mindex a75a98a..56282a1 100644[m
+[1m--- a/src/app/api/checkout/route.ts[m
+[1m+++ b/src/app/api/checkout/route.ts[m
+[36m@@ -5,7 +5,7 @@[m [mexport async function POST(req: NextRequest) {[m
+     const body = await req.json();[m
+     const { formData, cart, totalPrice, paymentMethod } = body;[m
+ [m
+[31m-    // --- THÔNG TIN ĐÃ CẤU HÌNH XONG ---[m
+[32m+[m[32m    // Thông tin Telegram đã cấu hình để nhận đơn hàng.[m
+     const TELEGRAM_BOT_TOKEN = '8781443837:AAHaF8ZTybjFQXlmRTY6vH2R09nu84E6Qy4';[m
+     const TELEGRAM_CHAT_ID = '8619570438'; [m
+     // ---------------------------------[m
+[36m@@ -45,4 +45,4 @@[m [mexport async function POST(req: NextRequest) {[m
+     console.error("Lỗi gửi Telegram:", err);[m
+     return NextResponse.json({ error: 'Lỗi xử lý đơn hàng' }, { status: 500 });[m
+   }[m
+[31m-}[

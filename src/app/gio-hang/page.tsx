@@ -52,7 +52,7 @@ export default function CheckoutClient() {
     }
   };
 
-  // 4. HÀM XỬ LÝ ĐẶT HÀNG TỔNG HỢP (Mail + QR + Zalo + Reset)
+  // Xử lý đặt hàng: lưu đơn, gửi thông báo và xóa giỏ hàng khi thành công.
   const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (cart.length === 0) {
@@ -61,7 +61,7 @@ export default function CheckoutClient() {
     }
 
     try {
-      // --- BƯỚC A.1: LƯU VÀO SUPABASE (THÊM MỚI VÀO ĐÂY) ---
+      // Lưu thông tin đơn hàng vào Supabase.
       const { data, error } = await supabase
         .from('orders')
         .insert([
@@ -76,14 +76,14 @@ export default function CheckoutClient() {
             status: 'Chờ xác nhận'
           }
         ]);
-      // BƯỚC A: Gửi Mail thông báo qua API Route
+      // Gửi email thông báo qua API route.
       await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ formData, cart, totalPrice, paymentMethod }),
       });
 
-      // BƯỚC B: Tạo nội dung tin nhắn Zalo
+      // Tạo nội dung tin nhắn Zalo cho đơn hàng.
       const phoneNumber = "0347227377"; 
       let message = `🔔 ĐƠN HÀNG MỚI TỪ WEBSITE\n`;
       message += `👤 Khách: ${formData.lastName} ${formData.firstName}\n`;
@@ -97,17 +97,17 @@ export default function CheckoutClient() {
       });
       message += `\n💰 TỔNG CỘNG: ${totalPrice.toLocaleString()}₫`;
 
-      // BƯỚC C: Xử lý theo phương thức thanh toán
+      // Xử lý tiếp theo tùy phương thức thanh toán.
       if (paymentMethod === 'bank') {
         const qrUrl = `https://img.vietqr.io/image/mbbank-0777353192-compact.png?amount=${totalPrice}&addInfo=HUNGNGOC%20${formData.phone}&accountName=Bui%20Van%20Hung`;
         alert("Cảm ơn bạn! Hệ thống sẽ hiển thị mã QR thanh toán và chuyển bạn đến Zalo để xác nhận.");
         window.open(qrUrl, '_blank');
       }
 
-      // BƯỚC D: Mở Zalo
+      // Mở Zalo để gửi thông tin đơn cho shop.
       window.open(`https://zalo.me/${phoneNumber}?text=${encodeURIComponent(message)}`, '_blank');
 
-      // BƯỚC E: RESET GIỎ HÀNG (Quan trọng nhất)
+      // Xóa giỏ hàng sau khi gửi đơn thành công.
       localStorage.removeItem('cart'); // Xóa dữ liệu trong máy khách
       setCart([]); // Xóa state để giao diện cập nhật ngay
       setTotalPrice(0);

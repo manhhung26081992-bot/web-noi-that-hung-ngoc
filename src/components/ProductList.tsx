@@ -4,7 +4,7 @@ import Link from 'next/link';
 import styles from '@/styles/Product.module.css';
 import ProductCard from './ProductCard'; 
 
-// Cập nhật Interface để nhận products từ Supabase
+// Kiểu dữ liệu đầu vào cho danh sách sản phẩm lấy từ Supabase.
 interface ProductListProps {
   products: any[];
   title?: string;
@@ -21,10 +21,10 @@ export default function ProductList({ title, products, categorySlugs, limit, vie
     setCurrentPage(1);
   }, [categorySlugs]);
 
-  // Nếu không có sản phẩm nào từ Supabase thì không hiển thị
+  // Không có sản phẩm thì không render để tránh tạo khoảng trắng thừa.
   if (!products || products.length === 0) return null;
 
-  // Logic hiển thị: Nếu có limit (trang chủ) thì lấy theo limit, nếu không (trang category) thì phân trang
+  // Trang chủ dùng limit, còn trang danh mục thì phân trang theo 8 sản phẩm.
   const displayProducts = limit 
     ? products.slice(0, limit) 
     : products.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -53,7 +53,7 @@ export default function ProductList({ title, products, categorySlugs, limit, vie
 
       <div className={styles.productGrid}>
         {displayProducts.map((p: any) => (
-          // SỬA LỖI KEY 51: Sử dụng p.id duy nhất từ Supabase
+          // Dùng id từ Supabase làm key để React nhận diện từng sản phẩm ổn định.
           <ProductCard key={p.id} product={p} />
         ))}
       </div>

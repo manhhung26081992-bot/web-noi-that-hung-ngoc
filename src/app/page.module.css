@@ -29,7 +29,7 @@
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
 }
 
-/* 3. INTRO SECTION - Tối ưu Typography cho SEO */
+/* 3. PHẦN GIỚI THIỆU - Tối ưu kiểu chữ cho SEO */
 .intro {
   display: flex;
   flex-direction: column;
@@ -54,7 +54,7 @@
   color: var(--text-sub);
 }
 
-/* 4. CALL TO ACTION (CTAs) - Tối ưu diện tích bấm cho Mobile SEO */
+/* 4. NÚT KÊU GỌI HÀNH ĐỘNG - Tối ưu diện tích bấm trên mobile */
 .ctas {
   display: flex;
   flex-direction: row;
@@ -67,7 +67,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 48px; /* Tăng lên 48px theo chuẩn Google Mobile Friendly */
+  height: 48px; /* Tăng lên 48px theo chuẩn thân thiện mobile của Google */
   padding: 0 28px;
   border-radius: 8px; /* Bo góc nhẹ nhàng phù hợp ngành nội thất */
   font-weight: 600;
@@ -88,7 +88,7 @@ a.secondary {
   color: var(--text-main);
 }
 
-/* 5. INTERACTION & RESPONSIVE */
+/* 5. TƯƠNG TÁC VÀ RESPONSIVE */
 @media (hover: hover) {
   a.primary:hover {
     background: var(--primary-hover);
@@ -112,7 +112,7 @@ a.secondary {
   }
 
   .ctas {
-    flex-direction: column; /* Mobile ưu tiên nút chồng lên nhau */
+    flex-direction: column; /* Trên mobile: ưu tiên nút xếp dọc */
   }
 
   .ctas a {

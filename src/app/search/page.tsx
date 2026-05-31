@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Suspense, useState, useEffect } from 'react';
 import styles from '@/styles/Search.module.css';
 
-// Khởi tạo Supabase client (Thay URL và Key của bạn vào đây hoặc dùng biến môi trường)
+// Khởi tạo Supabase client cho trang tìm kiếm.
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://oytmbjoxetmbjsvlyiph.supabase.co';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -27,7 +27,7 @@ function SearchContent() {
       setLoading(true);
       try {
         // Truy vấn bảng 'products'
-        // Sử dụng .ilike để tìm kiếm không phân biệt hoa thường trực tiếp từ database (tốt cho SEO & hiệu năng)
+        // Dùng .ilike để tìm không phân biệt hoa thường trực tiếp trong database.
         let { data, error } = await supabase
           .from('products')
           .select('*')
@@ -51,7 +51,7 @@ function SearchContent() {
     }
   }, [query]);
 
-  // --- LOGIC PHÂN TRANG ---
+  // Tính dữ liệu phân trang cho kết quả tìm kiếm.
   const totalPages = Math.ceil(products.length / itemsPerPage);
   const currentItems = products.slice(
     (currentPage - 1) * itemsPerPage,

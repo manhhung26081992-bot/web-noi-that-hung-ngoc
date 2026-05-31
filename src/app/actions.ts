@@ -2,7 +2,7 @@
 
 import { supabase } from '@/lib/supabase'
 import type { Product } from '@/types/types'
-// bolg . tin tức
+// Lấy danh sách bài viết tin tức.
 export async function getAllBlogPosts() {
   const { data, error } = await supabase
     .from('blog_posts')
@@ -85,7 +85,7 @@ export async function getProductsByMultipleCategories(
     console.error("Lỗi lấy sản phẩm từ Supabase:", error);
     return [];
   }
-// RANDOM SẢN PHẨM
+// Xáo trộn sản phẩm để mỗi lần hiển thị danh mục có cảm giác mới hơn.
 const shuffled = [...(data || [])].sort(() => Math.random() - 0.5);
 
 return shuffled;
@@ -146,9 +146,7 @@ export async function seedAllProductsAction(
     }
   }
 }
-// Thêm vào cuối file src/app/actions.ts
-
-// Hàm lấy toàn bộ sản phẩm
+// Lấy toàn bộ sản phẩm.
 export async function getAllProductsFromSupabase() {
   const { data, error } = await supabase
     .from('products')
@@ -162,7 +160,7 @@ export async function getAllProductsFromSupabase() {
   return data ?? [];
 }
 
-// Hàm lấy toàn bộ danh mục (Dựa trên dữ liệu duy nhất từ bảng sản phẩm nếu bạn chưa có bảng categories riêng)
+// Lấy toàn bộ danh mục từ cột category trong bảng products.
 export async function getAllCategoriesFromSupabase() {
   const { data, error } = await supabase
     .from('products')
@@ -171,7 +169,7 @@ export async function getAllCategoriesFromSupabase() {
 
   if (error) return [];
   
-  // Lọc ra các category duy nhất và tạo object có slug/title
+  // Lọc category trùng và tạo object có slug/title để dùng cho route.
   const uniqueCategories = Array.from(new Set(data.map(item => item.category)));
   return uniqueCategories.map(cat => ({
     slug: cat,

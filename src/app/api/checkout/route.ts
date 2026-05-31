@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { formData, cart, totalPrice, paymentMethod } = body;
 
-    // --- THÔNG TIN ĐÃ CẤU HÌNH XONG ---
+    // Thông tin Telegram đã cấu hình để nhận đơn hàng.
     const TELEGRAM_BOT_TOKEN = '8781443837:AAHaF8ZTybjFQXlmRTY6vH2R09nu84E6Qy4';
     const TELEGRAM_CHAT_ID = '8619570438'; 
     // ---------------------------------

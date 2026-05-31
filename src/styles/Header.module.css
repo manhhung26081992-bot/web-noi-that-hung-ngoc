@@ -45,7 +45,7 @@
 .desktopSearch {
   flex: 1;
   max-width: 450px;
-  display: block; /* Hiện trên Desktop */
+  display: block; /* Hiện trên máy tính */
 }
 
 /* CSS cho component SearchBar bên trong wrapper */
@@ -60,7 +60,7 @@
   cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
 
-/* XỬ LÝ LỖI: Ẩn tuyệt đối các ô tìm kiếm phụ trên Desktop */
+/* Xử lý lỗi: ẩn tuyệt đối các ô tìm kiếm phụ trên máy tính */
 .mobileMenuSearch, .mobileSearchBtn, .mobileSearchDropdown {
   display: none !important;
 }
@@ -83,7 +83,7 @@
 }
 .menuItem:hover, .active { background-color: #f39200; }
 
-/* Dropdown logic */
+/* Logic menu thả xuống */
 .dropdownMenu {
   position: absolute; top: 100%; left: 0; background-color: #f1f1f1;
   min-width: 230px; list-style: none; padding: 0; margin: 0;
@@ -112,7 +112,7 @@
   border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff;
 }
 
-/* --- 6. MOBILE RESPONSIVE (< 768px) --- */
+/* --- 6. RESPONSIVE MOBILE (< 768px) --- */
 @media (max-width: 768px) {
   .topBar { 
     display: flex;
@@ -143,13 +143,13 @@
     width: auto;
     object-fit: contain;
   }
-  /* Ẩn các thành phần Desktop */
+  /* Ẩn các thành phần chỉ dành cho máy tính */
   .desktopSearch,
    .brandText, 
    .hotline, 
    .cartBtn { display: none !important; }
 
-  /* Logo & Hamburger Mobile */
+  /* Logo và nút menu trên mobile */
   .logoWrapper { flex: 1;
      display: flex; 
      justify-content: 
@@ -184,7 +184,7 @@
   }
   .searchActive { max-height: 70px; padding: 12px 15px; border-bottom: 2px solid #d0021b; }
 
-  /* Sidebar Mobile */
+  /* Thanh menu trượt trên mobile */
   .nav {
     position: fixed; top: 0; left: -100%; width: 260px; height: 100vh;
     transition: 0.3s; z-index: 10002; overflow-y: auto;

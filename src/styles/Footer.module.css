@@ -31,7 +31,7 @@
   padding: 20px 15px;
   text-align: center;
   display: flex;
-  flex-direction: column; /* Ép chia làm 2 dòng trên Mobile */
+  flex-direction: column; /* Ép chia làm 2 dòng trên mobile */
   align-items: center;    /* Căn giữa đều cả 2 dòng */
   gap: 10px;              /* Khoảng cách giữa dòng Hotline và Bản quyền */
   border-top: 1px solid #222;

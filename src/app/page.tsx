@@ -70,7 +70,7 @@ const bunkBedGroup = ['giuong-tang-sat', 'giuong-tang']
             />
             <ProductList
   title="GIƯỜNG TẦNG SẮT"
-  products={bunkBedProducts} // ĐÚNG: Đây mới là mảng dữ liệu sản phẩm lấy từ Promise.all
+  products={bunkBedProducts} // Mảng sản phẩm giường tầng đã lấy từ Promise.all.
   limit={8}
   viewAllLink="/giuong-tang-sat"
 />

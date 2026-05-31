@@ -1,4 +1,4 @@
-/* 1. KHAI BÁO BIẾN (Variables) - Dễ dàng thay đổi màu sắc thương hiệu toàn trang */
+/* 1. KHAI BÁO BIẾN - Dễ thay đổi màu sắc thương hiệu toàn trang */
 
 
 
@@ -22,7 +22,7 @@
 .main {
   padding-top: 70px;
 }
-/* Chế độ tối (Dark Mode) - Tối ưu cho thiết bị hiện đại */
+/* Chế độ tối - Tối ưu cho thiết bị hiện đại */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -32,7 +32,7 @@
   }
 }
 
-/* 2. RESET & BASE STYLES */
+/* 2. RESET VÀ KIỂU NỀN TẢNG */
 * {
   box-sizing: border-box;
   padding: 0;
@@ -55,7 +55,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* 3. TYPOGRAPHY (Tối ưu Heading cho SEO) */
+/* 3. KIỂU CHỮ - Tối ưu heading cho SEO */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   line-height: 1.2;
@@ -67,7 +67,7 @@ h1, h2, h3, h4, h5, h6 {
   h1, h2, h3, h4, h5, h6 { color: var(--foreground); }
 }
 
-/* 4. MEDIA & ASSETS (Chống giật lag Layout Shift) */
+/* 4. HÌNH ẢNH VÀ TÀI NGUYÊN - Chống giật layout */
 img {
   max-width: 100%;
   height: auto;
@@ -75,7 +75,7 @@ img {
   font-style: italic; /* Hiển thị đẹp hơn khi ảnh bị lỗi alt */
 }
 
-/* 5. COMPONENTS DÙNG CHUNG (Utility Classes) */
+/* 5. THÀNH PHẦN DÙNG CHUNG */
 a {
   color: inherit;
   text-decoration: none;
@@ -93,7 +93,7 @@ a:hover {
   padding: 0 1rem;
 }
 
-/* Hidden but SEO-friendly (Bot vẫn đọc được) */
+/* Ẩn trên giao diện nhưng bot vẫn đọc được */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -112,7 +112,7 @@ a:hover {
 @media (max-width: 1024px) {.mainContent {
     padding-top: 0; /* đúng chiều cao mobile */
   }}
-/* 6. RESPONSIVE OPTIMIZATION (Mobile First) */
+/* 6. TỐI ƯU RESPONSIVE THEO MOBILE TRƯỚC */
 @media (max-width: 768px) {
   h1 { font-size: 1.75rem; }
   h2 { font-size: 1.5rem; }
@@ -125,7 +125,7 @@ a:hover {
    .mainContent {
     padding-top: 0; /* đúng chiều cao mobile */
   }
-  /* Tăng diện tích bấm cho mobile (SEO Mobile Friendliness) */
+  /* Tăng diện tích bấm trên mobile để thân thiện với Google. */
   a, button {
     min-height: 44px;
     min-width: 44px;
@@ -136,4 +136,3 @@ a:hover {
     padding-top: 60px;
   }
 }
-

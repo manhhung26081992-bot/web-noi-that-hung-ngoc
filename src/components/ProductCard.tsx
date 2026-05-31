@@ -11,18 +11,18 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, enableSchema = false }: ProductCardProps) {
   
-  // 1. Hàm tối ưu ảnh qua Supabase (Né lỗi 402 của Vercel)
+  // Tối ưu ảnh qua Supabase để giảm dung lượng và tránh vượt giới hạn Vercel.
   const getOptimizedUrl = (url: any) => {
     const imageUrl = Array.isArray(url) ? url[0] : url;
     if (!imageUrl || imageUrl.includes('default-product') || imageUrl.includes('logo.png')) {
       return '/default-product.webp';
     }
     const separator = imageUrl.includes('?') ? '&' : '?';
-    // Nén về 400px để trang chủ tải cực nhanh
+    // Ảnh card chỉ cần 400px để trang chủ và danh mục tải nhanh.
     return `${imageUrl}${separator}width=400&quality=70`;
   };
 
-  // 2. Định dạng giá tiền chuẩn Việt Nam
+  // Định dạng giá tiền theo chuẩn Việt Nam.
   const formatPrice = (price: string | number) => {
     if (!price || price === "0") return "Liên hệ báo giá";
     if (typeof price === "string" && isNaN(Number(price))) return price;
@@ -32,11 +32,11 @@ export default function ProductCard({ product, enableSchema = false }: ProductCa
     }).format(Number(price));
   };
 
-  // 3. Logic thêm vào giỏ hàng
+  // Thêm sản phẩm vào giỏ hàng và ghi nhận chuyển đổi nếu có Google Ads.
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Ghi nhận chuyển đổi Thêm vào giỏ hàng
+    // Ghi nhận chuyển đổi khi khách bấm thêm vào giỏ hàng.
     if (typeof window !== 'undefined' && (window as any).gtag) {
       (window as any).gtag('event', 'conversion', {
         'send_to': 'AW-18110246759/5w0kCNDuo6gcEOfe0btD',

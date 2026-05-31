@@ -9,7 +9,7 @@ export async function GET() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     
-    // 1. Lấy đầy đủ các cột dữ liệu cần thiết từ Supabase
+    // Lấy đầy đủ các cột cần thiết từ Supabase để tạo feed sản phẩm.
     const { data: products, error } = await supabase
       .from('products')
       .select('id, name, slug, image, images, price, description, detailDescription')
@@ -24,7 +24,7 @@ export async function GET() {
     <description>Sản phẩm từ noithathungngoc.com</description>
     ${products?.map(p => {
       // 2. Xử lý Mô tả: Ưu tiên detailDescription, nếu trống thì dùng description
-      // Đồng thời xóa bỏ các thẻ HTML như <p>, <b> để Google không báo lỗi
+      // Xóa các thẻ HTML như <p>, <b> để Google Merchant không báo lỗi mô tả.
       const rawDescription = p.detailDescription || p.description || `Sản phẩm nội thất chất lượng từ Nội Thất Hùng Ngọc - ${p.name}`;
       const cleanDescription = rawDescription
         .replace(/<[^>]*>?/gm, '') // Xóa thẻ HTML

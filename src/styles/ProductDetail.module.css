@@ -285,7 +285,7 @@
 .productGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 
 /* =============================================
-   8. RESPONSIVE (TABLET & MOBILE)
+   8. RESPONSIVE CHO TABLET VÀ MOBILE
    ============================================= */
 @media (max-width: 1024px) {
   .productTopWrapper { flex-direction: column; }

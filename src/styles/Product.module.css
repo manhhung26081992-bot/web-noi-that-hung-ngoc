@@ -134,7 +134,7 @@
   margin-bottom: 15px;
 }
 
-/* 5. NÚT THÊM VÀO GIỎ - Tối ưu Mobile UX */
+/* 5. NÚT THÊM VÀO GIỎ - Tối ưu trải nghiệm mobile */
 .addToCartBtn {
   background-color: transparent;
   color: #f39200;
@@ -159,7 +159,7 @@
   box-shadow: 0 4px 12px rgba(243, 146, 0, 0.3);
 }
 
-/* 6. SEO LINKS (Gợi ý tìm kiếm) */
+/* 6. LINK SEO GỢI Ý TÌM KIẾM */
 .subCategoryLinks {
   margin-top: 15px;
   font-size: 13px;
@@ -272,7 +272,7 @@
 .pageBtn:hover:not(.activePage) {
   background-color: #f0f0f0;
 }
-/* --- RESPONSIVE OPTIMIZATION --- */
+/* --- TỐI ƯU RESPONSIVE --- */
 @media (max-width: 1024px) {
   .productGrid { grid-template-columns: repeat(3, 1fr); gap: 15px; }
 }

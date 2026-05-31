@@ -1,4 +1,4 @@
-/* --- GIAO DIỆN MÁY TÍNH (GIỮ NGUYÊN PHONG CÁCH CỦA BẠN) --- */
+/* --- GIAO DIỆN MÁY TÍNH --- */
 .container {
   max-width: 1200px;
   margin: 40px auto;
@@ -149,7 +149,7 @@
   cursor: pointer;
 }
 
-/* --- GIAO DIỆN MOBILE (THÔNG TIN TRÊN - ĐƠN HÀNG DƯỚI) --- */
+/* --- GIAO DIỆN MOBILE: THÔNG TIN TRÊN, ĐƠN HÀNG DƯỚI --- */
 @media (max-width: 768px) {
   /* Tăng độ ưu tiên bằng bộ chọn kép để không cần dùng important */
   .container .checkoutForm {

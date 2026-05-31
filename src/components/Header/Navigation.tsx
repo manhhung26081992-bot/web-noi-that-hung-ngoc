@@ -29,12 +29,12 @@ export default function Navigation({ isOpen, setIsOpen, children }: NavigationPr
 
   return (
     <>
-      {/* Overlay: Lớp phủ đen khi mở menu mobile */}
+      {/* Lớp phủ đen khi mở menu mobile. */}
       {isOpen && <div className={styles.overlay} onClick={() => setIsOpen(false)} />}
 
       <nav className={`${styles.nav} ${isOpen ? styles.navActive : ''}`}>
         
-        {/* HIỂN THỊ Ô TÌM KIẾM TRÊN MOBILE TẠI ĐÂY */}
+        {/* Hiển thị ô tìm kiếm trong menu mobile. */}
         {isOpen && children}
         {/* {children} */}
 

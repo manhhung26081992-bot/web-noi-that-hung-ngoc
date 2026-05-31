@@ -7,9 +7,10 @@ import { Product } from '@/types/types';
 interface ProductCardProps {
   product: Product;
   enableSchema?: boolean;
+  priority?: boolean;
 }
 
-export default function ProductCard({ product, enableSchema = false }: ProductCardProps) {
+export default function ProductCard({ product, enableSchema = false, priority = false }: ProductCardProps) {
   
   // Tối ưu ảnh qua Supabase để giảm dung lượng và tránh vượt giới hạn Vercel.
   const getOptimizedUrl = (url: any) => {
@@ -85,7 +86,6 @@ export default function ProductCard({ product, enableSchema = false }: ProductCa
         href={`/san-pham/${product.slug}`} 
         title={`Chi tiết sản phẩm ${product.name}`}
         className={styles.productLink}
-        prefetch={false}
       >
         <div className={styles.imgBox} style={{ position: 'relative', width: '100%', aspectRatio: '1/1', overflow: 'hidden' }}>
           {/* DÙNG THẺ IMG THUẦN ĐỂ NÉ LỖI 402 */}
@@ -100,7 +100,8 @@ export default function ProductCard({ product, enableSchema = false }: ProductCa
               objectFit: 'contain',
               display: 'block'
             }}
-            loading="lazy"
+            loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : 'auto'}
             decoding="async"
             onError={(e) => {
   const target = e.target as HTMLImageElement;

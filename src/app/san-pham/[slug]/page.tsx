@@ -1,7 +1,7 @@
 import { 
   getProductBySlug, 
-  getAllProductsFromSupabase, 
-  getAllCategoriesFromSupabase 
+  getAllProductsFromSupabase,
+  getRelatedProductsByCategory
 } from '@/app/actions';
 import ProductDetailClient from './ProductDetailClient';
 import { notFound } from 'next/navigation';
@@ -13,16 +13,11 @@ export const revalidate = 604800;
 // Tạo sẵn các trang tĩnh trong lúc build để tải nhanh và tốt cho SEO.
 export async function generateStaticParams() {
   try {
-    const [products, categories] = await Promise.all([
-      getAllProductsFromSupabase(),
-      getAllCategoriesFromSupabase()
-    ]);
+    const products = await getAllProductsFromSupabase();
 
     // Dùng ?. để tránh sập build khi Supabase trả về rỗng.
     const productSlugs = products?.map((p: any) => ({ slug: p.slug })) || [];
-    const categorySlugs = categories?.map((c: any) => ({ slug: c.slug })) || [];
-
-    return [...productSlugs, ...categorySlugs];
+    return productSlugs;
   } catch (error) {
     console.error("Lỗi khi chạy generateStaticParams:", error);
     return [];
@@ -66,24 +61,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   
-  const [product, allProducts, allCategories] = await Promise.all([
-    getProductBySlug(slug),
-    getAllProductsFromSupabase(), 
-    getAllCategoriesFromSupabase()
-  ]);
+  const product = await getProductBySlug(slug);
 
-  const productExists = !!product;
-  const isCategory = allCategories?.some((c: any) => c.slug === slug) || false;
-
-  if (!productExists && !isCategory) {
+  if (!product) {
     notFound();
   }
 
+  const relatedProducts = await getRelatedProductsByCategory(
+    product.category,
+    product.slug,
+    8
+  );
+
   return (
     <ProductDetailClient 
-      params={params} 
-      allProducts={allProducts} 
-      allCategories={allCategories} 
+      product={product}
+      relatedProducts={relatedProducts}
     />
   );
 }

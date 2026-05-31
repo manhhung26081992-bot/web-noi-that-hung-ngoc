@@ -185,6 +185,26 @@ export async function getProductBySlug(slug: string) {
     .single();
   return data;
 }
+
+export async function getRelatedProductsByCategory(
+  category: string,
+  excludeSlug: string,
+  limit = 8
+) {
+  const { data, error } = await supabase
+    .from('products')
+    .select(PRODUCT_FIELDS)
+    .eq('category', category)
+    .neq('slug', excludeSlug)
+    .limit(limit);
+
+  if (error) {
+    console.error('Lỗi lấy sản phẩm cùng danh mục:', error.message);
+    return [];
+  }
+
+  return data ?? [];
+}
 // 'use server'
 
 // import { supabase } from '@/lib/supabase'

@@ -44,7 +44,6 @@ export default function ProductList({ title, products, categorySlugs, limit, vie
           <Link 
             href={viewAllLink || (categorySlugs ? `/${categorySlugs[0]}` : '#')} 
             className={styles.viewAll}
-            prefetch={false}
           >
             + Xem tất cả
           </Link>
@@ -52,9 +51,13 @@ export default function ProductList({ title, products, categorySlugs, limit, vie
       </div>
 
       <div className={styles.productGrid}>
-        {displayProducts.map((p: any) => (
+        {displayProducts.map((p: any, index: number) => (
           // Dùng id từ Supabase làm key để React nhận diện từng sản phẩm ổn định.
-          <ProductCard key={p.id} product={p} />
+          <ProductCard
+            key={p.id}
+            product={p}
+            priority={!limit && currentPage === 1 && index < 2}
+          />
         ))}
       </div>
 

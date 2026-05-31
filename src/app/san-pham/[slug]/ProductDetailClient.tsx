@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, use, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 // import Image from 'next/image';
 import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
@@ -8,16 +8,18 @@ import ProductSchema from '@/components/ProductSchema';
 import styles from '@/styles/ProductDetail.module.css';
 import { Product, CartItem } from '@/types/types';
 
-export default function ProductDetailClient({ params, allProducts, allCategories }: any) {
-  const { slug } = use(params) as { slug: string };
-  
-  const products = (allProducts as any) as Product[];
-  const categories = (allCategories as any) as any[];
+export default function ProductDetailClient({
+  product: productData,
+  relatedProducts = [],
+}: {
+  product: Product;
+  relatedProducts?: Product[];
+}) {
 
   // const product = useMemo(() => products.find((p) => p.slug === slug), [slug, products]);
   // Sửa lại đoạn useMemo để xử lý specs ngay khi nhận dữ liệu
 const product = useMemo(() => {
-  const found = products.find((p) => p.slug === slug);
+  const found = { ...productData };
   if (found && found.specs && typeof found.specs === 'string') {
     try {
       // Nếu specs là chuỗi, ta chuyển nó về dạng Object
@@ -27,9 +29,7 @@ const product = useMemo(() => {
     }
   }
   return found;
-}, [slug, products]);
-  const isCategory = useMemo(() => categories.some((c) => c.slug === slug), [slug, categories]);
-  const categoryProducts = useMemo(() => products.filter((p) => p.category === slug), [slug, products]);
+}, [productData]);
 
   // Xử lý zoom ảnh và slider ảnh sản phẩm.
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -81,7 +81,7 @@ const allImages = useMemo(() => {
   useEffect(() => {
     setActiveImgIndex(0);
     setQuantity(1);
-  }, [slug]);
+  }, [product.slug]);
 
   // --- GIỎ HÀNG ---
   const handleAddToCart = () => {
@@ -104,22 +104,8 @@ const allImages = useMemo(() => {
     alert(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
   };
 
-  if (isCategory) {
-    const currentCat = categories.find(c => c.slug === slug);
-    return (
-      <main className={styles.container}>
-        <h1 className={styles.categoryTitle}>{currentCat?.title}</h1>
-        <div className={styles.productGrid}>
-          {categoryProducts.map((p) => <ProductCard key={p.id} product={p as any} />)}
-        </div>
-      </main>
-    );
-  }
-
   if (!product) return null;
 
-  const parentCategory = categories.find(c => c.slug === product.category);
-  const relatedProducts = products.filter(p => p.category === product.category && p.slug !== slug).slice(0, 8);
   const numericPrice = Number(String(product.price).replace(/\D/g, '')) || 0;
 
   return (
@@ -131,7 +117,7 @@ const allImages = useMemo(() => {
         <ul>
           <li><Link href="/">Trang chủ</Link></li>
           <li className={styles.separator}>/</li>
-          <li><Link href={`/san-pham/${product.category}`}>{parentCategory?.title || "Sản phẩm"}</Link></li>
+          <li><Link href={`/${product.category}`}>{product.category || "Sản phẩm"}</Link></li>
           <li className={styles.separator}>/</li>
           <li><strong>{product.name}</strong></li>
         </ul>
@@ -152,6 +138,8 @@ const allImages = useMemo(() => {
   alt={product.name}
   width={800}
   height={800}
+  loading="eager"
+  fetchPriority="high"
   decoding="async"
   className={styles.actualImage} // 👈 Chỉ giữ lại class, XÓA BỎ DÒNG style={{...}} inline cũ
   onError={(e) => {
@@ -274,7 +262,7 @@ const allImages = useMemo(() => {
             </div>
             <button className={styles.addToCartBtn} onClick={handleAddToCart}>THÊM VÀO GIỎ HÀNG</button>
           </div>
-          <p className={styles.catInfo}>Danh mục: <span>{parentCategory?.title}</span></p>
+          <p className={styles.catInfo}>Danh mục: <span>{product.category}</span></p>
         </div>
 
         <aside className={styles.trustSidebar}>

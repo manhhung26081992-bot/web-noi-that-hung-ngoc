@@ -32,6 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Trang chủ.
   addUrl('/', 'daily', 1);
+  addUrl('/tin-tuc', 'weekly', 0.8);
 
   // Các trang danh mục lấy từ menu chính và menu con.
   MENU_ITEMS.forEach((item) => {
@@ -56,6 +57,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   (products || []).forEach((product) => {
     if (product.slug) {
       addUrl(`/san-pham/${product.slug}`, 'weekly', 0.8);
+    }
+  });
+
+  const { data: posts, error: blogError } = await supabase
+    .from('blog_posts')
+    .select('slug, created_at');
+
+  if (blogError) {
+    console.error('Lỗi tạo sitemap tin tức:', blogError.message);
+  }
+
+  (posts || []).forEach((post) => {
+    if (post.slug) {
+      const url = `${baseUrl}/tin-tuc/${post.slug}/`;
+
+      urls.set(url, {
+        url,
+        lastModified: post.created_at || new Date(),
+        changeFrequency: 'monthly',
+        priority: 0.6,
+      });
     }
   });
 

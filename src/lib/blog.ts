@@ -4,7 +4,7 @@ export async function getBlogBySlug(slug: string) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('blog_posts') // Đúng tên bảng trong database của bạn
+    .from('blog_posts') // Bảng lưu bài viết tin tức/cẩm nang.
     .select('*')
     .eq('slug', slug)
     .single();
@@ -15,19 +15,29 @@ export async function getBlogBySlug(slug: string) {
   }
 
   return {
+    id: data.id,
+    slug: data.slug,
     title: data.title,
     content: data.content,
-    image: data.image || '/logo.png', // Sử dụng cột 'image'
-    description: data.excerpt,        // Sử dụng cột 'excerpt' làm mô tả SEO
-    createdAt: data.created_at
+    excerpt: data.excerpt || '',
+    image: data.image || '/logo.png',
+    description: data.excerpt || '',
+    createdAt: data.created_at,
+    updatedAt: data.updated_at || data.created_at,
   };
 }
 
 export async function getAllBlogs() {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('blog_posts')
     .select('*')
     .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Lỗi lấy danh sách bài viết:', error.message);
+    return [];
+  }
+
   return data || [];
 }

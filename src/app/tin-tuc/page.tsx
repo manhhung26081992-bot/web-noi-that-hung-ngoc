@@ -1,13 +1,57 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getAllBlogs } from "@/lib/blog";
 
-export const revalidate = 0;
+export const revalidate = 86400;
+
+export const metadata: Metadata = {
+  title: "Tin tức & Cẩm nang nội thất - Nội Thất Hùng Ngọc",
+  description:
+    "Cẩm nang chọn mua bàn ghế văn phòng, tủ locker, sofa, nội thất gia đình và kinh nghiệm thi công nội thất giá tốt tại Hà Nội.",
+  alternates: {
+    canonical: "/tin-tuc",
+  },
+  openGraph: {
+    title: "Tin tức & Cẩm nang nội thất - Nội Thất Hùng Ngọc",
+    description:
+      "Kinh nghiệm chọn mua, bố trí và bảo quản nội thất văn phòng, gia đình từ Nội Thất Hùng Ngọc.",
+    url: "https://www.noithathungngoc.com/tin-tuc",
+    type: "website",
+  },
+};
 
 export default async function NewsPage() {
   const posts = await getAllBlogs();
 
+  const collectionSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Tin tức & Cẩm nang nội thất",
+    url: "https://www.noithathungngoc.com/tin-tuc",
+    description: metadata.description,
+    publisher: {
+      "@type": "Organization",
+      name: "Nội Thất Hùng Ngọc",
+      url: "https://www.noithathungngoc.com",
+      logo: "https://www.noithathungngoc.com/logo.png",
+    },
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: posts.slice(0, 20).map((post: any, index: number) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        url: `https://www.noithathungngoc.com/tin-tuc/${post.slug}`,
+        name: post.title,
+      })),
+    },
+  };
+
   return (
     <main className="container mx-auto px-4 py-12 min-h-screen">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema).replace(/</g, "\\u003c") }}
+      />
       <header className="mb-12 border-b pb-6">
         <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900">
           Tin tức & Cẩm nang Nội thất

@@ -1,8 +1,16 @@
 import Hero from '@/components/Hero'
 import ProductList from '@/components/ProductList'
 import styles from './page.module.css'
+import type { Metadata } from 'next'
 
 import { getProductsByMultipleCategories } from '@/app/actions'
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/',
+  },
+}
+
 export const revalidate = 86400
 
 export default async function Home() {

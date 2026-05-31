@@ -22,10 +22,6 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.noithathungngoc.com'),
 
-  alternates: {
-    canonical: '/',
-  },
-
   title: {
     default: 'Nội Thất Hùng Ngọc | Nội Thất Văn Phòng & Gia Đình Giá Rẻ Hà Nội',
     template: '%s | Nội Thất Hùng Ngọc',

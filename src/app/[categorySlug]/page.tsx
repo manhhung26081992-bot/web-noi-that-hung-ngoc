@@ -1,5 +1,6 @@
 import { MENU_ITEMS } from '@/components/Header/menuData'; 
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import ProductList from '@/components/ProductList';
 import CategorySchema from '@/components/CategorySchema';
 import styles from '@/styles/Category.module.css';
@@ -40,6 +41,32 @@ function findCategoryInfo(slug: string) {
   }
 
   return null;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { categorySlug } = await params;
+  const cleanSlug = categorySlug.replace(/^\/|\/$/g, '');
+  const category = findCategoryInfo(cleanSlug);
+  const categorySeo = await getCategoryBySlug(cleanSlug);
+  const title = categorySeo?.seo_title || category?.name || 'Danh mục sản phẩm';
+
+  return {
+    title,
+    description:
+      categorySeo?.seo_content ||
+      `Mua ${title} giá tốt tại Nội Thất Hùng Ngọc. Giao hàng nhanh tại Hà Nội.`,
+    alternates: {
+      canonical: `/${cleanSlug}`,
+    },
+    openGraph: {
+      title,
+      description:
+        categorySeo?.seo_content ||
+        `Mua ${title} giá tốt tại Nội Thất Hùng Ngọc. Giao hàng nhanh tại Hà Nội.`,
+      url: `https://www.noithathungngoc.com/${cleanSlug}`,
+      type: 'website',
+    },
+  };
 }
 
 export default async function CategoryPage({ params }: Props) {

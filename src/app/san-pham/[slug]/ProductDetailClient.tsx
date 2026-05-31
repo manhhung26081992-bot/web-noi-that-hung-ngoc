@@ -44,13 +44,13 @@ const product = useMemo(() => {
     setMousePosition({ x, y });
   };
 
-  const getOptimizedUrl = (url: string) => {
+  const getOptimizedUrl = (url: string, width = 800, quality = 75) => {
   if (!url || url.startsWith('/') || url.includes('logo.png')) return url;
   
   try {
     const separator = url.includes('?') ? '&' : '?';
     // Thêm các tham số nén của Supabase
-    return `${url}${separator}width=800&quality=75`;
+    return `${url}${separator}width=${width}&quality=${quality}`;
   } catch (e) {
     return url;
   }
@@ -195,7 +195,7 @@ const allImages = useMemo(() => {
                 <div 
                   className={styles.magnifiedImage}
                   style={{ 
-                    backgroundImage: `url(${allImages[activeImgIndex]})`, 
+                    backgroundImage: `url(${getOptimizedUrl(allImages[activeImgIndex], 1200, 80)})`, 
                     backgroundPosition: `${mousePosition.x}% ${mousePosition.y}%` 
                   }}
                 />
@@ -210,7 +210,14 @@ const allImages = useMemo(() => {
                   className={`${styles.thumbItem} ${idx === activeImgIndex ? styles.thumbActive : ''}`} 
                   onClick={() => setActiveImgIndex(idx)}
                 >
-                  <img src={img ||'/logo.png'} alt={`${product.name} thumbnail ${idx + 1}`} width={80} height={80} loading="lazy"/>
+                  <img
+                    src={getOptimizedUrl(img || '/logo.png', 120, 65)}
+                    alt={`${product.name} thumbnail ${idx + 1}`}
+                    width={80}
+                    height={80}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </div>
               ))}
             </div>
@@ -311,11 +318,12 @@ const allImages = useMemo(() => {
                   (product as any).realInstallImages.map((img: string, index: number) => (
                     <div key={index} className={styles.realImageCard}>
                       <img 
-                        src={img} 
+                        src={getOptimizedUrl(img, 700, 72)} 
                         alt={`Ảnh thực tế ${product.name}`} 
                         width={600} height={450} 
                         className={styles.realImage} 
                         loading="lazy"
+                        decoding="async"
                       />
                       <div className={styles.imageBadge}>Ảnh thực tế</div>
                     </div>
@@ -324,11 +332,12 @@ const allImages = useMemo(() => {
                   /* Nếu không có, dùng tạm ảnh đầu tiên nhưng hiển thị theo style thực tế */
                   <div className={styles.realImageCard}>
                     <img
-                      src={allImages[0]} 
+                      src={getOptimizedUrl(allImages[0], 700, 72)} 
                       alt={`Hình ảnh thực tế ${product.name}`} 
                       width={800} height={600} 
                       className={styles.realImage} 
                       loading="lazy"
+                      decoding="async"
                     />
                     <div className={styles.imageBadge}>Hùng Ngoc Furniture</div>
                   </div>

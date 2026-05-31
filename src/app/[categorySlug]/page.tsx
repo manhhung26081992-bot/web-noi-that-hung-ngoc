@@ -11,6 +11,8 @@ interface Props {
   params: Promise<{ categorySlug: string }>;
 }
 
+export const revalidate = 604800;
+
 const CATEGORY_GROUPS: { [key: string]: string[] } = {
   'sofa': ['sofa', 'ban-sofa', 'sofa-giuong', 'sofa-da', 'sofa-ni', 'sofa-vang'],
   'ghe-van-phong': ['ghe-xoay', 'ghe-chan-quy', 'ghe-giam-doc', 'ghe-gap', 'ghe-gaming', 'ghe-van-phong'],
@@ -41,6 +43,22 @@ function findCategoryInfo(slug: string) {
   }
 
   return null;
+}
+
+export function generateStaticParams() {
+  const slugs = new Set<string>();
+
+  MENU_ITEMS.forEach((item) => {
+    const itemSlug = item.link.replace(/^\/|\/$/g, '');
+    if (itemSlug) slugs.add(itemSlug);
+
+    item.submenu?.forEach((sub) => {
+      const subSlug = sub.link.replace(/^\/|\/$/g, '');
+      if (subSlug) slugs.add(subSlug);
+    });
+  });
+
+  return Array.from(slugs).map((categorySlug) => ({ categorySlug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

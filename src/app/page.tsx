@@ -101,7 +101,7 @@ const bunkBedGroup = ['giuong-tang-sat', 'giuong-tang']
               title="BÀN GHẾ CAFE"
               products={cafeProducts}
               limit={8}
-              viewAllLink="/san-pham/ban-ghe-cafe"
+              viewAllLink="/ban-ghe-cafe"
             />
 
             <ProductList

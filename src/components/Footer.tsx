@@ -23,8 +23,8 @@ export default function Footer() {
       links: [
         { name: "Bàn chân sắt giá rẻ", url: "/ban-chan-sat" },
         { name: "Bàn giám đốc hiện đại", url: "/ban-giam-doc" },
-        { name: "Bàn họp văn phòng", url: "/ban-lam-viec" },
-        { name: "Bàn làm việc tại nhà", url: "/ban-lam-viec" }
+        { name: "Bàn họp văn phòng", url: "/ban-hop" },
+        { name: "Bàn làm việc tại nhà", url: "/ban-van-phong" }
       ]
     },
     {

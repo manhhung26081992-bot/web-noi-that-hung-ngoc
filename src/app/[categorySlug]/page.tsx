@@ -20,11 +20,108 @@ const CATEGORY_GROUPS: { [key: string]: string[] } = {
   'ke-trang-tri': ['ke-go', 'ke-sach', 'ke-ti-vi', 'ke-trang-tri'],
   'ke-go': ['ke-go', 'ke-sach', 'ke-ti-vi', 'ke-trang-tri'],
   'truong-hoc': ['ban-ghe-hoc-sinh', 'bang-tu', 'ban-ghe-giao-vien'],
-  'ban-ghe-an': ['ban-ghe-an','ban-an-mat-da','bo-ban-an-thong-minh','bo-ban-an-6-ghe','bo-ban-an-4-ghe','ghe-an'],
-  'ban-ghe-cafe': ['ban-ghe-cafe', 'cafe'],
-  'ban-van-phong': ['ban-van-phong','ban-chan-sat', 'ban-giam-doc', 'ban-hop', 'ban-nhan-vien', 'ban-module', 'cum-ban-lam-viec'],
+  'ban-ghe-an': ['ban-ghe-an', 'ban-an-mat-da', 'ban-an-thong-minh', 'bo-ban-an-6-ghe', 'bo-ban-an-4-ghe', 'ghe-an', 'ban-eames'],
+  'ban-ghe-cafe': ['ban-ghe-cafe', 'ban-an-mat-da-cafe', 'ghe-bar', 'ban-eames'],
+  'ban-van-phong': ['ban-van-phong', 'ban-lam-viec', 'ban-chan-sat', 'ban-giam-doc', 'ban-hop', 'ban-nhan-vien', 'cum-ban', 'ban-gap'],
   'ban-lam-viec': ['ban-lam-viec'],
-  'gia-dinh': ['giuong-tang-sat', 'giuong-tang', 'tu-quan-ao', 'tu-giay', 'ban-trang-diem', 'giuong-go', 'ke-go', 'ban-hoc-sinh'],
+  'gia-dinh': ['gia-dinh', 'giuong-tang-sat', 'tu-quan-ao', 'tu-giay', 'ban-trang-diem', 'giuong-go', 'ke-go', 'ke-sach', 'ke-ti-vi', 'ket-sat', 'ke-de-hang'],
+};
+
+const CATEGORY_LABELS: { [key: string]: string } = {
+  'ban-an-mat-da': 'Bàn ăn mặt đá',
+  'ban-an-mat-da-cafe': 'Bàn cafe mặt đá',
+  'ban-an-thong-minh': 'Bàn ăn thông minh',
+  'ban-chan-sat': 'Bàn chân sắt',
+  'ban-eames': 'Bàn Eames',
+  'ban-gap': 'Bàn gấp',
+  'ban-ghe-an': 'Bàn ghế ăn',
+  'ban-ghe-cafe': 'Bàn ghế cafe',
+  'ban-ghe-giao-vien': 'Bàn ghế giáo viên',
+  'ban-ghe-hoc-sinh': 'Bàn ghế học sinh',
+  'ban-giam-doc': 'Bàn giám đốc',
+  'ban-hop': 'Bàn họp',
+  'ban-lam-viec': 'Bàn làm việc',
+  'ban-nhan-vien': 'Bàn nhân viên',
+  'ban-sofa': 'Bàn sofa',
+  'ban-trang-diem': 'Bàn trang điểm',
+  'ban-van-phong': 'Bàn văn phòng',
+  'bang-tu': 'Bảng từ',
+  'bo-ban-an-4-ghe': 'Bộ bàn ăn 4 ghế',
+  'bo-ban-an-6-ghe': 'Bộ bàn ăn 6 ghế',
+  'cum-ban': 'Cụm bàn làm việc',
+  'ghe-an': 'Ghế ăn',
+  'ghe-bar': 'Ghế bar',
+  'ghe-chan-quy': 'Ghế chân quỳ',
+  'ghe-gaming': 'Ghế gaming',
+  'ghe-gap': 'Ghế gấp',
+  'ghe-giam-doc': 'Ghế giám đốc',
+  'ghe-van-phong': 'Ghế văn phòng',
+  'ghe-xoay': 'Ghế xoay văn phòng',
+  'gia-dinh': 'Nội thất gia đình',
+  'giuong-go': 'Giường gỗ',
+  'giuong-tang-sat': 'Giường tầng sắt',
+  'hoc-tu-tu-phu': 'Hộc tủ - tủ phụ',
+  'ke-de-hang': 'Kệ để hàng',
+  'ke-go': 'Kệ gỗ',
+  'ke-sach': 'Kệ sách',
+  'ke-ti-vi': 'Kệ tivi',
+  'ke-trang-tri': 'Kệ trang trí',
+  'ket-sat': 'Két sắt',
+  'quay-le-tan': 'Quầy lễ tân',
+  'sofa': 'Sofa',
+  'sofa-da': 'Sofa da',
+  'sofa-giuong': 'Sofa giường',
+  'sofa-ni': 'Sofa nỉ',
+  'sofa-vang': 'Sofa văng',
+  'truong-hoc': 'Nội thất trường học',
+  'tu-giay': 'Tủ giày',
+  'tu-locker': 'Tủ locker',
+  'tu-quan-ao': 'Tủ quần áo',
+  'tu-tai-lieu-go': 'Tủ tài liệu gỗ',
+  'tu-tai-lieu-sat': 'Tủ tài liệu sắt',
+  'tu-van-phong': 'Tủ văn phòng',
+};
+
+const INTERNAL_LINK_GROUPS: { [key: string]: string[] } = {
+  ...CATEGORY_GROUPS,
+  'tu-locker': ['tu-van-phong', 'tu-tai-lieu-sat', 'hoc-tu-tu-phu'],
+  'tu-tai-lieu-sat': ['tu-van-phong', 'tu-tai-lieu-go', 'hoc-tu-tu-phu'],
+  'tu-tai-lieu-go': ['tu-van-phong', 'tu-tai-lieu-sat', 'ke-sach'],
+  'hoc-tu-tu-phu': ['tu-van-phong', 'ban-lam-viec', 'ban-nhan-vien'],
+  'ghe-xoay': ['ghe-van-phong', 'ghe-chan-quy', 'ghe-giam-doc'],
+  'ghe-chan-quy': ['ghe-van-phong', 'ban-hop', 'ghe-giam-doc'],
+  'ghe-giam-doc': ['ghe-van-phong', 'ban-giam-doc', 'ghe-xoay'],
+  'ghe-gap': ['ghe-van-phong', 'ban-gap', 'truong-hoc'],
+  'ghe-gaming': ['ghe-van-phong', 'ban-lam-viec'],
+  'ban-chan-sat': ['ban-van-phong', 'ban-lam-viec', 'ban-nhan-vien'],
+  'ban-hop': ['ban-van-phong', 'ghe-chan-quy', 'ban-giam-doc'],
+  'ban-giam-doc': ['ban-van-phong', 'ghe-giam-doc', 'tu-tai-lieu-go'],
+  'ban-nhan-vien': ['ban-van-phong', 'cum-ban', 'hoc-tu-tu-phu'],
+  'cum-ban': ['ban-van-phong', 'ban-nhan-vien', 'ghe-xoay'],
+  'ban-gap': ['ban-van-phong', 'ghe-gap', 'truong-hoc'],
+  'ban-ghe-hoc-sinh': ['truong-hoc', 'bang-tu', 'ban-ghe-giao-vien'],
+  'bang-tu': ['truong-hoc', 'ban-ghe-hoc-sinh'],
+  'ban-ghe-giao-vien': ['truong-hoc', 'bang-tu'],
+  'giuong-go': ['gia-dinh', 'tu-quan-ao', 'ban-trang-diem'],
+  'giuong-tang-sat': ['gia-dinh', 'tu-quan-ao'],
+  'tu-quan-ao': ['gia-dinh', 'giuong-go', 'tu-giay'],
+  'tu-giay': ['gia-dinh', 'ke-go', 'ke-trang-tri'],
+  'ke-sach': ['gia-dinh', 'ke-go', 'ke-trang-tri'],
+  'ke-ti-vi': ['gia-dinh', 'ban-sofa', 'sofa'],
+  'ket-sat': ['gia-dinh', 'tu-van-phong'],
+  'sofa-da': ['sofa', 'ban-sofa', 'sofa-ni'],
+  'sofa-ni': ['sofa', 'ban-sofa', 'sofa-vang'],
+  'sofa-giuong': ['sofa', 'ban-sofa', 'sofa-vang'],
+  'sofa-vang': ['sofa', 'ban-sofa', 'sofa-ni'],
+  'ban-sofa': ['sofa', 'sofa-da', 'sofa-ni'],
+  'bo-ban-an-4-ghe': ['ban-ghe-an', 'bo-ban-an-6-ghe', 'ghe-an'],
+  'bo-ban-an-6-ghe': ['ban-ghe-an', 'bo-ban-an-4-ghe', 'ban-an-mat-da'],
+  'ban-an-mat-da': ['ban-ghe-an', 'bo-ban-an-6-ghe', 'ghe-an'],
+  'ban-an-thong-minh': ['ban-ghe-an', 'bo-ban-an-4-ghe'],
+  'ghe-an': ['ban-ghe-an', 'bo-ban-an-4-ghe', 'bo-ban-an-6-ghe'],
+  'ban-eames': ['ban-ghe-an', 'ban-ghe-cafe', 'ghe-an'],
+  'ban-an-mat-da-cafe': ['ban-ghe-cafe', 'ghe-bar', 'ban-eames'],
+  'ghe-bar': ['ban-ghe-cafe', 'ban-an-mat-da-cafe'],
 };
 
 function findCategoryInfo(slug: string) {
@@ -43,6 +140,21 @@ function findCategoryInfo(slug: string) {
   }
 
   return null;
+}
+
+function getCategoryName(slug: string) {
+  return CATEGORY_LABELS[slug] || findCategoryInfo(slug)?.name || slug.replace(/-/g, ' ');
+}
+
+function getInternalLinks(currentSlug: string) {
+  const cleanSlug = currentSlug.toLowerCase();
+  const linkSlugs = INTERNAL_LINK_GROUPS[cleanSlug] || [];
+  const uniqueSlugs = Array.from(new Set(linkSlugs)).filter((slug) => slug !== cleanSlug);
+
+  return uniqueSlugs.slice(0, 8).map((slug) => ({
+    slug,
+    name: getCategoryName(slug),
+  }));
 }
 
 export function generateStaticParams() {
@@ -99,6 +211,7 @@ export default async function CategoryPage({ params }: Props) {
 
   const productsFromSupabase = await getProductsByMultipleCategories(finalSlugs);
   const categorySeo = await getCategoryBySlug(cleanSlug);
+  const internalLinks = getInternalLinks(cleanSlug);
 
   return (
     <main className={styles.container}>
@@ -136,12 +249,28 @@ export default async function CategoryPage({ params }: Props) {
           </div>
         )}
       </div>
-{categorySeo?.seo_title && categorySeo?.seo_content && (
-  <section className={styles.categorySeo}>
-    <h2>{categorySeo.seo_title}</h2>
-    <p>{categorySeo.seo_content}</p>
-  </section>
-)}
+      {categorySeo?.seo_title && categorySeo?.seo_content && (
+        <section className={styles.categorySeo}>
+          <div className={styles.seoContent}>
+            <span className={styles.seoEyebrow}>Tư vấn chọn mua</span>
+            <h2>{categorySeo.seo_title}</h2>
+            <p>{categorySeo.seo_content}</p>
+          </div>
+
+          {internalLinks.length > 0 && (
+            <div className={styles.relatedBox}>
+              <h3>Danh mục liên quan</h3>
+              <div className={styles.relatedLinks}>
+                {internalLinks.map((link) => (
+                  <Link key={link.slug} href={`/${link.slug}`} className={styles.relatedLink}>
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
     </main>
   );
 }

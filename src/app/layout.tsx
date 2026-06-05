@@ -5,6 +5,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import ScriptedConsultBot from '@/components/ScriptedConsultBot';
 import { SpeedInsights } from "@vercel/speed-insights/next";
 const inter = Inter({
   subsets: ['latin', 'vietnamese'],
@@ -169,6 +170,7 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+        <ScriptedConsultBot />
         <SpeedInsights />
       </body>
     </html>

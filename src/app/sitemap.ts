@@ -11,20 +11,35 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+function cleanPathPart(value?: string | null) {
+  return (value || '').trim().replace(/^\/+|\/+$/g, '');
+}
+
+function getValidDate(value?: string | Date | null) {
+  if (!value) {
+    return new Date();
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const urls = new Map<string, MetadataRoute.Sitemap[number]>();
 
   const addUrl = (
     path: string,
     changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'],
-    priority: number
+    priority: number,
+    lastModified?: string | Date | null
   ) => {
     const cleanPath = path === '/' ? '' : path.replace(/\/$/, '');
     const url = `${baseUrl}${cleanPath}/`;
 
     urls.set(url, {
       url,
-      lastModified: new Date(),
+      lastModified: getValidDate(lastModified),
       changeFrequency,
       priority,
     });
@@ -53,10 +68,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Lỗi tạo sitemap sản phẩm:', error.message);
   }
 
-  // Trang chi tiết sản phẩm đang dùng route /san-pham/[slug].
+  // URL sản phẩm đang hoạt động trong code hiện tại là /san-pham/[slug].
   (products || []).forEach((product) => {
-    if (product.slug) {
-      addUrl(`/san-pham/${product.slug}`, 'weekly', 0.8);
+    const slug = cleanPathPart(product.slug);
+
+    if (slug) {
+      addUrl(`/san-pham/${slug}`, 'weekly', 0.8);
     }
   });
 
@@ -69,15 +86,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   (posts || []).forEach((post) => {
-    if (post.slug) {
-      const url = `${baseUrl}/tin-tuc/${post.slug}/`;
+    const slug = cleanPathPart(post.slug);
 
-      urls.set(url, {
-        url,
-        lastModified: post.created_at || new Date(),
-        changeFrequency: 'monthly',
-        priority: 0.6,
-      });
+    if (slug) {
+      addUrl(`/tin-tuc/${slug}`, 'monthly', 0.6, post.created_at);
     }
   });
 

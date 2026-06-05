@@ -41,6 +41,7 @@ export default function ScriptedConsultBot() {
   const [isVisible, setIsVisible] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [userInput, setUserInput] = useState("");
+  const [selectedTopic, setSelectedTopic] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "bot",
@@ -60,6 +61,7 @@ export default function ScriptedConsultBot() {
   }, []);
 
   const chooseTopic = (topic: string) => {
+    setSelectedTopic(topic);
     setMessages((current) => [
       ...current,
       { role: "user", content: topic },
@@ -182,7 +184,7 @@ export default function ScriptedConsultBot() {
       const response = await fetch("/api/consult-bot/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: question })
+        body: JSON.stringify({ query: question, context: selectedTopic })
       });
       const data = await response.json();
       const links = [

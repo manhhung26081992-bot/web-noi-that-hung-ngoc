@@ -2,7 +2,8 @@ import styles from "./news.module.css";
 import { notFound } from "next/navigation";
 import { getBlogBySlug } from "@/lib/blog";
 
-export const revalidate = 86400;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -10,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   if (!post) return { title: "Nội Thất Hùng Ngọc" };
 
-  const canonicalUrl = `https://www.noithathungngoc.com/tin-tuc/${slug}`;
+  const canonicalUrl = `https://www.noithathungngoc.com/tin-tuc/${post.slug}`;
   const shareImage = post.image?.startsWith("http")
     ? post.image
     : `https://www.noithathungngoc.com${post.image || "/logo.png"}`;
@@ -49,7 +50,7 @@ export default async function BlogDetail({ params }: { params: Promise<{ slug: s
 
   if (!post) return notFound();
 
-  const canonicalUrl = `https://www.noithathungngoc.com/tin-tuc/${slug}`;
+  const canonicalUrl = `https://www.noithathungngoc.com/tin-tuc/${post.slug}`;
   const shareImage = post.image?.startsWith("http")
     ? post.image
     : `https://www.noithathungngoc.com${post.image || "/logo.png"}`;

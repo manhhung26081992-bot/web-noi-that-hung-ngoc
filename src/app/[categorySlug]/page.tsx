@@ -254,7 +254,10 @@ export default async function CategoryPage({ params }: Props) {
           <div className={styles.seoContent}>
             <span className={styles.seoEyebrow}>Tư vấn chọn mua</span>
             <h2>{categorySeo.seo_title}</h2>
-            <p>{categorySeo.seo_content}</p>
+            <div
+              className={styles.seoHtmlContent}
+              dangerouslySetInnerHTML={{ __html: categorySeo.seo_content }}
+            />
           </div>
 
           {internalLinks.length > 0 && (

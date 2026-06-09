@@ -102,6 +102,38 @@
   line-height: 1.8;
 }
 
+.seoHtmlContent {
+  color: #374151;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.seoHtmlContent p {
+  margin: 0 0 14px;
+}
+
+.seoHtmlContent h3 {
+  margin: 22px 0 10px;
+  color: #1f2937;
+  font-size: 20px;
+}
+
+.seoHtmlContent ul,
+.seoHtmlContent ol {
+  margin: 0 0 16px 22px;
+  padding: 0;
+}
+
+.seoHtmlContent a {
+  color: #005aab;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.seoHtmlContent a:hover {
+  text-decoration: underline;
+}
+
 .relatedBox {
   padding-left: 24px;
   border-left: 1px solid #dbe8f6;

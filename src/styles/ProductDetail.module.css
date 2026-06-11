@@ -27,7 +27,7 @@
 .productTopWrapper { display: flex; gap: 30px; margin-bottom: 50px; align-items: flex-start; }
 
 /* --- Phần ảnh & Zoom --- */
-.imageSection { flex: 1; min-width: 0; }
+.imageSection { flex: 0 1 320px; min-width: 0; max-width: 320px; }
 .mainImageWrapper {
   position: relative;
   border: 1px solid #eee;
@@ -51,7 +51,7 @@
   top: 0; left: 0;
   width: 100%; height: 100%;
   background-repeat: no-repeat;
-  background-size: 250%;
+  background-size: 180%;
   z-index: 10;
   pointer-events: none;
   /* transition: background-position 0.1s ease-out; */
@@ -63,6 +63,8 @@
   aspect-ratio: 1 / 1;
   object-fit: contain; /* Giữ trọn hình dáng sản phẩm, không cắt mép bàn ghế/tủ. */
   object-position: center;
+  box-sizing: border-box;
+  padding: 18px;
 }
 /* .actualImage {
   width: 100%; height: 100%;

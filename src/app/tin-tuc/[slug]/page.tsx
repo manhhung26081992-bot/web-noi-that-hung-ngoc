@@ -2,8 +2,7 @@ import styles from "./news.module.css";
 import { notFound } from "next/navigation";
 import { getBlogBySlug } from "@/lib/blog";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

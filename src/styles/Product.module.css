@@ -68,7 +68,7 @@
 /* 3. LƯỚI SẢN PHẨM (Grid System) */
 .productGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 20px;
 }
 
@@ -76,7 +76,7 @@
 .productCard {
   background: #fff;
   border: 1px solid var(--border-color);
-  padding: 15px;
+  padding: 10px;
   border-radius: 8px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
@@ -104,6 +104,8 @@
 
 .imgBox img {
   object-fit: contain;
+  box-sizing: border-box;
+  padding: 10px;
   transition: transform 0.5s ease;
 }
 
@@ -356,5 +358,27 @@
     display: flex;
     justify-content: center;
     align-items: center;
+  }
+}
+
+/* Desktop: giảm khung ảnh để sản phẩm không bị phóng quá lớn trên màn hình máy tính. */
+@media (min-width: 769px) {
+  .productCard .imgBox {
+    aspect-ratio: 4 / 3 !important;
+  }
+
+  .productCard .imgBox img {
+    padding: 22px;
+  }
+}
+
+/* Mobile vẫn giữ ảnh vuông, dễ nhìn và dễ bấm trên điện thoại. */
+@media (max-width: 768px) {
+  .productCard .imgBox {
+    aspect-ratio: 1 / 1 !important;
+  }
+
+  .productCard .imgBox img {
+    padding: 8px;
   }
 }

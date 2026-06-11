@@ -2,8 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getAllBlogs } from "@/lib/blog";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Tin tức & Cẩm nang nội thất - Nội Thất Hùng Ngọc",

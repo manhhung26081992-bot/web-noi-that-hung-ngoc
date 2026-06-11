@@ -15,7 +15,7 @@ interface ProductListProps {
 
 export default function ProductList({ title, products, categorySlugs, limit, viewAllLink }: ProductListProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 10;
 
   useEffect(() => {
     setCurrentPage(1);

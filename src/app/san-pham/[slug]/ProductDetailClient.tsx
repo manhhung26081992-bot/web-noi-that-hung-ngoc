@@ -134,10 +134,10 @@ const allImages = useMemo(() => {
               onMouseLeave={() => setIsZooming(false)}
             >
               <img 
-  src={getOptimizedUrl(allImages[activeImgIndex] || '/logo.png')} 
+  src={getOptimizedUrl(allImages[activeImgIndex] || '/logo.png', 500, 75)}
   alt={product.name}
-  width={800}
-  height={800}
+  width={500}
+  height={500}
   loading="eager"
   fetchPriority="high"
   decoding="async"

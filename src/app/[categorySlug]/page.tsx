@@ -11,7 +11,7 @@ interface Props {
   params: Promise<{ categorySlug: string }>;
 }
 
-export const revalidate = 604800;
+export const revalidate = 3600;
 
 const CATEGORY_GROUPS: { [key: string]: string[] } = {
   'sofa': ['sofa', 'ban-sofa', 'sofa-giuong', 'sofa-da', 'sofa-ni', 'sofa-vang'],

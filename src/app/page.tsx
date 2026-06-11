@@ -32,13 +32,13 @@ const bunkBedGroup = ['giuong-tang-sat', 'giuong-tang']
     sofaProducts,
     bunkBedProducts
   ] = await Promise.all([
-    getProductsByMultipleCategories(officeCabinetGroup, 8),
-    getProductsByMultipleCategories(officeTableGroup, 8),
-    getProductsByMultipleCategories(decorShelfGroup, 8),
-    getProductsByMultipleCategories(officeChairGroup, 8),
-    getProductsByMultipleCategories(cafeTableGroup, 8),
-    getProductsByMultipleCategories(sofaGroup, 8),
-    getProductsByMultipleCategories(bunkBedGroup, 8)
+    getProductsByMultipleCategories(officeCabinetGroup, 10),
+    getProductsByMultipleCategories(officeTableGroup, 10),
+    getProductsByMultipleCategories(decorShelfGroup, 10),
+    getProductsByMultipleCategories(officeChairGroup, 10),
+    getProductsByMultipleCategories(cafeTableGroup, 10),
+    getProductsByMultipleCategories(sofaGroup, 10),
+    getProductsByMultipleCategories(bunkBedGroup, 10)
   ])
 
   return (
@@ -61,37 +61,37 @@ const bunkBedGroup = ['giuong-tang-sat', 'giuong-tang']
             <ProductList
               title="BÀN VĂN PHÒNG"
               products={officeTableProducts}
-              limit={8}
+              limit={10}
               viewAllLink="/ban-van-phong"
             />
             <ProductList
               title="TỦ VĂN PHÒNG"
               products={officeCabinetProducts}
-              limit={8}
+              limit={10}
               viewAllLink="/tu-van-phong"
             />
              <ProductList
               title="GHẾ VĂN PHÒNG"
               products={officeChairProducts}
-              limit={8}
+              limit={10}
               viewAllLink="/ghe-van-phong"
             />
             <ProductList
   title="GIƯỜNG TẦNG SẮT"
   products={bunkBedProducts} // Mảng sản phẩm giường tầng đã lấy từ Promise.all.
-  limit={8}
+  limit={10}
   viewAllLink="/giuong-tang-sat"
 />
             {/* <ProductList
               title="GIƯỜNG TẦNG SẮT"
               products={bunkBedGroup}
-              limit={8}
+              limit={10}
               viewAllLink="/giuong-tang-sat"
             /> */}
             <ProductList
               title="KỆ TRANG TRÍ & KỆ GỖ"
               products={decorShelfProducts}
-              limit={8}
+              limit={10}
               viewAllLink="/ke-trang-tri"
             />
 
@@ -100,14 +100,14 @@ const bunkBedGroup = ['giuong-tang-sat', 'giuong-tang']
             <ProductList
               title="BÀN GHẾ CAFE"
               products={cafeProducts}
-              limit={8}
+              limit={10}
               viewAllLink="/ban-ghe-cafe"
             />
 
             <ProductList
               title="SOFA PHÒNG KHÁCH"
               products={sofaProducts}
-              limit={8}
+              limit={10}
               viewAllLink="/sofa"
             />
           </div>

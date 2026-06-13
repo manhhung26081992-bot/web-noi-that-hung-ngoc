@@ -1,8 +1,18 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getAllBlogs } from "@/lib/blog";
+import { getAllBlogs, getPopularBlogs } from "@/lib/blog";
+import styles from "./news-list.module.css";
 
 export const revalidate = 3600;
+
+type BlogPost = {
+  id: string | number;
+  slug: string;
+  title: string;
+  excerpt?: string;
+  image?: string;
+  views?: number;
+};
 
 export const metadata: Metadata = {
   title: "Tin tức & Cẩm nang nội thất - Nội Thất Hùng Ngọc",
@@ -20,8 +30,32 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function NewsPage() {
-  const posts = await getAllBlogs();
+function getImageSrc(post: BlogPost) {
+  return post.image || "/logo.png";
+}
+
+function getExcerpt(post: BlogPost) {
+  return (
+    post.excerpt ||
+    "Tìm hiểu thêm về cách chọn mua, bố trí và sử dụng nội thất văn phòng, gia đình bền đẹp, tiết kiệm chi phí tại Nội Thất Hùng Ngọc."
+  );
+}
+
+type NewsPageProps = {
+  searchParams?: Promise<{ page?: string }>;
+};
+
+export default async function NewsPage({ searchParams }: NewsPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const currentPage = Math.max(1, Number(resolvedSearchParams?.page || 1) || 1);
+  const postsPerPage = 10;
+  const [posts, popularPosts] = await Promise.all([
+    getAllBlogs() as Promise<BlogPost[]>,
+    getPopularBlogs(8) as Promise<BlogPost[]>,
+  ]);
+  const totalPages = Math.max(1, Math.ceil(posts.length / postsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const visiblePosts = posts.slice((safeCurrentPage - 1) * postsPerPage, safeCurrentPage * postsPerPage);
 
   const collectionSchema = {
     "@context": "https://schema.org",
@@ -37,7 +71,7 @@ export default async function NewsPage() {
     },
     mainEntity: {
       "@type": "ItemList",
-      itemListElement: posts.slice(0, 20).map((post: any, index: number) => ({
+      itemListElement: posts.slice(0, 20).map((post, index) => ({
         "@type": "ListItem",
         position: index + 1,
         url: `https://www.noithathungngoc.com/tin-tuc/${post.slug}`,
@@ -47,81 +81,111 @@ export default async function NewsPage() {
   };
 
   return (
-    <main className="container mx-auto px-4 py-12 min-h-screen">
+    <main className={styles.page}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema).replace(/</g, "\\u003c") }}
       />
-      <header className="mb-12 border-b pb-6">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900">
-          Tin tức & Cẩm nang Nội thất
-        </h1>
-        <p className="text-slate-600 mt-2">
-          Kinh nghiệm thiết kế và xu hướng nội thất mới nhất năm 2026.
-        </p>
-      </header>
 
-      {posts.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-slate-500 italic">Hiện chưa có bài viết nào.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts.map((post: any) => {
-            const imageSrc = post.image || '/logo.png';
-            const isLogo = !post.image || post.image.includes('logo.png');
+      <nav className={styles.breadcrumb}>
+        <Link href="/">Trang chủ</Link>
+        <span>/</span>
+        <span>Tin tức</span>
+      </nav>
 
-            return (
-              <Link key={post.id} href={`/tin-tuc/${post.slug}`} className="group">
-                <article className="h-full border rounded-xl overflow-hidden bg-white hover:shadow-lg transition-all flex flex-col">
-                  
-                  {/* KHUNG ẢNH: Cố định 220px, chống tràn, chống lỗi 402 */}
-                  <div style={{ 
-                    position: 'relative', 
-                    width: '100%', 
-                    height: '220px', 
-                    overflow: 'hidden',
-                    backgroundColor: '#f1f5f9' 
-                  }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={imageSrc}
-                      /* SEO 0 đồng: Tự động dùng tiêu đề làm mô tả ảnh */
-                      alt={post.title} 
-                      style={{ 
-                        width: '100%',
-                        height: '100%',
-                        objectFit: isLogo ? 'contain' : 'cover',
-                        padding: isLogo ? '40px' : '0'
-                      }}
-                      className="transition-transform duration-500 group-hover:scale-105"
-                    />
+      <div className={styles.layout}>
+        <aside className={styles.sidebar}>
+          <section className={styles.box}>
+            <h2 className={styles.boxTitle}>Chuyên mục</h2>
+            <ul className={styles.categoryList}>
+              <li><Link href="/tin-tuc">Tin tức</Link></li>
+              <li><Link href="/tin-tuc">Kinh nghiệm</Link></li>
+              <li><Link href="/tu-van-phong">Tủ văn phòng</Link></li>
+              <li><Link href="/ban-van-phong">Bàn văn phòng</Link></li>
+              <li><Link href="/ghe-van-phong">Ghế văn phòng</Link></li>
+              <li><Link href="/sofa">Sofa</Link></li>
+            </ul>
+          </section>
+
+          <section className={styles.box}>
+            <h2 className={styles.boxTitle}>Tin tức đọc nhiều</h2>
+            <div className={styles.popularList}>
+              {popularPosts.map((post) => (
+                <Link key={post.id} href={`/tin-tuc/${post.slug}`} className={styles.popularItem}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={getImageSrc(post)} alt={post.title} className={styles.popularThumb} loading="lazy" />
+                  <span className={styles.popularName}>{post.title}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        </aside>
+
+        <section className={styles.content}>
+          <h1 className={styles.title}>Tin tức & Cẩm nang nội thất</h1>
+
+          {posts.length === 0 ? (
+            <p className={styles.empty}>Hiện chưa có bài viết nào.</p>
+          ) : (
+            <div className={styles.postList}>
+              {visiblePosts.map((post) => (
+                <Link key={post.id} href={`/tin-tuc/${post.slug}`} className={styles.postItem}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={getImageSrc(post)} alt={post.title} className={styles.postImage} loading="lazy" />
+                  <div className={styles.postBody}>
+                    <h2 className={styles.postTitle}>{post.title}</h2>
+                    <p className={styles.excerpt}>{getExcerpt(post)}</p>
+                    <span className={styles.readMore}>Xem chi tiết &gt;&gt;</span>
                   </div>
+                </Link>
+              ))}
+            </div>
+          )}
 
-                  <div className="p-5 flex-1 flex flex-col">
-                    <div className="text-xs text-blue-600 font-semibold mb-2 uppercase">
-                      Cẩm nang nội thất
-                    </div>
-                    
-                    <h2 className="text-lg font-bold text-slate-800 line-clamp-2 mb-3 group-hover:text-blue-700">
-                      {post.title}
-                    </h2>
-                    
-                    <p className="text-slate-600 text-sm line-clamp-3 mb-4">
-                      {post.excerpt || "Tìm hiểu thêm về các mẫu nội thất văn phòng bền đẹp và tiết kiệm chi phí tại Nội Thất Hùng Ngọc..."}
-                    </p>
-                    
-                    <div className="mt-auto text-blue-600 text-sm font-bold flex items-center">
-                      Xem chi tiết 
-                      <span className="ml-1 group-hover:translate-x-1 transition-transform">→</span>
-                    </div>
-                  </div>
-                </article>
-              </Link>
-            );
-          })}
-        </div>
-      )}
+          {totalPages > 1 && (
+            <nav className={styles.pagination} aria-label="Phân trang tin tức">
+              {safeCurrentPage > 1 ? (
+                <Link
+                  className={styles.pageButton}
+                  href={safeCurrentPage === 2 ? "/tin-tuc" : `/tin-tuc?page=${safeCurrentPage - 1}`}
+                  aria-label="Trang trước"
+                >
+                  ‹
+                </Link>
+              ) : (
+                <span className={`${styles.pageButton} ${styles.disabled}`} aria-hidden="true">
+                  ‹
+                </span>
+              )}
+
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                <Link
+                  key={pageNumber}
+                  className={`${styles.pageButton} ${pageNumber === safeCurrentPage ? styles.activePage : ""}`}
+                  href={pageNumber === 1 ? "/tin-tuc" : `/tin-tuc?page=${pageNumber}`}
+                  aria-current={pageNumber === safeCurrentPage ? "page" : undefined}
+                >
+                  {pageNumber}
+                </Link>
+              ))}
+
+              {safeCurrentPage < totalPages ? (
+                <Link
+                  className={styles.pageButton}
+                  href={`/tin-tuc?page=${safeCurrentPage + 1}`}
+                  aria-label="Trang sau"
+                >
+                  ›
+                </Link>
+              ) : (
+                <span className={`${styles.pageButton} ${styles.disabled}`} aria-hidden="true">
+                  ›
+                </span>
+              )}
+            </nav>
+          )}
+        </section>
+      </div>
     </main>
   );
 }

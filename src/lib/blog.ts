@@ -106,5 +106,19 @@ export async function getAllBlogs() {
   return (data || []).map((post) => ({
     ...post,
     slug: normalizeBlogSlug(post.slug),
+    views: Number(post.views ?? post.view_count ?? post.viewCount ?? 0),
   }));
+}
+
+export async function getPopularBlogs(limit = 8) {
+  const posts = await getAllBlogs();
+
+  return [...posts]
+    .sort((a, b) => {
+      const viewDiff = Number(b.views || 0) - Number(a.views || 0);
+      if (viewDiff !== 0) return viewDiff;
+
+      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+    })
+    .slice(0, limit);
 }

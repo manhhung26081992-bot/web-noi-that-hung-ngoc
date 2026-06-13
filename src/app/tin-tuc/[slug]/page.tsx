@@ -1,6 +1,7 @@
 import styles from "./news.module.css";
 import { notFound } from "next/navigation";
 import { getBlogBySlug } from "@/lib/blog";
+import BlogViewTracker from "@/components/BlogViewTracker";
 
 export const revalidate = 3600;
 
@@ -87,6 +88,7 @@ export default async function BlogDetail({ params }: { params: Promise<{ slug: s
 
   return (
     <article className={styles.container}>
+      <BlogViewTracker slug={post.slug} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema).replace(/</g, "\\u003c") }}

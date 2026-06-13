@@ -58,14 +58,42 @@ const PRODUCT_FIELDS = `
   features,
   parent_slug
 `
+
+function getProductNameSortKey(product: Product) {
+  return String(product.name || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\bhn[\w-]*\b/g, '')
+    .replace(/\b\d+(\.\d+)?\s*(m|cm|mm|ngan|cho|ghe|canh|tang|hoc|keo|buong)\b/g, '')
+    .replace(/\b\d+[a-z]*\b/g, '')
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function sortSimilarProducts(products: Product[]) {
+  return [...products].sort((a, b) => {
+    const categoryCompare = String(a.category || '').localeCompare(String(b.category || ''), 'vi');
+    if (categoryCompare !== 0) return categoryCompare;
+
+    const nameCompare = getProductNameSortKey(a).localeCompare(getProductNameSortKey(b), 'vi');
+    if (nameCompare !== 0) return nameCompare;
+
+    return Number(a.id) - Number(b.id);
+  });
+}
+
 export async function getProductsByMultipleCategories(
   slugs: string[],
-  limit = 200 
+  limit = 200,
+  randomize = false
 ) {
   let query = supabase
     .from('products')
     .select(PRODUCT_FIELDS)
-    // .order('id', { ascending: true })
+    .order('category', { ascending: true })
+    .order('id', { ascending: true })
     .limit(limit);
 
   // NẾU CHỈ CÓ 1 SLUG (Ví dụ: khách bấm đúng vào 'ban-lam-viec')
@@ -88,8 +116,11 @@ export async function getProductsByMultipleCategories(
 // Xáo trộn sản phẩm để mỗi lần hiển thị danh mục có cảm giác mới hơn.
 const shuffled = [...(data || [])].sort(() => Math.random() - 0.5);
 
-return shuffled;
-  // return data ?? [];
+  if (randomize) {
+    return shuffled;
+  }
+
+  return sortSimilarProducts((data || []) as Product[]);
 }
 
 export async function seedAllProductsAction(

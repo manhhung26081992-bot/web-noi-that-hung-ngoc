@@ -32,13 +32,13 @@ const bunkBedGroup = ['giuong-tang-sat', 'giuong-tang']
     sofaProducts,
     bunkBedProducts
   ] = await Promise.all([
-    getProductsByMultipleCategories(officeCabinetGroup, 10),
-    getProductsByMultipleCategories(officeTableGroup, 10),
-    getProductsByMultipleCategories(decorShelfGroup, 10),
-    getProductsByMultipleCategories(officeChairGroup, 10),
-    getProductsByMultipleCategories(cafeTableGroup, 10),
-    getProductsByMultipleCategories(sofaGroup, 10),
-    getProductsByMultipleCategories(bunkBedGroup, 10)
+    getProductsByMultipleCategories(officeCabinetGroup, 10, true),
+    getProductsByMultipleCategories(officeTableGroup, 10, true),
+    getProductsByMultipleCategories(decorShelfGroup, 10, true),
+    getProductsByMultipleCategories(officeChairGroup, 10, true),
+    getProductsByMultipleCategories(cafeTableGroup, 10, true),
+    getProductsByMultipleCategories(sofaGroup, 10, true),
+    getProductsByMultipleCategories(bunkBedGroup, 10, true)
   ])
 
   return (

@@ -65,9 +65,22 @@ export default function ProductList({ title, products, categorySlugs, limit, vie
       {!limit && totalPages > 1 && (
         <div className={styles.paginationContainer}>
           <div className={styles.pageNumbers}>
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentPage(Math.max(1, currentPage - 1));
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={styles.pageBtn}
+              disabled={currentPage === 1}
+              aria-label="Trang trước"
+            >
+              ‹
+            </button>
             {Array.from({ length: totalPages }, (_, i) => (
               <button
                 key={i + 1}
+                type="button"
                 onClick={() => {
                   setCurrentPage(i + 1);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -77,6 +90,18 @@ export default function ProductList({ title, products, categorySlugs, limit, vie
                 {i + 1}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => {
+                setCurrentPage(Math.min(totalPages, currentPage + 1));
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={styles.pageBtn}
+              disabled={currentPage === totalPages}
+              aria-label="Trang sau"
+            >
+              ›
+            </button>
           </div>
         </div>
       )}

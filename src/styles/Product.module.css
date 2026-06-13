@@ -239,8 +239,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
-  margin-top: 30px;
+  margin-top: 34px;
   padding-bottom: 20px;
 }
 
@@ -253,26 +252,46 @@
 
 .pageNumbers {
   display: flex;
-  gap: 5px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
 
 .pageBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
   background: #fff;
-  border: 1px solid #666;
-  color: #333;
-  padding: 5px 12px;
+  border: 1px solid #d6e2ef;
+  border-radius: 6px;
+  color: #005aab;
   cursor: pointer;
-  transition: all 0.3s;
+  font-size: 15px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 90, 171, 0.08);
 }
 
 /* Nút trang hiện tại màu xám đậm */
 .activePage {
-  background-color: #666 !important;
+  background-color: #005aab !important;
+  border-color: #005aab !important;
   color: #fff !important;
 }
 
-.pageBtn:hover:not(.activePage) {
-  background-color: #f0f0f0;
+.pageBtn:hover:not(.activePage):not(:disabled) {
+  border-color: #f39200;
+  color: #f39200;
+}
+
+.pageBtn:disabled {
+  color: #b8c3cf;
+  background: #f7f9fb;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 /* --- TỐI ƯU RESPONSIVE --- */
 @media (max-width: 1024px) {
@@ -380,5 +399,20 @@
 
   .productCard .imgBox img {
     padding: 8px;
+  }
+
+  .paginationContainer {
+    margin-top: 28px;
+  }
+
+  .pageNumbers {
+    gap: 6px;
+  }
+
+  .pageBtn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    font-size: 14px;
   }
 }

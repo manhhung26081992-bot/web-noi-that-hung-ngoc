@@ -119,17 +119,19 @@ function SearchContent() {
             <div className={styles.pagination}>
               <button 
                 className={styles.pageBtn} 
-                onClick={() => handlePageChange(1)}
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-              > Đầu </button>
+                aria-label="Trang trước"
+              > &lsaquo; </button>
               
               {renderPagination()}
 
               <button 
                 className={styles.pageBtn} 
-                onClick={() => handlePageChange(totalPages)}
+                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-              > Cuối </button>
+                aria-label="Trang sau"
+              > &rsaquo; </button>
             </div>
           )}
         </>

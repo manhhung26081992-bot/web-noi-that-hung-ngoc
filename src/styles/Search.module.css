@@ -103,7 +103,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   margin: 40px 0;
   flex-wrap: wrap;
 }
@@ -117,34 +117,40 @@
 }
 
 .pageBtn {
-  padding: 8px 14px;
-  border: 1px solid #ccc;
-  background: #fff;
-  cursor: pointer;
-  font-size: 14px;
-  min-width: 40px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #d6e2ef;
+  border-radius: 6px;
+  background: #fff;
+  color: #005aab;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 90, 171, 0.08);
 }
 
 .pageBtn:hover:not(:disabled) {
-  background: #f5f5f5;
+  border-color: #f39200;
+  color: #f39200;
 }
 
 /* Trang đang hoạt động - Màu xám đậm chuẩn mẫu */
 .activePage {
-  background: #555 !important; 
+  background: #005aab !important;
   color: #fff !important;
-  border-color: #555 !important;
-  font-weight: bold;
+  border-color: #005aab !important;
 }
 
 .pageBtn:disabled {
-  color: #ccc;
+  color: #b8c3cf;
   cursor: not-allowed;
-  background: #f9f9f9;
+  background: #f7f9fb;
+  box-shadow: none;
 }
 
 .dots {
@@ -208,10 +214,10 @@
 
   /* Thu nhỏ nút phân trang (Đã tốt, giữ nguyên và tinh chỉnh nhẹ) */
   .pageBtn {
-    padding: 6px 10px;
-    font-size: 12px;
     min-width: 32px;
-    border-radius: 4px;
+    height: 32px;
+    padding: 0 8px;
+    font-size: 14px;
   }
   
   .pageInfo {

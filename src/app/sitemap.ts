@@ -50,25 +50,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   addUrl('/tin-tuc', 'weekly', 0.8);
 
   // Các trang danh mục lấy từ menu chính và menu con.
-  MENU_ITEMS.forEach((item) => {
-    if (item.link && item.link !== '/') {
-      addUrl(item.link, 'weekly', 0.8);
-    }
-
-    item.submenu?.forEach((sub) => {
-      addUrl(sub.link, 'weekly', 0.7);
-    });
-  });
-
   const { data: products, error } = await supabase
     .from('products')
-    .select('slug');
+    .select('slug, category, parent_slug');
 
   if (error) {
     console.error('Lỗi tạo sitemap sản phẩm:', error.message);
   }
 
   // URL sản phẩm đang hoạt động trong code hiện tại là /san-pham/[slug].
+  const activeCategorySlugs = new Set<string>();
+
+  (products || []).forEach((product) => {
+    const category = cleanPathPart(product.category);
+    const parentSlug = cleanPathPart(product.parent_slug);
+
+    if (category) activeCategorySlugs.add(category);
+    if (parentSlug) activeCategorySlugs.add(parentSlug);
+  });
+
+  // Chi dua danh muc vao sitemap khi danh muc do dang co san pham that.
+  MENU_ITEMS.forEach((item) => {
+    const itemSlug = cleanPathPart(item.link);
+
+    if (item.link && item.link !== '/' && activeCategorySlugs.has(itemSlug)) {
+      addUrl(item.link, 'weekly', 0.8);
+    }
+
+    item.submenu?.forEach((sub) => {
+      const subSlug = cleanPathPart(sub.link);
+
+      if (activeCategorySlugs.has(subSlug)) {
+        addUrl(sub.link, 'weekly', 0.7);
+      }
+    });
+  });
+
   (products || []).forEach((product) => {
     const slug = cleanPathPart(product.slug);
 

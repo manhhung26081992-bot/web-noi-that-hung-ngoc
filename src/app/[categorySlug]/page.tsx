@@ -157,6 +157,11 @@ function getInternalLinks(currentSlug: string) {
   }));
 }
 
+function getCategorySlugsForProducts(slug: string) {
+  const cleanSlug = slug.toLowerCase();
+  return Object.keys(CATEGORY_GROUPS).includes(cleanSlug) ? CATEGORY_GROUPS[cleanSlug] : [cleanSlug];
+}
+
 export function generateStaticParams() {
   const slugs = new Set<string>();
 
@@ -178,6 +183,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cleanSlug = categorySlug.replace(/^\/|\/$/g, '');
   const category = findCategoryInfo(cleanSlug);
   const categorySeo = await getCategoryBySlug(cleanSlug);
+  const finalSlugs = getCategorySlugsForProducts(cleanSlug);
+  const productsFromSupabase = await getProductsByMultipleCategories(finalSlugs);
+  const hasProducts = productsFromSupabase.length > 0;
   const title = categorySeo?.seo_title || category?.name || 'Danh mục sản phẩm';
 
   return {
@@ -188,6 +196,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical: `/${cleanSlug}`,
     },
+    robots: hasProducts
+      ? {
+          index: true,
+          follow: true,
+        }
+      : {
+          index: false,
+          follow: true,
+        },
     openGraph: {
       title,
       description:
@@ -206,8 +223,7 @@ export default async function CategoryPage({ params }: Props) {
 
   if (!category) notFound();
 
-  const isMainGroup = Object.keys(CATEGORY_GROUPS).includes(cleanSlug.toLowerCase());
-  const finalSlugs = isMainGroup ? CATEGORY_GROUPS[cleanSlug.toLowerCase()] : [cleanSlug];
+  const finalSlugs = getCategorySlugsForProducts(cleanSlug);
 
   const productsFromSupabase = await getProductsByMultipleCategories(finalSlugs);
   const categorySeo = await getCategoryBySlug(cleanSlug);

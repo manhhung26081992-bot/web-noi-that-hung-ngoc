@@ -1,5 +1,4 @@
 "use client";
-import { supabase } from '@/lib/supabase'; // Đường dẫn tới file config supabase của bạn
 import { useState, useEffect } from 'react';
 import styles from '@/styles/Checkout.module.css';
 
@@ -61,27 +60,19 @@ export default function CheckoutClient() {
     }
 
     try {
-      // Lưu thông tin đơn hàng vào Supabase.
-      const { data, error } = await supabase
-        .from('orders')
-        .insert([
-          {
-            first_name: formData.firstName,
-            last_name: formData.lastName,
-            phone_number: formData.phone,
-            address_detail: formData.address,
-            payment_method: paymentMethod === 'bank' ? 'VietQR' : 'COD',
-            total_amount: totalPrice,
-            order_items: cart, // Lưu nguyên mảng giỏ hàng vào jsonb
-            status: 'Chờ xác nhận'
-          }
-        ]);
-      // Gửi email thông báo qua API route.
-      await fetch('/api/checkout', {
+      // Gui du lieu len server de validate, luu Supabase va gui Telegram theo dung thu tu.
+      const checkoutResponse = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ formData, cart, totalPrice, paymentMethod }),
       });
+
+      const checkoutResult = await checkoutResponse.json().catch(() => null);
+
+      if (!checkoutResponse.ok || !checkoutResult?.success) {
+        alert(checkoutResult?.error || 'Thong tin dat hang khong hop le. Vui long kiem tra lai.');
+        return;
+      }
 
       // Tạo nội dung tin nhắn Zalo cho đơn hàng.
       const phoneNumber = "0347227377"; 

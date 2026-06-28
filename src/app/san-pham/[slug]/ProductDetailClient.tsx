@@ -5,6 +5,7 @@ import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import ProductCard from '@/components/ProductCard';
 import ProductSchema from '@/components/ProductSchema';
+import CategorySidebar from '@/components/CategorySidebar';
 import styles from '@/styles/ProductDetail.module.css';
 import { Product, CartItem } from '@/types/types';
 
@@ -123,6 +124,9 @@ const allImages = useMemo(() => {
         </ul>
       </nav>
 
+      <div className={styles.detailLayout}>
+        <CategorySidebar />
+        <div className={styles.detailMain}>
       <div className={styles.productTopWrapper}>
         {/* 2. Ảnh & Zoom */}
         <div className={styles.imageSection}>
@@ -270,6 +274,13 @@ const allImages = useMemo(() => {
             <button className={styles.addToCartBtn} onClick={handleAddToCart}>THÊM VÀO GIỎ HÀNG</button>
           </div>
           <p className={styles.catInfo}>Danh mục: <span>{product.category}</span></p>
+
+          <div className={styles.supportStrip} aria-label="Cam kết khi mua hàng">
+            <span>Giá xưởng</span>
+            <span>Giao nhanh Hà Nội</span>
+            <span>Bảo hành rõ ràng</span>
+            <span>Hỗ trợ Zalo</span>
+          </div>
         </div>
 
         <aside className={styles.trustSidebar}>
@@ -279,6 +290,8 @@ const allImages = useMemo(() => {
           <div className={styles.trustItem}>✅ Giá xưởng cạnh tranh nhất</div>
           <div className={styles.trustItem}>✅ Bảo hành bảo trì tận tâm</div>
         </aside>
+      </div>
+        </div>
       </div>
 
       {/* 4. TABS CHI TIẾT SẢN PHẨM */}

@@ -153,7 +153,13 @@ export default function ProductCard({ product, enableSchema = false, priority = 
         onClick={handleAddToCart}
         aria-label={`Mua ngay ${product.name}`}
       >
-        <span className={styles.cartIcon} aria-hidden="true">🛒</span> 
+        <span className={styles.cartIcon} aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M3.5 4.5h2.2l1.8 10.2a2 2 0 0 0 2 1.7h7.6a2 2 0 0 0 1.9-1.4l1.4-5.5H7" />
+            <path d="M9.4 20.2h.1" />
+            <path d="M17.2 20.2h.1" />
+          </svg>
+        </span> 
         THÊM VÀO GIỎ
       </button>
     </article>

@@ -16,7 +16,7 @@
 
 .breadcrumb a {
   text-decoration: none;
-  color: #005aab;
+  color: #32a7c8;
   transition: 0.3s;
 }
 
@@ -54,6 +54,20 @@
   gap: 25px;
 }
 
+.categoryLayout {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.categoryMain {
+  min-width: 0;
+  flex: 1;
+  padding: 14px;
+  border: 1px solid #d8e2e8;
+  background: #fff;
+}
+
 .empty {
   text-align: center;
   padding: 100px 0;
@@ -72,7 +86,7 @@
   border: 1px solid #e5edf7;
   border-radius: 8px;
   background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  box-shadow: 0 10px 30px rgba(0, 90, 171, 0.08);
+  box-shadow: 0 10px 30px rgba(50, 167, 200, 0.08);
 }
 
 .seoContent {
@@ -82,7 +96,7 @@
 .seoEyebrow {
   display: inline-flex;
   margin-bottom: 10px;
-  color: #005aab;
+  color: #32a7c8;
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
@@ -125,7 +139,7 @@
 }
 
 .seoHtmlContent a {
-  color: #005aab;
+  color: #32a7c8;
   font-weight: 700;
   text-decoration: none;
 }
@@ -159,20 +173,29 @@
   border: 1px solid #cfe0f3;
   border-radius: 6px;
   background: #fff;
-  color: #005aab;
+  color: #32a7c8;
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
 }
 
 .relatedLink:hover {
-  border-color: #f39200;
-  color: #d57900;
-  background: #fffaf2;
+  border-color: #d40f2e;
+  color: #b90b25;
+  background: #fff5f7;
 }
 
 /* --- Responsive cho mobile và tablet --- */
 @media (max-width: 1024px) {
+  .categoryLayout {
+    display: block;
+  }
+
+  .categoryMain {
+    padding: 0;
+    border: 0;
+  }
+
   .productGrid {
     grid-template-columns: repeat(3, 1fr);
     gap: 15px;

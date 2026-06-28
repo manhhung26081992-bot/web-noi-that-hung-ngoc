@@ -4,7 +4,7 @@
 
   /* GIỚI HẠN CHIỀU RỘNG */
   max-width: 1200px;
-  margin: 20px auto; /* căn giữa + tạo khoảng thở */
+  margin: 10px auto 20px; /* căn giữa + tạo khoảng thở */
 
   height: 420px;
 

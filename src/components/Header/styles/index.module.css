@@ -7,6 +7,28 @@
   transition: transform 0.3s ease;
 }
 
+.announceBar {
+  background: #32a7c8;
+  color: #fff;
+  font-size: 14px;
+}
+
+.announceInner {
+  max-width: 1250px;
+  margin: 0 auto;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.announceInner a {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
 /* fix ký tự lạ */
 .menuItem::after {
   content: none !important;
@@ -33,11 +55,11 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
+  max-width: 1250px;
   margin: 0 auto;
-  padding: 16px 1rem;
-  gap: 1.5rem;
-  min-height: 80px;
+  padding: 12px 1rem 10px;
+  gap: 1rem;
+  min-height: 74px;
 }
 
 /* sticky padding */
@@ -56,7 +78,51 @@
 /* --- 4. SEARCH DESKTOP --- */
 .desktopSearch {
   flex: 1;
-  max-width: 450px;
+  max-width: 520px;
+}
+
+.desktopInfo {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #111827;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.infoIcon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #d40f2e;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex: 0 0 auto;
+}
+
+.infoItem span:last-child {
+  display: grid;
+  gap: 3px;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.infoItem strong {
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 /* --- 5. CONTACT / ACTION --- */
@@ -138,6 +204,11 @@
     height: 60px;
     padding: 0 12px;
     gap: 0;
+  }
+
+  .announceBar,
+  .desktopInfo {
+    display: none;
   }
 
   /* 1. HAMBURGER (TRÁI) */

@@ -1,15 +1,15 @@
 .searchWrapper {
   display: flex;
-  height: 40px;
-  border: 2px solid #aba800;
-  border-radius: 6px;
+  height: 38px;
+  border: 1px solid #d5e0e7;
+  border-radius: 999px;
   overflow: hidden;
   transition: border-color 0.2s;
  
 }
 
 .searchWrapper:focus-within {
-  border-color: #f39200;
+  border-color: #32a7c8;
 }
 
 .searchInput {
@@ -21,10 +21,10 @@
 }
 
 .searchBtn {
-  background-color: #f39200;
+  background-color: #d40f2e;
   color: white;
   border: none;
-  padding: 0 15px;
+  padding: 0 17px;
   cursor: pointer;
   display: flex;
   align-items: center;

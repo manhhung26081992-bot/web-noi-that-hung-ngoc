@@ -1,6 +1,4 @@
-/* =============================================
-   1. KHUNG CHUNG & BREADCRUMB
-   ============================================= */
+
 .container { 
   max-width: 1200px; 
   margin: 20px auto; 
@@ -19,14 +17,12 @@
 .breadcrumb a { color: #333; text-decoration: none; transition: 0.3s; }
 .breadcrumb a:hover { color: #f38020; }
 .breadcrumb .separator { color: #ccc; font-weight: normal; }
-.breadcrumb strong { color: #005aab; font-weight: 700; }
+.breadcrumb strong { color: #32a7c8; font-weight: 700; }
 
-/* =============================================
-   2. BỐ CỤC TOP (ẢNH & THÔNG TIN CHUNG)
-   ============================================= */
+
 .productTopWrapper { display: flex; gap: 30px; margin-bottom: 50px; align-items: flex-start; }
 
-/* --- Phần ảnh & Zoom --- */
+
 .imageSection { flex: 0 1 320px; min-width: 0; max-width: 320px; }
 .mainImageWrapper {
   position: relative;
@@ -54,25 +50,21 @@
   background-size: 180%;
   z-index: 10;
   pointer-events: none;
-  /* transition: background-position 0.1s ease-out; */
+  
   will-change: background-position;
 }
 .actualImage {
   width: 100%;
   height: 100%;
   aspect-ratio: 1 / 1;
-  object-fit: contain; /* Giữ trọn hình dáng sản phẩm, không cắt mép bàn ghế/tủ. */
+  object-fit: contain; 
   object-position: center;
   box-sizing: border-box;
   padding: 18px;
 }
-/* .actualImage {
-  width: 100%; height: 100%;
-  object-fit: contain;
-  display: block;
-} */
 
-/* --- Điều hướng ảnh --- */
+
+
 .navBtnPrev, .navBtnNext {
   position: absolute;
   top: 50%;
@@ -84,41 +76,39 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; transition: 0.3s;
 }
-.navBtnPrev:hover, .navBtnNext:hover { background: #005aab; color: #fff; border-color: #005aab; }
+.navBtnPrev:hover, .navBtnNext:hover { background: #32a7c8; color: #fff; border-color: #32a7c8; }
 .navBtnPrev { left: 10px; }
 .navBtnNext { right: 10px; }
 
-/* --- Thumbnails --- */
+
 .thumbnailList { display: flex; gap: 10px; margin-top: 15px; overflow-x: auto; padding-bottom: 5px; }
 .thumbItem { width: 70px; height: 70px; border: 2px solid #eee; border-radius: 4px; cursor: pointer; overflow: hidden; flex-shrink: 0; transition: 0.2s; }
 .thumbItem img { width: 100%; height: 100%; object-fit: contain; background: #fff; }
-.thumbActive { border-color: #005aab; }
+.thumbActive { border-color: #32a7c8; }
 
-/* =============================================
-   3. CHI TIẾT THÔNG TIN SẢN PHẨM (INFO SECTION)
-   ============================================= */
+
 .infoSection { flex: 1.2; }
 .title { font-size: 26px; font-weight: 700; margin-bottom: 12px; color: #222; line-height: 1.3; }
 
-/* --- Giá & Liên hệ --- */
+
 .priceValue { font-size: 30px; color: #d0021b; font-weight: 800; margin-bottom: 20px; }
 .contactPrice {
   display: inline-flex;
   align-items: center;
   font-size: 24px;
-  color: #005aab;
+  color: #32a7c8;
   font-weight: 700;
   text-decoration: none;
   margin-bottom: 20px;
   transition: 0.3s;
 }
 .contactPrice:hover { color: #f38020; }
-.contactPrice::before { content: "📞"; margin-right: 10px; font-size: 20px; }
+.contactPrice::before { content: "\260E"; margin-right: 10px; font-size: 20px; }
 
 .shortSpecs { list-style: none; padding: 15px; background: #f9f9f9; border-radius: 8px; margin-bottom: 20px; }
 .shortSpecs li {
   display: grid;
-  /* Cột 1 (tiêu đề) rộng 110px, cột 2 (nội dung) tự động chiếm phần còn lại */
+  
   grid-template-columns: 110px 1fr; 
   gap: 10px;
   margin-bottom: 12px;
@@ -128,7 +118,7 @@
 .shortSpecs strong {
   color: #000;
   font-weight: 700;
-  /* Dùng flex để đẩy dấu : về sát mép phải của cột 110px */
+  
   display: flex;
 
 
@@ -138,7 +128,7 @@
 
 
 
-/* --- Khối mua hàng & Số lượng --- */
+
 .actionBox { display: flex; gap: 12px; margin-bottom: 20px; }
 .quantityWrapper {
   display: flex;
@@ -176,22 +166,46 @@
 }
 .addToCartBtn:hover { background: #e67310; box-shadow: 0 4px 12px rgba(243, 128, 32, 0.3); }
 
-/* =============================================
-   4. SIDEBAR CAM KẾT (TRUST SIDEBAR)
-   ============================================= */
-.trustSidebar { flex: 0.8; border: 2px solid #005aab; border-radius: 8px; background: #fff; }
-.trustHeader { background: #005aab; color: #fff; padding: 12px; text-align: center; font-weight: 700; font-size: 14px; text-transform: uppercase; }
+
+.supportStrip {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 420px;
+  margin-top: 14px;
+}
+
+.supportStrip span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px dashed #d4e0e7;
+  background: #fbfdff;
+  color: #1e5268;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.supportStrip span::before {
+  content: "\2713";
+  color: #d40f2e;
+  font-weight: 900;
+}
+
+
+.trustSidebar { flex: 0.8; border: 2px solid #32a7c8; border-radius: 8px; background: #fff; }
+.trustHeader { background: #32a7c8; color: #fff; padding: 12px; text-align: center; font-weight: 700; font-size: 14px; text-transform: uppercase; }
 .trustItem { padding: 12px 15px; display: flex; gap: 10px; font-size: 13px; border-bottom: 1px solid #f0f0f0; line-height: 1.4; }
 
-/* =============================================
-   5. TABS & MÔ TẢ CHI TIẾT (ARTICLE)
-   ============================================= */
+
 .detailDescription { margin-top: 40px; }
-.tabs { display: flex; border-bottom: 2px solid #005aab; }
-.activeTab { background: #005aab; color: #fff; padding: 12px 25px; font-weight: 700; border: none; border-radius: 6px 6px 0 0; cursor: pointer; }
+.tabs { display: flex; border-bottom: 2px solid #32a7c8; }
+.activeTab { background: #32a7c8; color: #fff; padding: 12px 25px; font-weight: 700; border: none; border-radius: 6px 6px 0 0; cursor: pointer; }
 .contentBody { padding: 30px; border: 1px solid #eee; border-top: none; line-height: 1.8; background: #fff; }
 
-.article h2 { font-size: 22px; color: #005aab; margin-bottom: 20px; padding-left: 12px; border-left: 4px solid #f38020; }
+.article h2 { font-size: 22px; color: #32a7c8; margin-bottom: 20px; padding-left: 12px; border-left: 4px solid #f38020; }
 .articleImageContainer { display: flex; flex-direction: column; align-items: center; margin: 30px auto; width: 100%; }
 .articleImage {
   max-width: 500px; width: 100%; height: auto;
@@ -200,9 +214,7 @@
 } 
 .articleImageCaption { margin-top: 10px; font-size: 13px; color: #666; font-style: italic; text-align: center; max-width: 500px; }
 
-/* =============================================
-   6. ẢNH THỰC TẾ (REAL INSTALLATION)
-   ============================================= */
+
 .realInstallSection {
   margin: 40px 0;
   padding: 25px;
@@ -269,26 +281,22 @@
 }
 .realImageCard:hover::after { opacity: 1; }
 .featuresTitle {
-    margin-top: 30px;    /* Tạo khoảng cách với phần trên */
-    margin-bottom: 15px; /* Khoảng cách với danh sách bên dưới */
-    font-size: 1.2rem;   /* Đảm bảo kích thước chữ cân đối */
+    margin-top: 30px;    
+    margin-bottom: 15px; 
+    font-size: 1.2rem;   
     font-weight: 700;
     color: #333;
 }
 .featuresList{
   list-style: none;
 }
-/* =============================================
-   7. SẢN PHẨM LIÊN QUAN (RELATED PRODUCTS)
-   ============================================= */
+
 .relatedSection { margin-top: 60px; }
 .relatedTitle { font-size: 20px; font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
-.relatedTitle::before { content: ""; width: 5px; height: 25px; background: #005aab; }
+.relatedTitle::before { content: ""; width: 5px; height: 25px; background: #32a7c8; }
 .productGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 
-/* =============================================
-   8. RESPONSIVE CHO TABLET VÀ MOBILE
-   ============================================= */
+
 @media (max-width: 1024px) {
   .productTopWrapper { flex-direction: column; }
   .imageSection, .infoSection, .trustSidebar { width: 100%; }
@@ -337,6 +345,17 @@
 }
 }
 @media (max-width: 768px) {
+  .supportStrip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: none;
+    margin-top: 12px;
+  }
+
+  .supportStrip span {
+    min-height: 32px;
+    padding: 7px 8px;
+    font-size: 12px;
+  }
   .title {
     color: #111 !important;
     font-weight: 800;
@@ -366,13 +385,112 @@
   }
 
   .article h2 {
-    color: #005aab !important;
+    color: #32a7c8 !important;
     opacity: 1 !important;
-    -webkit-text-fill-color: #005aab;
+    -webkit-text-fill-color: #32a7c8;
   }
 
   .container {
     color: #222;
     -webkit-font-smoothing: antialiased;
+  }
+}
+
+
+@media (min-width: 1025px) {
+  .container {
+    max-width: 1250px;
+    margin-top: 18px;
+  }
+
+  .detailLayout {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .detailMain {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .productTopWrapper {
+    gap: 20px;
+    padding: 12px;
+    border: 1px solid #d8e2e8;
+    background: #fff;
+    margin-bottom: 28px;
+  }
+
+  .imageSection {
+    flex: 0 0 455px;
+    max-width: 455px;
+  }
+
+  .mainImageWrapper {
+    border-radius: 0;
+    border-color: #cbd5dc;
+  }
+
+  .actualImage {
+    padding: 10px;
+  }
+
+  .infoSection {
+    flex: 1;
+    padding: 4px 0 0;
+  }
+
+  .title {
+    padding-bottom: 12px;
+    border-bottom: 1px dashed #cdd6de;
+    color: #2b4d7c;
+    font-size: 23px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .priceValue {
+    color: #e0001b;
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  .actionBox {
+    align-items: stretch;
+    max-width: 420px;
+  }
+
+  .addToCartBtn {
+    background: #d40f2e;
+    border-radius: 3px;
+  }
+
+  .addToCartBtn:hover {
+    background: #b90b25;
+  }
+
+  .shortSpecs {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  .trustSidebar {
+    display: none;
+  }
+
+  .breadcrumb {
+    margin-left: 275px;
+    padding: 10px 12px;
+    border: 1px solid #e4ebf0;
+    border-top: 3px solid #32a7c8;
+    background: #f7fafc;
+  }
+}
+
+@media (max-width: 1024px) {
+  .detailLayout {
+    display: block;
   }
 }

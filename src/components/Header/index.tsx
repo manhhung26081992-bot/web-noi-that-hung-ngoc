@@ -6,7 +6,6 @@ import SearchBar from './SearchBar';
 import Navigation from './Navigation';
 import ActionButtons from './ActionButtons'; 
 import styles from './styles/index.module.css';
-import Link from 'next/link';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -49,9 +48,13 @@ useEffect(() => {
 
   return (
     <header className={`${styles.header} ${isSticky ? styles.sticky : ''}`}>
+      <div className={styles.announceBar}>
+        <div className={styles.announceInner}>
+          <span>NỘI THẤT HÙNG NGỌC - TỔNG KHO NỘI THẤT GIÁ XƯỞNG HÀ NỘI</span>
+        </div>
+      </div>
       <div className={styles.topBar}>
-          {/* Nút Hamburger cuối cùng bên phải */}
-          <button 
+<button 
             className={styles.hamburger} 
             onClick={() => setIsMenuOpen(!isMenuOpen)} 
             aria-label="Menu"
@@ -59,21 +62,35 @@ useEffect(() => {
             <span className={styles.bar}></span>
             <span className={styles.bar}></span>
             <span className={styles.bar}></span>
-          </button> 
-        {/* Logo đưa lên đầu để nằm bên trái trên mobile. */}
-        <div className={styles.logoWrapper}>
+          </button>
+<div className={styles.logoWrapper}>
           <Logo />
         </div>
 
-        {/* 2. Ô TÌM KIẾM DESKTOP (Sẽ tự ẩn trên mobile bằng CSS của bạn) */}
-        <div className={styles.desktopSearch}>
+        <div className={styles.desktopInfo}>
+          <a href="tel:0347227377" className={styles.infoItem}>
+            <span className={styles.infoIcon}>☎</span>
+            <span><strong>HOTLINE</strong>0347 227 377</span>
+          </a>
+          <a href="mailto:noithathungngoc@gmail.com" className={styles.infoItem}>
+            <span className={styles.infoIcon}>✉</span>
+            <span><strong>EMAIL</strong>noithathungngoc@gmail.com</span>
+          </a>
+          <a
+            href="https://www.google.com/maps/search/213+Nguy%E1%BB%85n+V%C4%83n+Gi%C3%A1p,+Nam+T%E1%BB%AB+Li%C3%AAm,+H%C3%A0+N%E1%BB%99i"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.infoItem}
+          >
+            <span className={styles.infoIcon}>⌖</span>
+            <span><strong>SHOWROOM</strong>213 Nguyễn Văn Giáp, Hà Nội</span>
+          </a>
+        </div>
+<div className={styles.desktopSearch}>
           <SearchBar query={searchQuery} setQuery={setSearchQuery} onSearch={handleSearch} />
         </div>
-
-        {/* 3. Cụm chức năng đưa sang PHẢI (Tìm kiếm, Giỏ hàng, Menu) */}
-        <div className={styles.contactInfo}>
-          {/* Nút tìm kiếm trên mobile. */}
-          <button 
+<div className={styles.contactInfo}>
+<button 
             className={styles.mobileSearchBtn} 
             onClick={() => setIsSearchOpen(!isSearchOpen)} 
             aria-label="Tìm kiếm"
@@ -90,21 +107,15 @@ useEffect(() => {
     <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
   </svg>
           </button>
-          
-          {/* Giỏ hàng (ActionButtons) */}
-          <ActionButtons />
+<ActionButtons />
 
         
         </div>
       </div>
-
-      {/* Ô tìm kiếm thả xuống khi bấm icon tìm kiếm trên mobile. */}
-      <div className={`${styles.mobileSearchDropdown} ${isSearchOpen ? styles.searchActive : ''}`}>
+<div className={`${styles.mobileSearchDropdown} ${isSearchOpen ? styles.searchActive : ''}`}>
           <SearchBar query={searchQuery} setQuery={setSearchQuery} onSearch={handleSearch} />
       </div>
-
-      {/* Menu điều hướng */}
-      <Navigation isOpen={isMenuOpen} setIsOpen={setIsMenuOpen}>
+<Navigation isOpen={isMenuOpen} setIsOpen={setIsMenuOpen}>
           <div className={styles.mobileMenuSearch}>
               <SearchBar query={searchQuery} setQuery={setSearchQuery} onSearch={handleSearch} />
           </div>
@@ -113,3 +124,4 @@ useEffect(() => {
     </header>
   );
 }
+

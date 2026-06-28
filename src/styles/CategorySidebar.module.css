@@ -1,0 +1,173 @@
+.sidebar {
+  width: 255px;
+  flex: 0 0 255px;
+}
+
+.title {
+  margin: 0;
+  padding: 13px 16px;
+  background: #32a7c8;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  border-radius: 4px 4px 0 0;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #d9e3e8;
+  border-top: 0;
+  background: #fff;
+}
+
+.item {
+  border-bottom: 1px dashed #d5dde2;
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.mainLink {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 10px 14px;
+  color: #243447;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.mainLink::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  border-top: 2px solid #32a7c8;
+  border-right: 2px solid #32a7c8;
+  transform: rotate(45deg);
+}
+
+.mainLink:hover {
+  color: #d40f2e;
+  background: #f7fbfd;
+}
+
+.subList {
+  display: none;
+  margin: 0;
+  padding: 0 0 8px 30px;
+  list-style: none;
+}
+
+.item:hover .subList {
+  display: block;
+}
+
+.subList a {
+  display: block;
+  padding: 5px 8px;
+  color: #4b5563;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.subList a:hover {
+  color: #d40f2e;
+}
+
+.hotBox {
+  margin-top: 12px;
+  border: 1px solid #e4edf2;
+  border-radius: 4px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.hotTitle {
+  margin: 0;
+  padding: 13px 14px;
+  background: #d40f2e;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.hotList {
+  display: grid;
+  gap: 0;
+}
+
+.hotProduct {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 10px;
+  padding: 10px;
+  color: #243447;
+  text-decoration: none;
+  border-bottom: 1px dashed #d9e3e8;
+}
+
+.hotProduct:last-child {
+  border-bottom: 0;
+}
+
+.hotProduct:hover {
+  background: #f8fbfd;
+}
+
+.hotImageWrap {
+  width: 74px;
+  height: 74px;
+  display: block;
+  background: #fff;
+  border: 1px solid #edf2f5;
+  overflow: hidden;
+}
+
+.hotImageWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  padding: 4px;
+}
+
+.hotInfo {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+}
+
+.hotInfo strong {
+  color: #243447;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hotInfo span {
+  color: #e0001b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    display: none;
+  }
+}

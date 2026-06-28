@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import ProductList from '@/components/ProductList';
 import CategorySchema from '@/components/CategorySchema';
+import CategorySidebar from '@/components/CategorySidebar';
 import styles from '@/styles/Category.module.css';
 import Link from 'next/link';
 import { getProductsByMultipleCategories, getCategoryBySlug  } from '@/app/actions';
@@ -247,6 +248,9 @@ export default async function CategoryPage({ params }: Props) {
         <h1 className={styles.mainTitle}>{category.name}</h1>
       </header>
 
+      <div className={styles.categoryLayout}>
+        <CategorySidebar />
+        <div className={styles.categoryMain}>
       <div className={styles.productSection}>
         {productsFromSupabase && productsFromSupabase.length > 0 ? (
           <div className={styles.productGridFull}>
@@ -264,6 +268,8 @@ export default async function CategoryPage({ params }: Props) {
             <Link href="/" className={styles.backHome}>Quay lại trang chủ</Link>
           </div>
         )}
+      </div>
+        </div>
       </div>
       {categorySeo?.seo_title && categorySeo?.seo_content && (
         <section className={styles.categorySeo}>

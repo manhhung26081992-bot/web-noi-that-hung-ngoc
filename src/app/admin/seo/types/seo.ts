@@ -10,13 +10,21 @@ export interface SeoOverview {
   categorySource: SeoCategorySource;
   staticUrls: number;
   activeCategoryUrls: number;
+  clusters?: number;
+  keywords?: number;
+  tasks?: number;
+  logs?: number;
+  goals?: number;
+  priorities?: number;
+  progress?: number;
+  doNotTouch?: number;
 }
 
 export interface ChartPoint { date: string; impressions: number; clicks: number; }
 export interface SearchConsoleMetrics { status: ConnectionStatus; message: string; impressions: number; clicks: number; ctr: number; averagePosition: number; chart7Days: ChartPoint[]; chart28Days: ChartPoint[]; topQueries: string[]; topPages: string[]; topCountries: string[]; topDevices: string[]; }
 export interface GoogleAdsKeyword { id: string; keyword: string; competition: 'low' | 'medium' | 'high' | 'unknown'; monthlySearch: number; status: ConnectionStatus; }
 export interface SeoPriority { id: string; keyword: string; rating: number; note?: string; updated_at?: string; }
-export interface TodayTask { id: string; title: string; completed: boolean; task_date: string; updated_at?: string; }
+export interface TodayTask { id: string; title: string; completed: boolean; task_date: string; updated_at?: string; cluster?: string; priority?: string | number; status?: string; }
 export interface BrokenUrlItem { id: string; url: string; source?: string; status: 'new' | 'redirected' | 'ignored'; redirectTo?: string; detectedAt?: string; }
 export interface SitemapStatus { url: string; lastGenerated?: string; urlCount: number; robotsOk: boolean; sitemapOk: boolean; }
 export interface IndexStatusItem { id: string; url: string; created_at: string; submitted: boolean; indexed: boolean; }
@@ -85,6 +93,10 @@ export interface SeoCluster {
   product_count: number;
   post_count: number;
   internal_link_count: number;
+  internal_link_measured?: boolean;
+  keyword_count?: number;
+  task_count?: number;
+  log_count?: number;
   note?: string;
   created_at?: string;
   updated_at?: string;
@@ -97,10 +109,26 @@ export interface ProductSeoItem {
   parent_slug?: string | null;
   image?: string | null;
   images?: unknown;
+  realInstallImages?: unknown;
   description?: string | null;
   detailDescription?: string | null;
   specs?: unknown;
+  features?: unknown;
   created_at?: string | null;
+  qualityScore?: number;
+  checks?: {
+    mainImage: boolean;
+    multipleImages: boolean;
+    alt: boolean;
+    description: boolean;
+    detailDescription: boolean;
+    specs: boolean;
+    features: boolean;
+    category: boolean;
+    slug: boolean;
+    internalLink: boolean;
+    faq: boolean;
+  };
   issues: string[];
   action: string;
 }
@@ -146,5 +174,4 @@ export interface AiDailyBrief {
   text: string;
   level: SeoPriorityLevel;
 }
-
 

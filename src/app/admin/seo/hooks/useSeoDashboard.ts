@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getGoogleAdsKeywords } from '../services/googleAdsService';
 import { getSearchConsoleMetrics } from '../services/searchConsoleService';
+import { getSearchConsoleV5Data, type SearchConsoleV5Data } from '../services/searchConsole';
 import {
   deleteDoNotTouchItem,
   deleteLocalSeoItem,
@@ -66,6 +67,7 @@ import type {
 interface DashboardState {
   overview: SeoOverview | null;
   searchConsole: SearchConsoleMetrics | null;
+  searchConsoleV5: SearchConsoleV5Data | null;
   adsMessage: string;
   adsKeywords: GoogleAdsKeyword[];
   priorities: SeoPriority[];
@@ -88,6 +90,7 @@ interface DashboardState {
 const initialState: DashboardState = {
   overview: null,
   searchConsole: null,
+  searchConsoleV5: null,
   adsMessage: 'Chưa kết nối Google Ads',
   adsKeywords: [],
   priorities: [],
@@ -124,6 +127,7 @@ export function useSeoDashboard() {
       const [
         overview,
         searchConsole,
+        searchConsoleV5,
         ads,
         priorities,
         tasks,
@@ -143,6 +147,7 @@ export function useSeoDashboard() {
       ] = await Promise.all([
         getSeoOverview(),
         getSearchConsoleMetrics(),
+        getSearchConsoleV5Data(),
         getGoogleAdsKeywords(),
         getSeoPriorities(),
         getTodayTasks(),
@@ -164,6 +169,7 @@ export function useSeoDashboard() {
       setDashboard({
         overview,
         searchConsole,
+        searchConsoleV5,
         adsMessage: ads.message,
         adsKeywords: ads.keywords,
         priorities,
@@ -289,3 +295,7 @@ export function useSeoDashboard() {
 
   return { dashboard, loading, saving, error, actions };
 }
+
+
+
+

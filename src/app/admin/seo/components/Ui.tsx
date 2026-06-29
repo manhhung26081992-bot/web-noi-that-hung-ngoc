@@ -19,5 +19,6 @@ export function SkeletonGrid() {
 export function MiniBarChart({ data, label }: { data: ChartPoint[]; label: string }) {
   if (!data.length) return <EmptyState title="Chưa có dữ liệu biểu đồ" detail={label} />;
   const max = Math.max(...data.map((item) => item.impressions), 1);
-  return <div className={styles.chart} aria-label={label}>{data.map((item) => <div className={styles.chartColumn} key={item.date}><span style={{ height: `${Math.max(8, (item.impressions / max) * 100)}%` }} /><small>{item.date}</small></div>)}</div>;
+  return <div className={styles.chart} aria-label={label}>{data.map((item, index) => <div className={styles.chartColumn} key={`${item.date}-${index}`}><span style={{ height: `${Math.max(8, (item.impressions / max) * 100)}%` }} /><small>{item.date}</small></div>)}</div>;
 }
+

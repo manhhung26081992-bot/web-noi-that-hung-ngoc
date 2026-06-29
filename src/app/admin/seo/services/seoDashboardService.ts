@@ -41,9 +41,8 @@ function textIncludes(row: BlogAnalyzeRow, keyword: string) {
 }
 function productUrl(product: { slug?: string | null; category?: string | null; parent_slug?: string | null }) {
   const slug = cleanSlug(product.slug);
-  const category = cleanSlug(product.category || product.parent_slug);
   if (!slug) return '/';
-  return category ? `/${category}/${slug}` : `/san-pham/${slug}`;
+  return `/san-pham/${slug}`;
 }
 function normalizeNumber(value: unknown) { const number = Number(value || 0); return Number.isFinite(number) ? number : 0; }
 function countImages(value: unknown) {

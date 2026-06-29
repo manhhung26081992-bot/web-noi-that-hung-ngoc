@@ -16,7 +16,7 @@ function key(table: string, id: unknown, slug: unknown, index: number) { return 
 function status(score: number) { return score >= 80 ? 'ok' : score >= 55 ? 'pending' : 'warning'; }
 function levelStatus(level: string) { return level === 'critical' || level === 'high' ? 'warning' : level === 'low' ? 'ok' : 'pending'; }
 function uniqueBy<T>(items: T[], getKey: (item: T, index: number) => string) { const map = new Map<string, T>(); items.forEach((item, index) => { const k = getKey(item, index); if (!map.has(k)) map.set(k, item); }); return Array.from(map.values()); }
-function productHref(product: ProductSeoItem) { const category = product.category || product.parent_slug; return category ? '/' + category + '/' + product.slug : '/san-pham/' + product.slug; }
+function productHref(product: ProductSeoItem) { return '/san-pham/' + product.slug; }
 function clusterMatch(cluster: SeoCluster, value: unknown) { const text = n(value); const name = n(cluster.name); const url = n(cluster.main_url).replace(/^\//, ''); return Boolean(text && ((name && text.includes(name)) || (url && text.includes(url)))); }
 
 function productsRank(products: ProductSeoItem[]) {

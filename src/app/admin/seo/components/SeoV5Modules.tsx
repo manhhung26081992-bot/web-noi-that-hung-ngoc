@@ -21,7 +21,7 @@ function clamp(value: number) { return Math.max(0, Math.min(100, Math.round(valu
 function levelByScore(score: number) { return score >= 80 ? 'ok' : score >= 55 ? 'pending' : 'warning'; }
 function safeKey(table: string, id: unknown, slug: unknown, index: number) { return `${table}-${String(id ?? 'no-id')}-${String(slug ?? 'no-slug')}-${index}`; }
 function uniqueBy<T>(items: T[], getKey: (item: T, index: number) => string) { const map = new Map<string, T>(); items.forEach((item, index) => { const key = getKey(item, index); if (!map.has(key)) map.set(key, item); }); return Array.from(map.values()); }
-function productHref(product: ProductSeoItem) { const category = product.category || product.parent_slug; return category ? `/${category}/${product.slug}` : `/san-pham/${product.slug}`; }
+function productHref(product: ProductSeoItem) { return `/san-pham/${product.slug}`; }
 function normalize(value: unknown) { return String(value || '').trim().toLowerCase(); }
 function statusIncludes(itemStatus: string | undefined, keyword: string) { return normalize(itemStatus).includes(normalize(keyword)); }
 

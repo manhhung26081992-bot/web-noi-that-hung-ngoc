@@ -1,6 +1,7 @@
 ﻿import { MENU_ITEMS } from '@/components/Header/menuData';
 import { supabase } from '@/lib/supabase';
-import type { ContentOpportunity, DoNotTouchItem, IndexStatusItem, InternalLinkSuggestion, LocalSeoItem, ProductSeoItem, RoadmapWeek, SeoCluster, SeoCompetitor, SeoGoal, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoNote, SeoOverview, SeoPriority, SeoProgress, TodayTask } from '../types/seo';
+import type { ContentOpportunity, DoNotTouchItem, IndexStatusItem, InternalLinkSuggestion, LocalSeoItem, ProductSeoItem,
+  SeoBlogQualityItem, RoadmapWeek, SeoCluster, SeoCompetitor, SeoGoal, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoNote, SeoOverview, SeoPriority, SeoProgress, TodayTask } from '../types/seo';
 
 type ProductUrlRow = { slug?: string | null; category?: string | null; parent_slug?: string | null };
 type BlogUrlRow = { slug?: string | null };
@@ -285,6 +286,47 @@ export async function getProductSeoItems(): Promise<ProductSeoItem[]> {
   }).sort((a, b) => (a.qualityScore || 0) - (b.qualityScore || 0) || b.issues.length - a.issues.length);
 }
 
+function textField(row: LooseRow, keys: string[]) {
+  for (const key of keys) {
+    const value = row[key];
+    if (typeof value === 'string' && value.trim()) return value;
+  }
+  return '';
+}
+
+export async function getBlogSeoItems(): Promise<SeoBlogQualityItem[]> {
+  const rows = await safeList<LooseRow>('blog_posts', 'created_at', false, 300);
+  return uniqueBy(rows, (row, index) => String(row.id || row.slug || index)).map((row) => {
+    const title = textField(row, ['title', 'name']) || 'Bài viết chưa có tiêu đề';
+    const slug = textField(row, ['slug']);
+    const content = textField(row, ['content', 'seo_content', 'body']);
+    const excerpt = textField(row, ['excerpt', 'description', 'meta_description']);
+    const image = textField(row, ['image', 'image_url', 'thumbnail', 'cover']);
+    const combined = (title + ' ' + excerpt + ' ' + content).toLowerCase();
+    const checks = {
+      content: content.length >= 800,
+      internalLink: /href=|\/tu-|\/ghe-|\/ban-|\/san-pham|\/tin-tuc/.test(content),
+      image: Boolean(image) || /<img\s/i.test(content),
+      slug: Boolean(slug) && slug === slug.toLowerCase() && !/\s/.test(slug),
+      meta: excerpt.length >= 80 && excerpt.length <= 180,
+      faq: /faq|hỏi|câu hỏi|thắc mắc|giải đáp/i.test(combined),
+      keyword: title.length >= 20 || /giá|mua|chọn|nên|hà nội/i.test(combined),
+    };
+    const issueMap: Record<keyof typeof checks, string> = {
+      content: 'nội dung còn mỏng',
+      internalLink: 'thiếu internal link',
+      image: 'thiếu ảnh đại diện',
+      slug: 'slug chưa chuẩn',
+      meta: 'meta/excerpt chưa tối ưu',
+      faq: 'thiếu FAQ',
+      keyword: 'keyword chưa rõ',
+    };
+    const issues = Object.entries(checks).filter(([, ok]) => !ok).map(([key]) => issueMap[key as keyof typeof checks]);
+    const score = Math.round(Object.values(checks).filter(Boolean).length / Object.keys(checks).length * 100);
+    return { id: row.id as string | number || slug || title, title, slug, excerpt, image, created_at: textField(row, ['created_at']), updated_at: textField(row, ['updated_at']), score, checks, issues, action: issues.length ? 'Ưu tiên: ' + issues.slice(0, 3).join(', ') + '.' : 'Bài viết ổn, theo dõi Search Console.' };
+  }).sort((a, b) => a.score - b.score || b.issues.length - a.issues.length);
+}
+
 export async function getInternalLinkSuggestions(): Promise<InternalLinkSuggestion[]> {
   const { data, error } = await supabase.from('blog_posts').select('id, title, slug, content, excerpt').order('created_at', { ascending: false }).limit(120);
   if (error) return [];
@@ -351,4 +393,3 @@ export function getRoadmap30Days(): RoadmapWeek[] {
 export function getClusterProgress(cluster: SeoCluster) { return clusterScore(cluster); }
 
 export async function getSeoHealth(): Promise<SeoHealthSnapshot> { const response = await fetch('/api/admin/seo/health', { cache: 'no-store' }); if (!response.ok) throw new Error('Không đọc được tình trạng hệ thống SEO'); return response.json(); }
-

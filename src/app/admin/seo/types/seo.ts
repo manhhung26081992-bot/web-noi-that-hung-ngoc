@@ -132,6 +132,43 @@ export interface ProductSeoItem {
   issues: string[];
   action: string;
 }
+export interface SeoBlogQualityItem {
+  id: string | number;
+  title: string;
+  slug: string;
+  excerpt?: string | null;
+  image?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  score: number;
+  checks: {
+    content: boolean;
+    internalLink: boolean;
+    image: boolean;
+    slug: boolean;
+    meta: boolean;
+    faq: boolean;
+    keyword: boolean;
+  };
+  issues: string[];
+  action: string;
+}
+export interface V6Decision { id: string; priority: 1 | 2 | 3; title: string; reason: string; action: string; level: SeoPriorityLevel; source: string; }
+export interface V6Opportunity { id: string; cluster: string; score: number; reasons: string[]; nextAction: string; }
+export interface V6Notification { id: string; title: string; detail: string; level: SeoPriorityLevel; count?: number; }
+export interface V6RadarPoint { label: string; score: number; }
+export interface AiRecommendationHistoryItem { id: string; date: string; suggestion: string; done: boolean; result?: string; }
+export interface V6Analysis {
+  decisions: V6Decision[];
+  opportunities: V6Opportunity[];
+  productRanking: ProductSeoItem[];
+  blogRanking: SeoBlogQualityItem[];
+  notifications: V6Notification[];
+  radar: V6RadarPoint[];
+  progress: { yesterday: number; today: number; sevenDays: number; thirtyDays: number; improved: string[]; };
+  insights: string[];
+}
+
 export interface ContentOpportunity {
   id: string;
   cluster: string;

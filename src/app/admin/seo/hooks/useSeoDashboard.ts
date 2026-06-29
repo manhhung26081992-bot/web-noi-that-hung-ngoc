@@ -16,6 +16,7 @@ import {
   deleteSeoProgress,
   deleteTodayTask,
   getDoNotTouchItems,
+  getBlogSeoItems,
   getIndexStatus,
   getInternalLinkSuggestions,
   getLocalSeoItems,
@@ -50,6 +51,7 @@ import type {
   InternalLinkSuggestion,
   LocalSeoItem,
   ProductSeoItem,
+  SeoBlogQualityItem,
   SearchConsoleMetrics,
   SeoCluster,
   SeoCompetitor,
@@ -82,6 +84,7 @@ interface DashboardState {
   localSeo: LocalSeoItem[];
   seoClusters: SeoCluster[];
   productSeoItems: ProductSeoItem[];
+  blogSeoItems: SeoBlogQualityItem[];
   internalLinkSuggestions: InternalLinkSuggestion[];
   doNotTouch: DoNotTouchItem[];
   seoCompetitors: SeoCompetitor[];
@@ -105,6 +108,7 @@ const initialState: DashboardState = {
   localSeo: [],
   seoClusters: [],
   productSeoItems: [],
+  blogSeoItems: [],
   internalLinkSuggestions: [],
   doNotTouch: [],
   seoCompetitors: [],
@@ -141,6 +145,7 @@ export function useSeoDashboard() {
         localSeo,
         seoClusters,
         productSeoItems,
+        blogSeoItems,
         internalLinkSuggestions,
         doNotTouch,
         seoCompetitors,
@@ -161,6 +166,7 @@ export function useSeoDashboard() {
         getLocalSeoItems(),
         getSeoClusters(),
         getProductSeoItems(),
+        getBlogSeoItems(),
         getInternalLinkSuggestions(),
         getDoNotTouchItems(),
         getSeoCompetitors(),
@@ -184,6 +190,7 @@ export function useSeoDashboard() {
         localSeo,
         seoClusters,
         productSeoItems,
+        blogSeoItems,
         internalLinkSuggestions,
         doNotTouch,
         seoCompetitors,

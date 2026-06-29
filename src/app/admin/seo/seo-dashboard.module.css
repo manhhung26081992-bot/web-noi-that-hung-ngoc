@@ -38,3 +38,34 @@
 .dark .qualityMissing{background:#352716;color:#ffd788}
 @media (max-width:1100px){.v51FilterBar{grid-template-columns:1fr 1fr}.v51FilterBar input{grid-column:1/-1}.productQualityCards{grid-template-columns:1fr}}
 @media (max-width:720px){.v51FilterBar{grid-template-columns:1fr}.v51Toggle{white-space:normal}.qualityHeader{flex-direction:column}.productQualityCard{padding:12px}.productQualityCards{grid-template-columns:1fr}}
+
+
+.v6List { display: grid; gap: 12px; }
+.v6Decision, .v6ScoreRow, .v6History { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--card-soft); }
+.v6Decision p, .v6ScoreRow p, .v6Notice p { margin: 6px 0; color: var(--muted); }
+.v6Decision span, .v6ScoreRow span, .v6RankItem span, .v6History small { display: block; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.v6Toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.v6Toolbar select { min-height: 38px; border: 1px solid var(--border); border-radius: 10px; padding: 0 12px; background: var(--card); color: var(--text); }
+.v6RankList { display: grid; gap: 10px; }
+.v6RankItem { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--card-soft); color: var(--text); text-decoration: none; }
+.v6RankItem span { grid-column: 1 / -1; }
+.v6NoticeGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.v6Notice { padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--card-soft); }
+.v6RadarWrap { display: grid; grid-template-columns: 220px 1fr; gap: 18px; align-items: center; }
+.v6Radar { width: 220px; height: 220px; }
+.v6RadarGrid { fill: rgba(14, 165, 233, 0.06); stroke: var(--border); stroke-width: 2; }
+.v6RadarShape { fill: rgba(14, 165, 233, 0.28); stroke: var(--primary); stroke-width: 3; }
+.v6RadarLegend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.v6RadarLegend div { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--card-soft); }
+.v6Pill, .v6Insight { padding: 10px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--card-soft); color: var(--text); }
+.v6Insight { border-radius: 12px; line-height: 1.5; }
+.v6History { justify-content: flex-start; }
+.v6History input { margin-top: 3px; }
+
+@media (max-width: 720px) {
+  .v6Decision, .v6ScoreRow { flex-direction: column; }
+  .v6RadarWrap { grid-template-columns: 1fr; }
+  .v6Radar { margin: 0 auto; max-width: 100%; }
+  .v6RadarLegend { grid-template-columns: 1fr; }
+  .v6RankItem { grid-template-columns: 1fr; }
+}

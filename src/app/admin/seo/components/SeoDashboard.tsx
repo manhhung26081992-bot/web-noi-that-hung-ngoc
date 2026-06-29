@@ -26,6 +26,7 @@ import {
 } from './SeoV4Modules';
 import { buildContentOpportunities, getRoadmap30Days } from '../services/seoDashboardService';
 import { DashboardAnalytics, DailySeoMission, ClusterHealth, ContentPlanner, InternalLinkAIV5, KeywordIntelligence, ProductQualityAIV5, SearchConsoleCenter, SeoV51FilterBar, type DashboardSeoFilters } from './SeoV5Modules';
+import { AiBlogRanking, AiDecisionEngine, AiProductRanking, AiProgressEngine, AiRecommendationHistory, AutoInsightPanel, OpportunityScorePanel, SeoHealthRadar, SmartNotificationCenter, buildV6Analysis } from './SeoV6Modules';
 import { useSeoDashboard } from '../hooks/useSeoDashboard';
 import styles from '../seo-dashboard.module.css';
 
@@ -81,11 +82,12 @@ export default function SeoDashboard() {
   const opportunities = useMemo(() => buildContentOpportunities(filteredClusters, filteredKeywords, overview), [filteredClusters, filteredKeywords, overview]);
   const roadmap = useMemo(() => getRoadmap30Days(), []);
   const lastUpdated = useMemo(() => new Date().toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' }), []);
+  const v6Analysis = useMemo(() => buildV6Analysis({ overview, health, products: dashboard.productSeoItems, blogs: dashboard.blogSeoItems, keywords: dashboard.seoKeywords, clusters: dashboard.seoClusters, tasks: dashboard.tasks, logs: dashboard.seoLogs, doNotTouch: dashboard.doNotTouch, searchConsole: dashboard.searchConsoleV5 }), [dashboard.blogSeoItems, dashboard.doNotTouch, dashboard.productSeoItems, dashboard.searchConsoleV5, dashboard.seoClusters, dashboard.seoKeywords, dashboard.seoLogs, dashboard.tasks, health, overview]);
 
   if (loading) return <main className={styles.dashboard}><header className={styles.hero}><h1>SEO Dashboard</h1><p>Đang tải dữ liệu SEO...</p></header><SkeletonGrid /></main>;
 
   return <main className={`${styles.dashboard} ${darkMode ? styles.dark : ''}`}>
-    <header className={styles.hero}><div><p className={styles.eyebrow}>Nội Thất Hùng Ngọc</p><h1>SEO Dashboard v5.1</h1><p>AI SEO Operating System dùng dữ liệu thật từ Supabase khi có thể, fallback rõ ràng khi chưa có API ngoài.</p></div><div className={styles.heroActions}><button className={styles.secondaryButton} onClick={() => setDarkMode((value) => !value)}>{darkMode ? 'Light Mode' : 'Dark Mode'}</button><button className={styles.primaryButton} onClick={actions.reload}>Làm mới</button></div></header>
+    <header className={styles.hero}><div><p className={styles.eyebrow}>Nội Thất Hùng Ngọc</p><h1>SEO Dashboard v6.0</h1><p>AI SEO Operating System dùng dữ liệu thật từ Supabase khi có thể, fallback rõ ràng khi chưa có API ngoài.</p></div><div className={styles.heroActions}><button className={styles.secondaryButton} onClick={() => setDarkMode((value) => !value)}>{darkMode ? 'Light Mode' : 'Dark Mode'}</button><button className={styles.primaryButton} onClick={actions.reload}>Làm mới</button></div></header>
     {error ? <div className={styles.alert}>{error}</div> : null}
 
     <AiDailyBriefPanelV41 items={dailyBrief} lastUpdated={lastUpdated} />
@@ -94,6 +96,12 @@ export default function SeoDashboard() {
     <section className={styles.metricGrid}><MetricCard label="Tổng sản phẩm" value={formatNumber(overview?.products || 0)} /><MetricCard label="Tổng bài viết" value={formatNumber(overview?.blogPosts || 0)} /><MetricCard label="Tổng danh mục" value={formatNumber(overview?.categories || 0)} hint={overview?.categorySource === 'supabase' ? 'Lấy từ Supabase' : 'Fallback từ menu'} /><MetricCard label="URL tạo từ website" value={formatNumber(overview?.generatedUrls || 0)} hint={`${overview?.activeCategoryUrls || 0} danh mục có sản phẩm, ${overview?.staticUrls || 0} trang tĩnh`} /></section>
 
     <SeoV51FilterBar filters={filters} onChange={setFilters} />
+
+    <section className={styles.gridTwo}><AiDecisionEngine decisions={v6Analysis.decisions} /><SmartNotificationCenter items={v6Analysis.notifications} /></section>
+    <section className={styles.gridTwo}><SeoHealthRadar points={v6Analysis.radar} /><AutoInsightPanel insights={v6Analysis.insights} /></section>
+    <section className={styles.gridTwo}><OpportunityScorePanel items={v6Analysis.opportunities} /><AiProgressEngine analysis={v6Analysis} /></section>
+    <section className={styles.gridTwo}><AiProductRanking products={v6Analysis.productRanking} /><AiBlogRanking blogs={v6Analysis.blogRanking} /></section>
+    <AiRecommendationHistory decisions={v6Analysis.decisions} />
 
     <section className={styles.gridTwo}><SearchConsoleCenter data={dashboard.searchConsoleV5} /><DashboardAnalytics overview={overview} health={health} clusters={dashboard.seoClusters} keywords={dashboard.seoKeywords} tasks={dashboard.tasks} logs={dashboard.seoLogs} doNotTouch={dashboard.doNotTouch} /></section>
     <section className={styles.gridTwo}><KeywordIntelligence keywords={filteredKeywords} /><ClusterHealth clusters={filteredClusters} /></section>

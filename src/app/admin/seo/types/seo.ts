@@ -25,8 +25,34 @@ export interface SystemHealthItem { name: string; status: 'ok' | 'warning' | 'er
 export interface SeoHealthSnapshot { brokenUrls: BrokenUrlItem[]; sitemap: SitemapStatus; systemHealth: SystemHealthItem[]; }
 
 export interface SeoCommand { id: string; title: string; detail: string; level: SeoPriorityLevel; source: string; }
-export interface SeoKeyword { id: string; keyword: string; target_url: string; priority: number; status: string; current_position: number | null; current_impression: number | null; note?: string; updated_at?: string; }
-export interface SeoLog { id: string; log_date: string; action: string; target: string; note?: string; created_at?: string; }
+export interface SeoKeyword {
+  id: string;
+  keyword: string;
+  cluster?: string;
+  target_url: string;
+  intent?: string;
+  priority: number;
+  status: string;
+  current_position: number | null;
+  current_impression: number | null;
+  current_click?: number | null;
+  note?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+export interface SeoLog {
+  id: string;
+  log_date: string;
+  action: string;
+  target: string;
+  note?: string;
+  type?: string;
+  title?: string;
+  description?: string;
+  related_url?: string;
+  cluster?: string;
+  created_at?: string;
+}
 export interface SeoProgress { id: string; cluster: string; progress: number; note?: string; updated_at?: string; }
 export interface SeoGoal { id: string; title: string; target_value: number; current_value: number; unit?: string; note?: string; updated_at?: string; }
 export interface LocalSeoItem { id: string; name: string; value: string; status: 'ok' | 'warning' | 'missing'; updated_at?: string; }
@@ -49,3 +75,76 @@ export interface AiSeoScore {
 }
 export interface TodaySummary { products: number; blogPosts: number; errors: number; urls: number; productsTotal: number; blogPostsTotal: number; }
 export interface AiInsight { id: string; text: string; level: SeoPriorityLevel; }
+
+export interface SeoCluster {
+  id: string;
+  name: string;
+  main_url: string;
+  priority: number;
+  status: string;
+  product_count: number;
+  post_count: number;
+  internal_link_count: number;
+  note?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+export interface ProductSeoItem {
+  id: string | number;
+  name: string;
+  slug: string;
+  category?: string | null;
+  parent_slug?: string | null;
+  image?: string | null;
+  images?: unknown;
+  description?: string | null;
+  detailDescription?: string | null;
+  specs?: unknown;
+  created_at?: string | null;
+  issues: string[];
+  action: string;
+}
+export interface ContentOpportunity {
+  id: string;
+  cluster: string;
+  suggestion: string;
+  reason: string;
+  level: SeoPriorityLevel;
+}
+export interface InternalLinkSuggestion {
+  id: string;
+  post_title: string;
+  post_url: string;
+  detected_keyword: string;
+  target_url: string;
+  anchor: string;
+}
+export interface DoNotTouchItem {
+  id: string;
+  url: string;
+  reason: string;
+  until_date: string;
+  status: string;
+  created_at?: string;
+}
+export interface SeoCompetitor {
+  id: string;
+  name: string;
+  domain: string;
+  note?: string;
+  priority: number;
+  created_at?: string;
+  updated_at?: string;
+}
+export interface RoadmapWeek {
+  week: string;
+  focus: string;
+  tasks: string[];
+}
+export interface AiDailyBrief {
+  id: string;
+  text: string;
+  level: SeoPriorityLevel;
+}
+
+

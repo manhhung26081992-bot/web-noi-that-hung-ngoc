@@ -4,15 +4,23 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getGoogleAdsKeywords } from '../services/googleAdsService';
 import { getSearchConsoleMetrics } from '../services/searchConsoleService';
 import {
+  deleteDoNotTouchItem,
   deleteLocalSeoItem,
+  deleteSeoCluster,
+  deleteSeoCompetitor,
   deleteSeoGoal,
   deleteSeoKeyword,
   deleteSeoLog,
   deleteSeoPriority,
   deleteSeoProgress,
   deleteTodayTask,
+  getDoNotTouchItems,
   getIndexStatus,
+  getInternalLinkSuggestions,
   getLocalSeoItems,
+  getProductSeoItems,
+  getSeoClusters,
+  getSeoCompetitors,
   getSeoGoals,
   getSeoHealth,
   getSeoKeywords,
@@ -23,7 +31,10 @@ import {
   getSeoProgress,
   getTodayTasks,
   saveSeoNote,
+  upsertDoNotTouchItem,
   upsertLocalSeoItem,
+  upsertSeoCluster,
+  upsertSeoCompetitor,
   upsertSeoGoal,
   upsertSeoKeyword,
   upsertSeoLog,
@@ -31,7 +42,26 @@ import {
   upsertSeoProgress,
   upsertTodayTask,
 } from '../services/seoDashboardService';
-import type { GoogleAdsKeyword, IndexStatusItem, LocalSeoItem, SearchConsoleMetrics, SeoGoal, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoNote, SeoOverview, SeoPriority, SeoProgress, TodayTask } from '../types/seo';
+import type {
+  DoNotTouchItem,
+  GoogleAdsKeyword,
+  IndexStatusItem,
+  InternalLinkSuggestion,
+  LocalSeoItem,
+  ProductSeoItem,
+  SearchConsoleMetrics,
+  SeoCluster,
+  SeoCompetitor,
+  SeoGoal,
+  SeoHealthSnapshot,
+  SeoKeyword,
+  SeoLog,
+  SeoNote,
+  SeoOverview,
+  SeoPriority,
+  SeoProgress,
+  TodayTask,
+} from '../types/seo';
 
 interface DashboardState {
   overview: SeoOverview | null;
@@ -48,6 +78,11 @@ interface DashboardState {
   seoProgress: SeoProgress[];
   seoGoals: SeoGoal[];
   localSeo: LocalSeoItem[];
+  seoClusters: SeoCluster[];
+  productSeoItems: ProductSeoItem[];
+  internalLinkSuggestions: InternalLinkSuggestion[];
+  doNotTouch: DoNotTouchItem[];
+  seoCompetitors: SeoCompetitor[];
 }
 
 const initialState: DashboardState = {
@@ -65,6 +100,11 @@ const initialState: DashboardState = {
   seoProgress: [],
   seoGoals: [],
   localSeo: [],
+  seoClusters: [],
+  productSeoItems: [],
+  internalLinkSuggestions: [],
+  doNotTouch: [],
+  seoCompetitors: [],
 };
 
 function errorMessage(prefix: string, err: unknown, fallback: string) {
@@ -81,7 +121,26 @@ export function useSeoDashboard() {
     setLoading(true);
     setError('');
     try {
-      const [overview, searchConsole, ads, priorities, tasks, note, indexStatus, health, seoKeywords, seoLogs, seoProgress, seoGoals, localSeo] = await Promise.all([
+      const [
+        overview,
+        searchConsole,
+        ads,
+        priorities,
+        tasks,
+        note,
+        indexStatus,
+        health,
+        seoKeywords,
+        seoLogs,
+        seoProgress,
+        seoGoals,
+        localSeo,
+        seoClusters,
+        productSeoItems,
+        internalLinkSuggestions,
+        doNotTouch,
+        seoCompetitors,
+      ] = await Promise.all([
         getSeoOverview(),
         getSearchConsoleMetrics(),
         getGoogleAdsKeywords(),
@@ -95,8 +154,34 @@ export function useSeoDashboard() {
         getSeoProgress(),
         getSeoGoals(),
         getLocalSeoItems(),
+        getSeoClusters(),
+        getProductSeoItems(),
+        getInternalLinkSuggestions(),
+        getDoNotTouchItems(),
+        getSeoCompetitors(),
       ]);
-      setDashboard({ overview, searchConsole, adsMessage: ads.message, adsKeywords: ads.keywords, priorities, tasks, note, indexStatus, health, seoKeywords, seoLogs, seoProgress, seoGoals, localSeo });
+
+      setDashboard({
+        overview,
+        searchConsole,
+        adsMessage: ads.message,
+        adsKeywords: ads.keywords,
+        priorities,
+        tasks,
+        note,
+        indexStatus,
+        health,
+        seoKeywords,
+        seoLogs,
+        seoProgress,
+        seoGoals,
+        localSeo,
+        seoClusters,
+        productSeoItems,
+        internalLinkSuggestions,
+        doNotTouch,
+        seoCompetitors,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không tải được SEO Dashboard');
     } finally {
@@ -175,6 +260,30 @@ export function useSeoDashboard() {
     removeLocalSeo: async (id: string) => {
       const ok = await persist(() => deleteLocalSeoItem(id).then(() => true), 'Chưa xóa được Local SEO');
       if (ok) setDashboard((prev) => ({ ...prev, localSeo: prev.localSeo.filter((item) => item.id !== id) }));
+    },
+    saveCluster: async (cluster: Partial<SeoCluster>) => {
+      const saved = await persist(() => upsertSeoCluster(cluster), 'Chưa lưu được Cluster Manager');
+      if (saved) setDashboard((prev) => ({ ...prev, seoClusters: [saved, ...prev.seoClusters.filter((item) => item.id !== saved.id)] }));
+    },
+    removeCluster: async (id: string) => {
+      const ok = await persist(() => deleteSeoCluster(id).then(() => true), 'Chưa xóa được Cluster Manager');
+      if (ok) setDashboard((prev) => ({ ...prev, seoClusters: prev.seoClusters.filter((item) => item.id !== id) }));
+    },
+    saveDoNotTouch: async (item: Partial<DoNotTouchItem>) => {
+      const saved = await persist(() => upsertDoNotTouchItem(item), 'Chưa lưu được Do Not Touch');
+      if (saved) setDashboard((prev) => ({ ...prev, doNotTouch: [saved, ...prev.doNotTouch.filter((row) => row.id !== saved.id)] }));
+    },
+    removeDoNotTouch: async (id: string) => {
+      const ok = await persist(() => deleteDoNotTouchItem(id).then(() => true), 'Chưa xóa được Do Not Touch');
+      if (ok) setDashboard((prev) => ({ ...prev, doNotTouch: prev.doNotTouch.filter((item) => item.id !== id) }));
+    },
+    saveCompetitor: async (item: Partial<SeoCompetitor>) => {
+      const saved = await persist(() => upsertSeoCompetitor(item), 'Chưa lưu được Competitor Watch');
+      if (saved) setDashboard((prev) => ({ ...prev, seoCompetitors: [saved, ...prev.seoCompetitors.filter((row) => row.id !== saved.id)] }));
+    },
+    removeCompetitor: async (id: string) => {
+      const ok = await persist(() => deleteSeoCompetitor(id).then(() => true), 'Chưa xóa được Competitor Watch');
+      if (ok) setDashboard((prev) => ({ ...prev, seoCompetitors: prev.seoCompetitors.filter((item) => item.id !== id) }));
     },
   }), [loadDashboard]);
 

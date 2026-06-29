@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Badge, EmptyState, ModuleCard } from './Ui';
 import type { SearchConsoleV5Data } from '../services/searchConsole';
-import type { AiRecommendationHistoryItem, DoNotTouchItem, ProductSeoItem, SeoBlogQualityItem, SeoCluster, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoOverview, TodayTask, V6Analysis, V6Decision, V6Notification, V6Opportunity, V6RadarPoint } from '../types/seo';
+import type { AiDailyBrief, AiRecommendationHistoryItem, DoNotTouchItem, ProductSeoItem, SeoBlogQualityItem, SeoCluster, SeoCommand, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoOverview, TodayTask, V6Analysis, V6Decision, V6Notification, V6Opportunity, V6RadarPoint } from '../types/seo';
 import styles from '../seo-dashboard.module.css';
 
 type V6Input = { overview: SeoOverview | null; health: SeoHealthSnapshot | null; products: ProductSeoItem[]; blogs: SeoBlogQualityItem[]; keywords: SeoKeyword[]; clusters: SeoCluster[]; tasks: TodayTask[]; logs: SeoLog[]; doNotTouch: DoNotTouchItem[]; searchConsole: SearchConsoleV5Data | null; };
@@ -159,3 +159,55 @@ export function SeoHealthRadar({ points }: { points: V6RadarPoint[] }) {
 export function AutoInsightPanel({ insights }: { insights: string[] }) {
   return <ModuleCard title="Auto Insight" description="Mỗi lần làm mới, AI sinh 3 nhận xét từ dữ liệu hiện tại.">{insights.length ? <div className={styles.v6List}>{insights.map((item, index) => <div className={styles.v6Insight} key={key('insight', item, '', index)}>{item}</div>)}</div> : <EmptyState title="Chưa đủ dữ liệu insight" detail="Thêm sản phẩm, blog hoặc cluster để AI tự nhận xét." />}</ModuleCard>;
 }
+
+
+function uniqueText(items: string[]) {
+  return Array.from(new Set(items.map((item) => item.trim()).filter(Boolean))).slice(0, 8);
+}
+
+function TodaySeoFocusV61Base({
+  decisions,
+  notifications,
+  insights,
+  tasks,
+  commands,
+  dailyBrief,
+  lastUpdated,
+}: {
+  decisions: V6Decision[];
+  notifications: V6Notification[];
+  insights: string[];
+  tasks: TodayTask[];
+  commands: SeoCommand[];
+  dailyBrief: AiDailyBrief[];
+  lastUpdated: string;
+}) {
+  const pendingTasks = useMemo(() => tasks.filter((task) => !task.completed).slice(0, 5), [tasks]);
+  const todayItems = useMemo(() => uniqueText([
+    ...decisions.map((item) => item.title + ': ' + item.action),
+    ...commands.map((item) => item.title + ': ' + item.detail),
+    ...dailyBrief.map((item) => item.text),
+    ...pendingTasks.map((item) => 'Làm task: ' + item.title),
+  ]).slice(0, 6), [commands, dailyBrief, decisions, pendingTasks]);
+
+  return (
+    <ModuleCard title="Hôm nay cần làm gì" description={'Gộp AI Daily Brief, Daily SEO Mission, Today Task, Auto Insight và Smart Notification. Cập nhật: ' + lastUpdated}>
+      <div className={styles.v61TodayGrid}>
+        <div className={styles.v61TodayColumn}>
+          <strong>Việc ưu tiên</strong>
+          {todayItems.length ? todayItems.map((item, index) => <p key={key('today-focus', item, '', index)}>{item}</p>) : <EmptyState title="Chưa có việc ưu tiên" detail="Dashboard chưa đủ dữ liệu để sinh việc hôm nay." />}
+        </div>
+        <div className={styles.v61TodayColumn}>
+          <strong>Cảnh báo</strong>
+          {notifications.length ? notifications.slice(0, 4).map((item, index) => <div className={styles.v61NoticeLine} key={key('today-notice', item.id, item.title, index)}><Badge status={levelStatus(item.level)}>{item.count ? fmt(item.count) : 'AI'}</Badge><span>{item.title}</span></div>) : <span>Không có cảnh báo lớn.</span>}
+        </div>
+        <div className={styles.v61TodayColumn}>
+          <strong>Insight nhanh</strong>
+          {insights.length ? insights.map((item, index) => <p key={key('today-insight', item, '', index)}>{item}</p>) : <span>Chưa có insight mới.</span>}
+        </div>
+      </div>
+    </ModuleCard>
+  );
+}
+
+export const TodaySeoFocusV61 = memo(TodaySeoFocusV61Base);

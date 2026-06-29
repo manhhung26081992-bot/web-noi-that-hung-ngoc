@@ -1,7 +1,17 @@
 ﻿export type ConnectionStatus = 'connected' | 'disconnected' | 'pending' | 'error';
 export type SeoPriorityLevel = 'critical' | 'high' | 'medium' | 'low';
+export type SeoCategorySource = 'supabase' | 'menu';
 
-export interface SeoOverview { products: number; blogPosts: number; categories: number; generatedUrls: number; }
+export interface SeoOverview {
+  products: number;
+  blogPosts: number;
+  categories: number;
+  generatedUrls: number;
+  categorySource: SeoCategorySource;
+  staticUrls: number;
+  activeCategoryUrls: number;
+}
+
 export interface ChartPoint { date: string; impressions: number; clicks: number; }
 export interface SearchConsoleMetrics { status: ConnectionStatus; message: string; impressions: number; clicks: number; ctr: number; averagePosition: number; chart7Days: ChartPoint[]; chart28Days: ChartPoint[]; topQueries: string[]; topPages: string[]; topCountries: string[]; topDevices: string[]; }
 export interface GoogleAdsKeyword { id: string; keyword: string; competition: 'low' | 'medium' | 'high' | 'unknown'; monthlySearch: number; status: ConnectionStatus; }
@@ -20,6 +30,22 @@ export interface SeoLog { id: string; log_date: string; action: string; target: 
 export interface SeoProgress { id: string; cluster: string; progress: number; note?: string; updated_at?: string; }
 export interface SeoGoal { id: string; title: string; target_value: number; current_value: number; unit?: string; note?: string; updated_at?: string; }
 export interface LocalSeoItem { id: string; name: string; value: string; status: 'ok' | 'warning' | 'missing'; updated_at?: string; }
-export interface AiSeoScore { technical: number; content: number; internalLink: number; index: number; health: number; overall: number; }
+export interface AiSeoScore {
+  technical: number;
+  content: number;
+  data: number;
+  integration: number;
+  overall: number;
+  details: {
+    supabaseOk: boolean;
+    sitemapOk: boolean;
+    robotsOk: boolean;
+    hasProducts: boolean;
+    hasBlogPosts: boolean;
+    searchConsoleConnected: boolean;
+    googleAdsConnected: boolean;
+    canonicalOk: boolean;
+  };
+}
 export interface TodaySummary { products: number; blogPosts: number; errors: number; urls: number; productsTotal: number; blogPostsTotal: number; }
 export interface AiInsight { id: string; text: string; level: SeoPriorityLevel; }

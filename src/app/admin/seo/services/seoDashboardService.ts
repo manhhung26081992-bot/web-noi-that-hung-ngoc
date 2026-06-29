@@ -1,10 +1,73 @@
-﻿import { supabase } from '@/lib/supabase';
+﻿import { MENU_ITEMS } from '@/components/Header/menuData';
+import { supabase } from '@/lib/supabase';
 import type { IndexStatusItem, LocalSeoItem, SeoGoal, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoNote, SeoOverview, SeoPriority, SeoProgress, TodayTask } from '../types/seo';
 
+type ProductUrlRow = { slug?: string | null; category?: string | null; parent_slug?: string | null };
+type BlogUrlRow = { slug?: string | null };
+
+const STATIC_SEO_PATHS = ['/', '/tin-tuc'];
+
+function cleanSlug(value?: string | null) {
+  return String(value || '').trim().replace(/^\/+|\/+$/g, '');
+}
+
+function cleanPath(value?: string | null) {
+  const slug = cleanSlug(value);
+  return slug ? `/${slug}` : '/';
+}
+
+function getMenuCategoryLinks() {
+  const links = new Set<string>();
+  MENU_ITEMS.forEach((item) => {
+    if (item.link && item.link !== '/') links.add(cleanPath(item.link));
+    item.submenu?.forEach((subItem) => {
+      if (subItem.link && subItem.link !== '/') links.add(cleanPath(subItem.link));
+    });
+  });
+  return Array.from(links);
+}
+
 async function countTable(table: string) {
-  const { count, error } = await supabase.from(table).select('id', { count: 'exact', head: true });
+  const { count, error } = await supabase.from(table).select('*', { count: 'exact', head: true });
   if (error) return 0;
   return count || 0;
+}
+
+async function listProductsForUrls(): Promise<ProductUrlRow[]> {
+  const { data, error } = await supabase.from('products').select('slug, category, parent_slug');
+  if (error) return [];
+  return (data || []) as ProductUrlRow[];
+}
+
+async function listBlogsForUrls(): Promise<BlogUrlRow[]> {
+  const { data, error } = await supabase.from('blog_posts').select('slug');
+  if (error) return [];
+  return (data || []) as BlogUrlRow[];
+}
+
+export function getEstimatedGeneratedUrls(products: ProductUrlRow[], blogs: BlogUrlRow[]) {
+  const urls = new Set<string>(STATIC_SEO_PATHS);
+  const activeCategorySlugs = new Set<string>();
+
+  products.forEach((product) => {
+    const category = cleanSlug(product.category);
+    const parentSlug = cleanSlug(product.parent_slug);
+    const productSlug = cleanSlug(product.slug);
+
+    if (category) activeCategorySlugs.add(category);
+    if (parentSlug) activeCategorySlugs.add(parentSlug);
+    if (productSlug) urls.add(`/san-pham/${productSlug}`);
+  });
+
+  const activeCategoryUrls = getMenuCategoryLinks().filter((link) => activeCategorySlugs.has(cleanSlug(link)));
+  activeCategoryUrls.forEach((link) => urls.add(link));
+
+  blogs.forEach((post) => {
+    const slug = cleanSlug(post.slug);
+    if (slug) urls.add(`/tin-tuc/${slug}`);
+  });
+
+  return { total: urls.size, staticUrls: STATIC_SEO_PATHS.length, activeCategoryUrls: activeCategoryUrls.length };
 }
 
 async function safeList<T>(table: string, orderColumn = 'updated_at', ascending = false, limit?: number): Promise<T[]> {
@@ -27,8 +90,21 @@ async function deleteRow(table: string, id: string) {
 }
 
 export async function getSeoOverview(): Promise<SeoOverview> {
-  const [products, blogPosts, categories] = await Promise.all([countTable('products'), countTable('blog_posts'), countTable('categories')]);
-  return { products, blogPosts, categories, generatedUrls: 1 + products + blogPosts + categories };
+  const [productRows, blogRows, supabaseCategories] = await Promise.all([listProductsForUrls(), listBlogsForUrls(), countTable('categories')]);
+  const menuCategories = getMenuCategoryLinks().length;
+  const categorySource = supabaseCategories > 0 ? 'supabase' : 'menu';
+  const categories = supabaseCategories > 0 ? supabaseCategories : menuCategories;
+  const estimatedUrls = getEstimatedGeneratedUrls(productRows, blogRows);
+
+  return {
+    products: productRows.length,
+    blogPosts: blogRows.length,
+    categories,
+    generatedUrls: estimatedUrls.total,
+    categorySource,
+    staticUrls: estimatedUrls.staticUrls,
+    activeCategoryUrls: estimatedUrls.activeCategoryUrls,
+  };
 }
 
 export async function getSeoPriorities(): Promise<SeoPriority[]> { return safeList<SeoPriority>('seo_priorities', 'rating', false); }

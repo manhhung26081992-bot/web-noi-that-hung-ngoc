@@ -20,47 +20,83 @@ type V3Actions = {
 function clamp(value: number) { return Math.max(0, Math.min(100, Math.round(value || 0))); }
 function levelIcon(level: SeoPriorityLevel) { return ({ critical: '🔴', high: '🟡', medium: '🔵', low: '🟢' } as const)[level]; }
 function newId(prefix: string) { return `${prefix}-${crypto.randomUUID()}`; }
+function isRecentDate(dateString?: string) {
+  if (!dateString) return false;
+  const value = new Date(dateString).getTime();
+  if (Number.isNaN(value)) return false;
+  return Date.now() - value <= 3 * 24 * 60 * 60 * 1000;
+}
+function supabaseDashboardUrl() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
+  return projectRef ? `https://supabase.com/dashboard/project/${projectRef}` : 'https://supabase.com/dashboard';
+}
 
-export function buildSeoCommands({ overview, tasks, health, keywords }: { overview: SeoOverview | null; tasks: TodayTask[]; health: SeoHealthSnapshot | null; keywords: SeoKeyword[] }): SeoCommand[] {
+export function buildSeoCommands({ overview, tasks, health, keywords, searchConsoleConnected }: { overview: SeoOverview | null; tasks: TodayTask[]; health: SeoHealthSnapshot | null; keywords: SeoKeyword[]; searchConsoleConnected: boolean }): SeoCommand[] {
+  const commands: SeoCommand[] = [];
+  const products = overview?.products || 0;
+  const blogPosts = overview?.blogPosts || 0;
   const pendingTasks = tasks.filter((task) => !task.completed).length;
   const errors = health?.brokenUrls.filter((item) => item.status === 'new').length || 0;
   const weakKeyword = keywords.find((item) => item.current_position && item.current_position > 10);
-  return [
-    { id: 'product', title: 'Thêm 1 sản phẩm', detail: `${overview?.products || 0} sản phẩm hiện có`, level: (overview?.products || 0) < 350 ? 'critical' : 'low', source: 'products' },
-    { id: 'blog', title: 'Viết 1 bài tin tức', detail: `${overview?.blogPosts || 0} bài viết hiện có`, level: (overview?.blogPosts || 0) < 100 ? 'high' : 'low', source: 'blog_posts' },
-    { id: 'focus', title: weakKeyword ? `Tối ưu ${weakKeyword.keyword}` : 'Không sửa cụm đã ổn', detail: weakKeyword ? `Đang ở vị trí ${weakKeyword.current_position}` : 'Ưu tiên cụm còn yếu', level: weakKeyword ? 'high' : 'low', source: 'seo_keywords' },
-    { id: 'console', title: 'Kiểm tra Search Console', detail: errors ? `${errors} URL 404 mới` : 'Sitemap và robots đang được theo dõi', level: errors ? 'critical' : 'medium', source: 'health' },
-    { id: 'task', title: pendingTasks ? `Hoàn thành ${pendingTasks} việc SEO` : 'Tạo checklist hôm nay', detail: pendingTasks ? 'Còn việc chưa xong' : 'Chưa có việc cần làm', level: pendingTasks ? 'medium' : 'high', source: 'seo_tasks' },
-  ];
+  const sitemapOk = Boolean(health?.sitemap.sitemapOk);
+
+  if (products < 350) commands.push({ id: 'product', title: 'Thêm 1 sản phẩm thật nếu có hàng', detail: `${products} sản phẩm hiện có, mục tiêu giai đoạn này là 350+ sản phẩm thật.`, level: 'critical', source: 'products' });
+  else commands.push({ id: 'product-ok', title: 'Không thêm sản phẩm ảo', detail: `${products} sản phẩm hiện có. Chỉ thêm khi có ảnh, giá và thông tin thật.`, level: 'low', source: 'products' });
+
+  if (blogPosts < 60) commands.push({ id: 'blog', title: 'Viết hoặc cập nhật 1 bài tin tức/dự án', detail: `${blogPosts} bài viết hiện có. Ưu tiên bài có ảnh thật và liên kết nội bộ.`, level: 'high', source: 'blog_posts' });
+  else commands.push({ id: 'blog-ok', title: 'Rà soát bài cũ thay vì viết dàn trải', detail: `${blogPosts} bài viết hiện có. Nên cập nhật bài có khả năng ra đơn.`, level: 'medium', source: 'blog_posts' });
+
+  commands.push(searchConsoleConnected ? { id: 'console-ok', title: 'Đọc dữ liệu Search Console', detail: 'Search Console đã sẵn sàng để theo dõi impression, click và query.', level: 'medium', source: 'search_console' } : { id: 'console', title: 'Kiểm tra Search Console thủ công', detail: 'Chưa kết nối API, nên kiểm tra index và query bằng Search Console.', level: 'medium', source: 'search_console' });
+
+  commands.push(sitemapOk ? { id: 'sitemap-ok', title: 'Không sửa sitemap hôm nay', detail: `${health?.sitemap.urlCount || overview?.generatedUrls || 0} URL đang được theo dõi. Sitemap đọc được.`, level: 'low', source: 'sitemap' } : { id: 'sitemap-check', title: 'Kiểm tra sitemap.xml', detail: 'Dashboard chưa đọc được sitemap.xml hoặc sitemap đang lỗi.', level: 'critical', source: 'sitemap' });
+
+  if (errors) commands.push({ id: '404', title: `Xử lý ${errors} URL 404 mới`, detail: 'Ưu tiên redirect hoặc sửa liên kết nội bộ trước khi viết thêm nội dung.', level: 'critical', source: '404' });
+  else commands.push({ id: 'stable-url', title: 'Không sửa title/slug URL mới', detail: 'Nếu vừa thêm sản phẩm hoặc bài viết, nên chờ Google đánh giá trước khi đổi URL.', level: 'low', source: 'index' });
+
+  if (weakKeyword) commands.push({ id: 'keyword', title: `Tối ưu cụm ${weakKeyword.keyword}`, detail: `Đang theo dõi vị trí ${weakKeyword.current_position}. Nên thêm FAQ, ảnh thật hoặc liên kết nội bộ.`, level: 'high', source: 'seo_keywords' });
+  if (!pendingTasks) commands.push({ id: 'old-product', title: 'Cập nhật ảnh thật hoặc FAQ cho sản phẩm cũ', detail: 'Khi không có sản phẩm mới, nên làm giàu dữ liệu cho sản phẩm đang bán.', level: 'medium', source: 'products' });
+
+  return commands.slice(0, Math.max(3, Math.min(commands.length, 6)));
 }
 
-export function buildAiInsights({ overview, health, tasks, logs }: { overview: SeoOverview | null; health: SeoHealthSnapshot | null; tasks: TodayTask[]; logs: SeoLog[] }): AiInsight[] {
+export function buildAiInsights({ overview, health, tasks, logs, searchConsoleConnected }: { overview: SeoOverview | null; health: SeoHealthSnapshot | null; tasks: TodayTask[]; logs: SeoLog[]; searchConsoleConnected: boolean }): AiInsight[] {
   const today = new Date().toISOString().slice(0, 10);
+  const recentLogs = logs.filter((item) => isRecentDate(item.log_date)).length;
+  const sitemapUrls = health?.sitemap.urlCount || overview?.generatedUrls || 0;
   return [
-    { id: 'products', text: `Website đang có ${overview?.products || 0} sản phẩm.`, level: (overview?.products || 0) >= 300 ? 'low' : 'high' },
-    { id: 'blogs', text: `Kho tin tức đang có ${overview?.blogPosts || 0} bài viết.`, level: (overview?.blogPosts || 0) >= 80 ? 'low' : 'high' },
-    { id: 'robots', text: health?.sitemap.robotsOk ? 'Không phát hiện lỗi robots.' : 'Cần kiểm tra robots.txt.', level: health?.sitemap.robotsOk ? 'low' : 'critical' },
-    { id: 'sitemap', text: health?.sitemap.sitemapOk ? `Sitemap hoạt động bình thường với ${health.sitemap.urlCount} URL.` : 'Cần kiểm tra sitemap.xml.', level: health?.sitemap.sitemapOk ? 'low' : 'critical' },
-    { id: 'logs', text: logs.some((item) => item.log_date === today) ? 'Hôm nay đã có hành động SEO được ghi nhận.' : 'Hôm nay chưa có log SEO mới.', level: logs.some((item) => item.log_date === today) ? 'low' : 'medium' },
-    { id: 'tasks', text: tasks.some((item) => !item.completed) ? 'Còn việc SEO hôm nay chưa hoàn thành.' : 'Checklist hôm nay đang gọn.', level: tasks.some((item) => !item.completed) ? 'medium' : 'low' },
+    { id: 'data', text: `Website hiện có ${overview?.products || 0} sản phẩm, ${overview?.blogPosts || 0} bài viết và ${overview?.categories || 0} danh mục.`, level: 'low' },
+    { id: 'sitemap', text: health?.sitemap.sitemapOk ? `Sitemap đọc được, đang có khoảng ${sitemapUrls} URL.` : 'Sitemap chưa đọc được, cần kiểm tra trước khi submit lại.', level: health?.sitemap.sitemapOk ? 'low' : 'critical' },
+    { id: 'console', text: searchConsoleConnected ? 'Search Console đã kết nối, có thể dùng dữ liệu impression/click để ra quyết định.' : 'Search Console chưa kết nối API nên chưa thể tự lấy impression/click; hiện vẫn nên kiểm tra thủ công.', level: searchConsoleConnected ? 'low' : 'medium' },
+    { id: 'priority', text: 'Hôm nay nên ưu tiên dữ liệu thật: sản phẩm, dự án, ảnh thực tế và câu hỏi thường gặp.', level: 'high' },
+    { id: 'url-stability', text: recentLogs ? 'Có hành động SEO mới trong 3 ngày gần đây, không nên đổi slug/title liên tục.' : 'Chưa thấy log SEO mới gần đây, có thể chọn 1 trang cũ để cập nhật nội dung.', level: recentLogs ? 'low' : 'medium' },
+    { id: 'tasks', text: tasks.some((item) => !item.completed) ? 'Còn việc SEO hôm nay chưa hoàn thành.' : 'Checklist hôm nay chưa có việc lưu, có thể dùng gợi ý ở Today Task.', level: tasks.some((item) => !item.completed) ? 'medium' : 'low' },
   ];
 }
 
-export function buildSeoScore({ overview, health, keywords, progress }: { overview: SeoOverview | null; health: SeoHealthSnapshot | null; keywords: SeoKeyword[]; progress: SeoProgress[] }): AiSeoScore {
-  const technical = health?.sitemap.sitemapOk && health?.sitemap.robotsOk ? 95 : 70;
-  const content = clamp(((overview?.blogPosts || 0) / 100) * 100);
-  const internalLink = progress.length ? clamp(progress.reduce((sum, item) => sum + item.progress, 0) / progress.length) : 70;
-  const index = clamp(((health?.sitemap.urlCount || 0) / Math.max(1, overview?.generatedUrls || 1)) * 100);
-  const keywordScore = keywords.length ? clamp(100 - keywords.reduce((sum, item) => sum + Math.min(item.current_position || 20, 30), 0) / keywords.length) : 80;
-  const healthScore = health?.brokenUrls.some((item) => item.status === 'new') ? 80 : 100;
-  const overall = clamp((technical + content + internalLink + index + keywordScore + healthScore) / 6);
-  return { technical, content, internalLink, index, health: healthScore, overall };
+export function buildSeoScore({ overview, health, searchConsoleConnected, googleAdsConnected }: { overview: SeoOverview | null; health: SeoHealthSnapshot | null; searchConsoleConnected: boolean; googleAdsConnected: boolean }): AiSeoScore {
+  const supabaseOk = Boolean(overview);
+  const sitemapOk = Boolean(health?.sitemap.sitemapOk);
+  const robotsOk = Boolean(health?.sitemap.robotsOk);
+  const hasProducts = Boolean((overview?.products || 0) > 0);
+  const hasBlogPosts = Boolean((overview?.blogPosts || 0) > 0);
+  const canonicalOk = health?.systemHealth.some((item) => item.name.toLowerCase() === 'canonical' && item.status === 'ok') || false;
+  const overall = (supabaseOk ? 20 : 0) + (sitemapOk ? 20 : 0) + (robotsOk ? 15 : 0) + (hasProducts ? 15 : 0) + (hasBlogPosts ? 10 : 0) + (searchConsoleConnected ? 10 : 0) + (googleAdsConnected ? 5 : 0) + (canonicalOk ? 5 : 0);
+
+  return {
+    technical: clamp(((sitemapOk ? 20 : 0) + (robotsOk ? 15 : 0) + (canonicalOk ? 5 : 0)) / 40 * 100),
+    content: clamp(((hasProducts ? 15 : 0) + (hasBlogPosts ? 10 : 0)) / 25 * 100),
+    data: supabaseOk ? 100 : 0,
+    integration: clamp(((searchConsoleConnected ? 10 : 0) + (googleAdsConnected ? 5 : 0)) / 15 * 100),
+    overall,
+    details: { supabaseOk, sitemapOk, robotsOk, hasProducts, hasBlogPosts, searchConsoleConnected, googleAdsConnected, canonicalOk },
+  };
 }
 
 export function buildTodaySummary({ overview, health, logs }: { overview: SeoOverview | null; health: SeoHealthSnapshot | null; logs: SeoLog[] }): TodaySummary {
   const today = new Date().toISOString().slice(0, 10);
   const todayLogs = logs.filter((item) => item.log_date === today);
-  return { products: todayLogs.filter((item) => item.action.toLowerCase().includes('sản phẩm')).length, blogPosts: todayLogs.filter((item) => item.action.toLowerCase().includes('bài') || item.action.toLowerCase().includes('tin')).length, errors: health?.brokenUrls.filter((item) => item.status === 'new').length || 0, urls: health?.sitemap.urlCount || overview?.generatedUrls || 0, productsTotal: overview?.products || 0, blogPostsTotal: overview?.blogPosts || 0 };
+  return { products: todayLogs.filter((item) => item.action.toLowerCase().includes('sản phẩm')).length, blogPosts: todayLogs.filter((item) => item.action.toLowerCase().includes('bài') || item.action.toLowerCase().includes('tin')).length, errors: health?.brokenUrls.filter((item) => item.status === 'new').length || 0, urls: overview?.generatedUrls || health?.sitemap.urlCount || 0, productsTotal: overview?.products || 0, blogPostsTotal: overview?.blogPosts || 0 };
 }
 
 export function SeoCommandCenter({ commands }: { commands: SeoCommand[] }) {
@@ -88,12 +124,21 @@ export function AiInsightPanel({ insights }: { insights: AiInsight[] }) {
 }
 
 export function TodaySummaryPanel({ summary }: { summary: TodaySummary }) {
-  return <ModuleCard title="Today Summary" description="Tóm tắt nhanh trong ngày."><div className={styles.metricGridSmall}><MetricCard label="+ Sản phẩm" value={summary.products} /><MetricCard label="+ Bài viết" value={summary.blogPosts} /><MetricCard label="+ Lỗi" value={summary.errors} /><MetricCard label="URL" value={summary.urls} /><MetricCard label="Tổng sản phẩm" value={summary.productsTotal} /><MetricCard label="Tổng bài viết" value={summary.blogPostsTotal} /></div></ModuleCard>;
+  return <ModuleCard title="Today Summary" description="Tóm tắt nhanh trong ngày."><div className={styles.metricGridSmall}><MetricCard label="+ Sản phẩm" value={summary.products} /><MetricCard label="+ Bài viết" value={summary.blogPosts} /><MetricCard label="+ Lỗi" value={summary.errors} /><MetricCard label="URL tạo từ website" value={summary.urls} /><MetricCard label="Tổng sản phẩm" value={summary.productsTotal} /><MetricCard label="Tổng bài viết" value={summary.blogPostsTotal} /></div></ModuleCard>;
 }
 
 export function QuickActionPanel() {
-  const actions = [{ label: 'Thêm sản phẩm', href: '/admin' }, { label: 'Thêm bài viết', href: '/admin' }, { label: 'Mở Search Console', href: 'https://search.google.com/search-console' }, { label: 'Mở Google Ads', href: 'https://ads.google.com' }, { label: 'Mở Sitemap', href: '/sitemap.xml' }, { label: 'Mở Robots', href: '/robots.txt' }];
-  return <ModuleCard title="Quick Action" description="Các đường tắt thao tác SEO."><div className={styles.quickGrid}>{actions.map((item) => <a className={styles.quickButton} href={item.href} target={item.href.startsWith('http') ? '_blank' : undefined} key={item.label}>{item.label}</a>)}</div></ModuleCard>;
+  const actions = [
+    { label: 'Mở Sitemap', href: '/sitemap.xml' },
+    { label: 'Mở Robots', href: '/robots.txt' },
+    { label: 'Mở Search Console', href: 'https://search.google.com/search-console' },
+    { label: 'Mở Google Ads', href: 'https://ads.google.com' },
+    { label: 'Mở Supabase', href: supabaseDashboardUrl() },
+    { label: 'Mở trang chủ', href: '/' },
+    { label: 'Mở Ghế chân quỳ', href: '/ghe-chan-quy' },
+    { label: 'Mở Bàn giám đốc', href: '/ban-giam-doc' },
+  ];
+  return <ModuleCard title="Quick Action" description="Các đường tắt thao tác SEO."><div className={styles.quickGrid}>{actions.map((item) => <a className={styles.quickButton} href={item.href} target="_blank" rel="noreferrer" key={item.label}>{item.label}</a>)}</div></ModuleCard>;
 }
 
 export function LocalSeoPanel({ items, saving, actions }: { items: LocalSeoItem[]; saving: boolean; actions: V3Actions }) {
@@ -101,6 +146,6 @@ export function LocalSeoPanel({ items, saving, actions }: { items: LocalSeoItem[
 }
 
 export function AiSeoScorePanel({ score }: { score: AiSeoScore }) {
-  const rows = [['Technical SEO', score.technical], ['Content', score.content], ['Internal Link', score.internalLink], ['Index', score.index], ['Health', score.health]] as const;
-  return <ModuleCard title="AI SEO Score" description="Điểm tự chấm từ dữ liệu dashboard."><div className={styles.scoreHero}><strong>{score.overall}/100</strong><span>Overall</span></div><div className={styles.scoreList}>{rows.map(([label, value]) => <div className={styles.scoreItem} key={label}><span>{label}</span><b>{value}</b><i><em style={{ width: `${value}%` }} /></i></div>)}</div></ModuleCard>;
+  const rows = [['Technical SEO', score.technical], ['Content', score.content], ['Data', score.data], ['Integration', score.integration]] as const;
+  return <ModuleCard title="AI SEO Score" description="Điểm tự chấm thực tế từ tình trạng website. Search Console/Ads chưa kết nối được xem là pending."><div className={styles.scoreHero}><strong>{score.overall}/100</strong><span>Overall Score</span></div><div className={styles.scoreList}>{rows.map(([label, value]) => <div className={styles.scoreItem} key={label}><span>{label}</span><b>{value}</b><i><em style={{ width: `${value}%` }} /></i></div>)}</div><div className={styles.scoreStatus}><Badge status={score.details.searchConsoleConnected ? 'connected' : 'pending'}>Search Console {score.details.searchConsoleConnected ? 'đã kết nối' : 'pending'}</Badge><Badge status={score.details.googleAdsConnected ? 'connected' : 'pending'}>Google Ads {score.details.googleAdsConnected ? 'đã kết nối' : 'pending'}</Badge><Badge status={score.details.canonicalOk ? 'ok' : 'pending'}>Canonical {score.details.canonicalOk ? 'OK' : 'pending'}</Badge></div></ModuleCard>;
 }

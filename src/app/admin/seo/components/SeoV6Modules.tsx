@@ -3,10 +3,10 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import { Badge, EmptyState, ModuleCard } from './Ui';
 import type { SearchConsoleV5Data } from '../services/searchConsole';
-import type { AiDailyBrief, AiRecommendationHistoryItem, DoNotTouchItem, ProductSeoItem, SeoBlogQualityItem, SeoCluster, SeoCommand, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoOverview, TodayTask, V6Analysis, V6Decision, V6Notification, V6Opportunity, V6RadarPoint } from '../types/seo';
+import type { AiDailyBrief, AiRecommendationHistoryItem, DoNotTouchItem, ProductSeoItem, SearchConsoleV7Data, SeoBlogQualityItem, SeoCluster, SeoCommand, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoOverview, TodayTask, V6Analysis, V6Decision, V6Notification, V6Opportunity, V6RadarPoint } from '../types/seo';
 import styles from '../seo-dashboard.module.css';
 
-type V6Input = { overview: SeoOverview | null; health: SeoHealthSnapshot | null; products: ProductSeoItem[]; blogs: SeoBlogQualityItem[]; keywords: SeoKeyword[]; clusters: SeoCluster[]; tasks: TodayTask[]; logs: SeoLog[]; doNotTouch: DoNotTouchItem[]; searchConsole: SearchConsoleV5Data | null; };
+type V6Input = { overview: SeoOverview | null; health: SeoHealthSnapshot | null; products: ProductSeoItem[]; blogs: SeoBlogQualityItem[]; keywords: SeoKeyword[]; clusters: SeoCluster[]; tasks: TodayTask[]; logs: SeoLog[]; doNotTouch: DoNotTouchItem[]; searchConsole: SearchConsoleV5Data | null; searchConsoleV7?: SearchConsoleV7Data | null; };
 
 function n(value: unknown) { return String(value || '').trim().toLowerCase(); }
 function clamp(value: number) { return Math.max(0, Math.min(100, Math.round(Number.isFinite(value) ? value : 0))); }
@@ -89,7 +89,7 @@ function radar(input: V6Input, products: ProductSeoItem[], blogs: SeoBlogQuality
   const product = products.length ? avg(products.map((item) => item.qualityScore || 0)) : 30;
   const cluster = opps.length ? avg(opps.map((item) => item.score)) : 35;
   const blog = blogs.length ? avg(blogs.map((item) => item.score)) : 35;
-  const gsc = input.searchConsole?.status === 'connected' ? 90 : 50;
+  const gsc = input.searchConsoleV7?.overview.connected || input.searchConsole?.status === 'connected' ? 90 : 50;
   return [{ label: 'Technical', score: technical }, { label: 'Content', score: content }, { label: 'Internal Link', score: internalLink }, { label: 'Keyword', score: keyword }, { label: 'Product', score: product }, { label: 'Cluster', score: cluster }, { label: 'Blog', score: blog }, { label: 'Search Console', score: gsc }];
 }
 

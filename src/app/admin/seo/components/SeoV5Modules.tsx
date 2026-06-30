@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Badge, EmptyState, MetricCard, MiniBarChart, ModuleCard } from './Ui';
 import type { SearchConsoleV5Data } from '../services/searchConsole';
 import { getClusterProgress } from '../services/seoDashboardService';
-import type { ContentOpportunity, DoNotTouchItem, InternalLinkSuggestion, ProductSeoItem, SeoCluster, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoOverview, TodayTask } from '../types/seo';
+import type { ContentOpportunity, DoNotTouchItem, InternalLinkSuggestion, ProductSeoItem, SearchConsoleQuery, SearchConsoleV7Data, SeoCluster, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoOverview, TodayTask } from '../types/seo';
 import styles from '../seo-dashboard.module.css';
 
 export type DashboardSeoFilters = {
@@ -74,7 +74,7 @@ export function SearchConsoleCenter({ data }: { data: SearchConsoleV5Data | null
   </ModuleCard>;
 }
 
-export function KeywordIntelligence({ keywords }: { keywords: SeoKeyword[] }) {
+export function KeywordIntelligence({ keywords, searchConsoleQueries = [] }: { keywords: SeoKeyword[]; searchConsoleQueries?: SearchConsoleQuery[] }) {
   const cleanKeywords = useMemo(() => uniqueBy(keywords, (item) => item.id || item.keyword.trim().toLowerCase()), [keywords]);
   const clusters = useMemo(() => Array.from(new Set(cleanKeywords.map((item) => item.cluster || 'Chưa phân cụm').filter(Boolean))), [cleanKeywords]);
   const duplicates = useMemo(() => keywords.filter((item, index) => keywords.findIndex((row) => row.keyword.trim().toLowerCase() === item.keyword.trim().toLowerCase()) !== index), [keywords]);
@@ -87,6 +87,13 @@ export function KeywordIntelligence({ keywords }: { keywords: SeoKeyword[] }) {
     { label: 'Tránh trùng', test: (item: SeoKeyword) => duplicates.some((dup) => dup.keyword.trim().toLowerCase() === item.keyword.trim().toLowerCase()) },
   ];
   const intents = ['Informational', 'Commercial', 'Transactional'];
+  const gscKeywordRows = useMemo(() => {
+    const manual = new Set(cleanKeywords.map((item) => normalize(item.keyword)).filter(Boolean));
+    return {
+      matched: searchConsoleQueries.filter((row) => manual.has(normalize(row.query))).slice(0, 5),
+      fresh: searchConsoleQueries.filter((row) => !manual.has(normalize(row.query))).slice(0, 5),
+    };
+  }, [cleanKeywords, searchConsoleQueries]);
 
   return <ModuleCard title="Keyword Intelligence" description="Đọc bảng seo_keywords thật, gom theo cụm, trạng thái, intent và ưu tiên.">
     {cleanKeywords.length === 0 ? <EmptyState title="Chưa có keyword" detail="Thêm keyword ở Keyword Center để module tự phân tích." /> : <div className={styles.v5Stack}>
@@ -98,6 +105,10 @@ export function KeywordIntelligence({ keywords }: { keywords: SeoKeyword[] }) {
         {statusGroups.slice(4).map((group, index) => <div key={safeKey('keyword-status-extra', group.label, group.label, index)}><h3>{group.label}</h3>{cleanKeywords.filter(group.test).slice(0, 5).map((item, itemIndex) => <p key={safeKey('keyword-extra', item.id, item.keyword, itemIndex)}>{item.keyword}<small>Pos {item.current_position || '-'} · {formatNumber(item.current_impression)} impression</small></p>)}{cleanKeywords.filter(group.test).length === 0 ? <small>Chưa có dữ liệu.</small> : null}</div>)}
         <div><h3>Intent</h3>{intents.map((intent, index) => <p key={safeKey('intent', intent, intent, index)}>{intent}<small>{cleanKeywords.filter((item) => (item.intent || '').toLowerCase() === intent.toLowerCase()).length} keyword</small></p>)}</div>
       </div>
+      {searchConsoleQueries.length ? <div className={styles.v5TwoTables}>
+        <div><h3>Keyword từ Search Console</h3>{gscKeywordRows.matched.length ? <table><tbody>{gscKeywordRows.matched.map((item, index) => <tr key={safeKey('keyword-gsc-match', item.query, item.page, index)}><td>{item.query}</td><td>{formatNumber(item.impressions)}</td><td>Pos {item.position}</td></tr>)}</tbody></table> : <small>Chưa khớp keyword thủ công.</small>}</div>
+        <div><h3>Từ khóa mới phát hiện</h3>{gscKeywordRows.fresh.length ? <table><tbody>{gscKeywordRows.fresh.map((item, index) => <tr key={safeKey('keyword-gsc-fresh', item.query, item.page, index)}><td>{item.query}</td><td>{formatNumber(item.impressions)}</td><td>CTR {formatCtr(item.ctr)}</td></tr>)}</tbody></table> : <small>Chưa có query mới.</small>}</div>
+      </div> : null}
       {duplicates.length ? <div className={styles.v5Warning}>Keyword bị trùng: {uniqueBy(duplicates, (item) => item.keyword.trim().toLowerCase()).map((item) => item.keyword).join(', ')}</div> : <Badge status="ok">Không thấy keyword trùng</Badge>}
     </div>}
   </ModuleCard>;
@@ -140,10 +151,28 @@ export function ProductQualityAIV5({ products }: { products: ProductSeoItem[] })
   </ModuleCard>;
 }
 
-export function ClusterHealth({ clusters }: { clusters: SeoCluster[] }) {
+export function ClusterHealth({ clusters, searchConsoleData }: { clusters: SeoCluster[]; searchConsoleData?: SearchConsoleV7Data | null }) {
   const safeClusters = useMemo(() => uniqueBy(clusters, (cluster) => `${cluster.id}-${cluster.main_url}`), [clusters]);
+  const gscByCluster = useMemo(() => {
+    const map = new Map<string, { clicks: number; impressions: number; position: number; count: number }>();
+    safeClusters.forEach((cluster) => {
+      const name = normalize(cluster.name);
+      const url = normalize(cluster.main_url).replace(/^\//, '');
+      const rows = (searchConsoleData?.queries || []).filter((row) => {
+        const textValue = normalize(row.query + ' ' + (row.page || ''));
+        return (name && textValue.includes(name)) || (url && textValue.includes(url)) || (url && textValue.includes(url.replace(/-/g, ' ')));
+      });
+      map.set(String(cluster.id || cluster.name), {
+        clicks: rows.reduce((sum, row) => sum + row.clicks, 0),
+        impressions: rows.reduce((sum, row) => sum + row.impressions, 0),
+        position: rows.length ? rows.reduce((sum, row) => sum + row.position, 0) / rows.length : 0,
+        count: rows.length,
+      });
+    });
+    return map;
+  }, [safeClusters, searchConsoleData]);
   return <ModuleCard title="Cluster Health" description="Điểm cụm tính từ sản phẩm, bài viết, keyword, task, log và internal link đã đo được.">
-    {safeClusters.length === 0 ? <EmptyState title="Chưa có cụm SEO" detail="Thêm cụm trong Cluster Manager." /> : <div className={styles.v5ClusterHealth}>{safeClusters.map((cluster, index) => { const score = getClusterProgress(cluster); return <div key={safeKey('cluster-health', cluster.id, cluster.main_url, index)}><strong>{cluster.name}</strong><Badge status={levelByScore(score)}>{score}/100</Badge><span><i style={{ width: `${score}%` }} /></span><small>Sản phẩm {cluster.product_count} · Bài {cluster.post_count} · Keyword {cluster.keyword_count || 0} · Task {cluster.task_count || 0} · Log {cluster.log_count || 0} · Internal link {cluster.internal_link_measured ? cluster.internal_link_count : 'Chưa đo'}</small></div>; })}</div>}
+    {safeClusters.length === 0 ? <EmptyState title="Chưa có cụm SEO" detail="Thêm cụm trong Cluster Manager." /> : <div className={styles.v5ClusterHealth}>{safeClusters.map((cluster, index) => { const score = getClusterProgress(cluster); const gsc = gscByCluster.get(String(cluster.id || cluster.name)); return <div key={safeKey('cluster-health', cluster.id, cluster.main_url, index)}><strong>{cluster.name}</strong><Badge status={levelByScore(score)}>{score}/100</Badge><span><i style={{ width: `${score}%` }} /></span><small>Sản phẩm {cluster.product_count} · Bài {cluster.post_count} · Keyword {cluster.keyword_count || 0} · Task {cluster.task_count || 0} · Log {cluster.log_count || 0} · Internal link {cluster.internal_link_measured ? cluster.internal_link_count : 'Chưa đo'}</small><small>Search Console: {gsc?.count ? `${formatNumber(gsc.impressions)} impression · ${formatNumber(gsc.clicks)} click · Pos ${gsc.position.toFixed(1)}` : 'Chưa đo'}</small></div>; })}</div>}
   </ModuleCard>;
 }
 

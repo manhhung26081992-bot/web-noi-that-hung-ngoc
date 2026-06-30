@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { MetricCard, SkeletonGrid } from './Ui';
@@ -9,6 +9,7 @@ import { SeoV51FilterBar, type DashboardSeoFilters } from './SeoV5Modules';
 import { AiBlogRanking, AiProductRanking, AiProgressEngine, AiRecommendationHistory, OpportunityScorePanel, SeoHealthRadar, TodaySeoFocusV61, buildV6Analysis } from './SeoV6Modules';
 import { useSeoDashboard } from '../hooks/useSeoDashboard';
 import styles from '../seo-dashboard.module.css';
+import type { SearchConsoleV7Data } from '../types/seo';
 
 const SeoDashboardLowerModules = lazy(() => import('./SeoDashboardLowerModules'));
 
@@ -42,6 +43,7 @@ export default function SeoDashboard() {
   const { dashboard, loading, saving, error, actions } = useSeoDashboard();
   const [darkMode, setDarkMode] = useState(false);
   const [filters, setFilters] = useState<DashboardSeoFilters>(defaultFilters);
+  const [searchConsoleV7, setSearchConsoleV7] = useState<SearchConsoleV7Data | null>(null);
 
   const filteredKeywords = useMemo(() => dashboard.seoKeywords.filter((item) => {
     if (!matchesSearch(filters.search, item.keyword, item.cluster, item.target_url, item.status, item.intent)) return false;
@@ -135,7 +137,8 @@ export default function SeoDashboard() {
     logs: dashboard.seoLogs,
     doNotTouch: dashboard.doNotTouch,
     searchConsole: dashboard.searchConsoleV5,
-  }), [dashboard.blogSeoItems, dashboard.doNotTouch, dashboard.productSeoItems, dashboard.searchConsoleV5, dashboard.seoClusters, dashboard.seoKeywords, dashboard.seoLogs, dashboard.tasks, health, overview]);
+    searchConsoleV7,
+  }), [dashboard.blogSeoItems, dashboard.doNotTouch, dashboard.productSeoItems, dashboard.searchConsoleV5, dashboard.seoClusters, dashboard.seoKeywords, dashboard.seoLogs, dashboard.tasks, health, overview, searchConsoleV7]);
 
   if (loading) {
     return (
@@ -154,8 +157,8 @@ export default function SeoDashboard() {
       <header className={styles.hero}>
         <div>
           <p className={styles.eyebrow}>Nội Thất Hùng Ngọc</p>
-          <h1>SEO Dashboard v6.1</h1>
-          <p>AI SEO Operating System dùng dữ liệu thật từ Supabase khi có thể, gom việc hằng ngày và tối ưu hiển thị mobile.</p>
+          <h1>SEO Dashboard v7.0</h1>
+          <p>AI SEO Operating System dùng dữ liệu thật từ Supabase khi có thể, kết nối Search Console và tối ưu hiển thị mobile.</p>
         </div>
         <div className={styles.heroActions}>
           <button className={styles.secondaryButton} onClick={() => setDarkMode((value) => !value)}>{darkMode ? 'Light Mode' : 'Dark Mode'}</button>
@@ -235,6 +238,8 @@ export default function SeoDashboard() {
           filteredClusters={filteredClusters}
           filteredTasks={filteredTasks}
           filteredProducts={filteredProducts}
+          searchConsoleV7={searchConsoleV7}
+          onSearchConsoleV7Data={setSearchConsoleV7}
         />
       </Suspense>
     </main>

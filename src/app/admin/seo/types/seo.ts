@@ -212,3 +212,86 @@ export interface AiDailyBrief {
   level: SeoPriorityLevel;
 }
 
+export type SearchConsoleRange = '7d' | '28d' | '90d';
+export type SearchConsoleRequestType = 'overview' | 'queries' | 'pages' | 'devices' | 'countries' | 'opportunities';
+export type SearchConsoleSource = 'api' | 'fallback' | 'import';
+
+export interface SearchConsoleOverview {
+  connected: boolean;
+  reason?: 'missing_credentials' | 'permission_denied' | 'api_error' | 'manual_import' | 'unknown';
+  message: string;
+  siteUrl: string;
+  range: SearchConsoleRange;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+  lastUpdated?: string;
+}
+
+export interface SearchConsoleQuery {
+  query: string;
+  page?: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+export interface SearchConsolePage {
+  page: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+export interface SearchConsoleDevice {
+  device: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+export interface SearchConsoleCountry {
+  country: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+export interface SearchConsoleDatePoint {
+  date: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+export interface SearchConsoleOpportunity {
+  id: string;
+  query: string;
+  page?: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+  priority: 1 | 2 | 3;
+  reason: string;
+  action: string;
+  cluster?: string;
+}
+
+export interface SearchConsoleV7Data {
+  source: SearchConsoleSource;
+  selectedType: SearchConsoleRequestType;
+  overview: SearchConsoleOverview;
+  queries: SearchConsoleQuery[];
+  pages: SearchConsolePage[];
+  devices: SearchConsoleDevice[];
+  countries: SearchConsoleCountry[];
+  trend: SearchConsoleDatePoint[];
+  opportunities: SearchConsoleOpportunity[];
+}

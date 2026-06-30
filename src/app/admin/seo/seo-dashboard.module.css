@@ -112,3 +112,24 @@
 .dashboard{scroll-padding-top:80px;overflow-x:hidden}
 @media (max-width:1100px){.v61TodayGrid{grid-template-columns:1fr 1fr}.v61TodayColumn:first-child{grid-column:1/-1}}
 @media (max-width:720px){.v61Tabs{position:relative;margin-left:-4px;margin-right:-4px;padding:8px 4px}.v61Tabs a{min-height:36px;font-size:13px}.v61TodayGrid{grid-template-columns:1fr}.v61Accordion summary{align-items:flex-start;flex-direction:column}.v61Accordion summary small{text-align:left}.v61AccordionBody{padding:0 12px 12px}.v61Deferred{padding-bottom:150px}.v61TodayColumn{padding:12px}.dashboard{overflow-x:hidden}}
+
+.scV7Stack{display:grid;gap:14px}
+.scV7Toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.scV7Toolbar select{min-height:38px;border:1px solid var(--seo-border);border-radius:8px;background:var(--seo-panel);color:var(--seo-text);padding:6px 10px}
+.scV7Tabs{display:flex;flex-wrap:wrap;gap:6px}
+.scV7Tabs button{border:1px solid var(--seo-border);border-radius:999px;background:var(--seo-panel);color:var(--seo-text);padding:8px 12px;font-weight:700;cursor:pointer}
+.scV7Tabs .scV7TabActive{background:var(--seo-primary);border-color:var(--seo-primary);color:#fff}
+.scV7Status{border:1px solid var(--seo-border);border-radius:8px;background:var(--seo-soft);padding:10px 12px;font-weight:700;color:var(--seo-text)}
+.scV7InlinePanel{border:1px solid var(--seo-border);border-radius:8px;background:var(--seo-panel);padding:12px;display:grid;gap:8px}
+.scV7InlinePanel h3{margin:0;color:var(--seo-primary);font-size:15px}
+.scV7InlinePanel p{display:grid;gap:4px;margin:0;padding:8px 0;border-bottom:1px solid var(--seo-border)}
+.scV7InlinePanel p:last-child{border-bottom:0}
+.scV7InlinePanel span{color:var(--seo-muted);font-size:13px}
+.scV7OpportunityList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.scV7OpportunityList article{border:1px solid var(--seo-border);border-radius:8px;background:var(--seo-panel);padding:12px;display:grid;gap:7px}
+.scV7OpportunityList strong{color:var(--seo-primary)}
+.scV7OpportunityList p{margin:0;color:var(--seo-text)}
+.scV7OpportunityList span,.scV7OpportunityList small{color:var(--seo-muted)}
+@media (max-width:720px){.scV7Toolbar{align-items:stretch}.scV7Tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.scV7Tabs button{border-radius:8px}.scV7Toolbar select,.scV7Toolbar button{width:100%}.scV7OpportunityList{grid-template-columns:1fr}}
+
+.scImportBox{display:grid;gap:10px}.scImportBox textarea{width:100%;min-height:180px;border:1px solid var(--seo-border);border-radius:8px;background:var(--seo-panel);color:var(--seo-text);padding:12px;resize:vertical;font:13px/1.5 Consolas,Monaco,monospace}.scImportActions{display:flex;flex-wrap:wrap;gap:10px}.scImportActions button{min-height:40px}.scV7Tabs{margin-top:2px}.scV7Stack .tableWrap{max-width:100%}@media (max-width:720px){.scImportActions{display:grid;grid-template-columns:1fr}.scImportBox textarea{min-height:220px}.scV7Stack{padding-bottom:12px}}

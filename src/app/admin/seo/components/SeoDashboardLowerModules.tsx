@@ -4,6 +4,7 @@ import { memo } from 'react';
 import EditablePriorityList from './EditablePriorityList';
 import SeoNotesPanel from './SeoNotesPanel';
 import TodayTaskList from './TodayTaskList';
+import SearchConsoleV7Center from './SearchConsoleV7Center';
 import { Badge, EmptyState, MetricCard, MiniBarChart, ModuleCard } from './Ui';
 import { AiInsightPanel, LocalSeoPanel, TodaySummaryPanel } from './SeoV3Modules';
 import {
@@ -21,9 +22,9 @@ import {
   SeoMemoryTimeline,
   MonthlyGoalProgressPanel,
 } from './SeoV4Modules';
-import { DashboardAnalytics, ClusterHealth, ContentPlanner, InternalLinkAIV5, KeywordIntelligence, ProductQualityAIV5, SearchConsoleCenter } from './SeoV5Modules';
+import { DashboardAnalytics, ClusterHealth, ContentPlanner, InternalLinkAIV5, KeywordIntelligence, ProductQualityAIV5 } from './SeoV5Modules';
 import type { useSeoDashboard } from '../hooks/useSeoDashboard';
-import type { AiInsight, ContentOpportunity, ProductSeoItem, RoadmapWeek, SeoCluster, SeoHealthSnapshot, SeoKeyword, SeoOverview, TodaySummary, TodayTask } from '../types/seo';
+import type { AiInsight, ContentOpportunity, ProductSeoItem, RoadmapWeek, SearchConsoleV7Data, SeoCluster, SeoHealthSnapshot, SeoKeyword, SeoOverview, TodaySummary, TodayTask } from '../types/seo';
 import styles from '../seo-dashboard.module.css';
 
 type DashboardData = ReturnType<typeof useSeoDashboard>['dashboard'];
@@ -48,6 +49,8 @@ type Props = {
   filteredClusters: SeoCluster[];
   filteredTasks: TodayTask[];
   filteredProducts: ProductSeoItem[];
+  searchConsoleV7: SearchConsoleV7Data | null;
+  onSearchConsoleV7Data: (data: SearchConsoleV7Data | null) => void;
 };
 
 function formatNumber(value: number) {
@@ -89,20 +92,22 @@ function SeoDashboardLowerModules({
   filteredClusters,
   filteredTasks,
   filteredProducts,
+  searchConsoleV7,
+  onSearchConsoleV7Data,
 }: Props) {
   return (
     <div className={styles.v61Deferred}>
       <AccordionSection id="search-console" title="Search Console và dữ liệu tổng quan" description="Các module đọc sau để dashboard nhẹ hơn." defaultOpen>
         <section className={styles.gridTwo}>
-          <SearchConsoleCenter data={dashboard.searchConsoleV5} />
+          <SearchConsoleV7Center keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} onData={onSearchConsoleV7Data} />
           <DashboardAnalytics overview={overview} health={health} clusters={dashboard.seoClusters} keywords={dashboard.seoKeywords} tasks={dashboard.tasks} logs={dashboard.seoLogs} doNotTouch={dashboard.doNotTouch} />
         </section>
       </AccordionSection>
 
       <AccordionSection title="Keyword, cụm SEO và kế hoạch nội dung" description="Lọc bằng thanh tìm kiếm phía trên.">
         <section className={styles.gridTwo}>
-          <KeywordIntelligence keywords={filteredKeywords} />
-          <ClusterHealth clusters={filteredClusters} />
+          <KeywordIntelligence keywords={filteredKeywords} searchConsoleQueries={searchConsoleV7?.queries || []} />
+          <ClusterHealth clusters={filteredClusters} searchConsoleData={searchConsoleV7} />
         </section>
         <section className={styles.gridTwo}>
           <ContentPlanner opportunities={opportunities} keywords={filteredKeywords} />

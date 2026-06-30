@@ -9,5 +9,5 @@ export interface GoogleAnalyticsSnapshot {
 }
 
 export async function getGoogleAnalyticsSnapshot(): Promise<GoogleAnalyticsSnapshot> {
-  return { status: 'disconnected', message: 'Chưa kết nối Google Analytics', users: 0, sessions: 0, topLandingPages: [] };
+  return { status: 'disconnected', message: 'Chưa có dữ liệu Google Analytics thủ công', users: 0, sessions: 0, topLandingPages: [] };
 }

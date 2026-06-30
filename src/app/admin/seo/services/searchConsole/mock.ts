@@ -15,7 +15,7 @@ function days(count: number): SearchConsoleTrendPoint[] {
 export function getMockSearchConsoleV5Data(): SearchConsoleV5Data {
   return {
     status: 'mock',
-    message: 'Chưa kết nối Search Console API - đang dùng dữ liệu thủ công/mock.',
+    message: 'Chưa import dữ liệu Search Console - đang dùng dữ liệu thủ công/mock.',
     overview: { clicks: 0, impressions: 0, ctr: 0, position: 0 },
     topQueries: [
       { query: 'ghế chân quỳ giá rẻ', page: '/ghe-chan-quy', clicks: 0, impressions: 0, ctr: 0, position: 0, device: 'MOBILE', country: 'VNM' },

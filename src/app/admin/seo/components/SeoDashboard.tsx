@@ -9,7 +9,7 @@ import { SeoV51FilterBar, type DashboardSeoFilters } from './SeoV5Modules';
 import { AiBlogRanking, AiProductRanking, AiProgressEngine, AiRecommendationHistory, OpportunityScorePanel, SeoHealthRadar, TodaySeoFocusV61, buildV6Analysis } from './SeoV6Modules';
 import { useSeoDashboard } from '../hooks/useSeoDashboard';
 import styles from '../seo-dashboard.module.css';
-import type { SearchConsoleV7Data } from '../types/seo';
+import type { GoogleAdsImportData, IndexSummaryManual, SearchConsoleV7Data } from '../types/seo';
 
 const SeoDashboardLowerModules = lazy(() => import('./SeoDashboardLowerModules'));
 
@@ -44,6 +44,8 @@ export default function SeoDashboard() {
   const [darkMode, setDarkMode] = useState(false);
   const [filters, setFilters] = useState<DashboardSeoFilters>(defaultFilters);
   const [searchConsoleV7, setSearchConsoleV7] = useState<SearchConsoleV7Data | null>(null);
+  const [googleAdsV8, setGoogleAdsV8] = useState<GoogleAdsImportData | null>(null);
+  const [indexSummary, setIndexSummary] = useState<IndexSummaryManual | null>(null);
 
   const filteredKeywords = useMemo(() => dashboard.seoKeywords.filter((item) => {
     if (!matchesSearch(filters.search, item.keyword, item.cluster, item.target_url, item.status, item.intent)) return false;
@@ -72,10 +74,9 @@ export default function SeoDashboard() {
   }), [dashboard.productSeoItems, filters]);
 
   const overview = dashboard.overview;
-  const searchConsole = dashboard.searchConsole;
   const health = dashboard.health;
-  const searchConsoleConnected = isConnected(searchConsole?.status);
-  const googleAdsConnected = dashboard.adsKeywords.some((item) => isConnected(item.status));
+  const searchConsoleConnected = Boolean(searchConsoleV7?.overview.impressions);
+  const googleAdsConnected = Boolean(googleAdsV8?.summary.keywordCount);
 
   const commands = useMemo(() => buildSeoCommands({
     overview,
@@ -138,7 +139,8 @@ export default function SeoDashboard() {
     doNotTouch: dashboard.doNotTouch,
     searchConsole: dashboard.searchConsoleV5,
     searchConsoleV7,
-  }), [dashboard.blogSeoItems, dashboard.doNotTouch, dashboard.productSeoItems, dashboard.searchConsoleV5, dashboard.seoClusters, dashboard.seoKeywords, dashboard.seoLogs, dashboard.tasks, health, overview, searchConsoleV7]);
+    googleAdsV8,
+  }), [dashboard.blogSeoItems, dashboard.doNotTouch, dashboard.productSeoItems, dashboard.searchConsoleV5, dashboard.seoClusters, dashboard.seoKeywords, dashboard.seoLogs, dashboard.tasks, health, overview, searchConsoleV7, googleAdsV8]);
 
   if (loading) {
     return (
@@ -157,8 +159,8 @@ export default function SeoDashboard() {
       <header className={styles.hero}>
         <div>
           <p className={styles.eyebrow}>Nội Thất Hùng Ngọc</p>
-          <h1>SEO Dashboard v7.0</h1>
-          <p>AI SEO Operating System dùng dữ liệu thật từ Supabase khi có thể, kết nối Search Console và tối ưu hiển thị mobile.</p>
+          <h1>SEO Dashboard v8.1</h1>
+          <p>AI SEO Operating System dùng dữ liệu Supabase và dữ liệu Google import thủ công. Không dùng Google API/OAuth/billing.</p>
         </div>
         <div className={styles.heroActions}>
           <button className={styles.secondaryButton} onClick={() => setDarkMode((value) => !value)}>{darkMode ? 'Light Mode' : 'Dark Mode'}</button>
@@ -226,9 +228,6 @@ export default function SeoDashboard() {
           actions={actions}
           overview={overview}
           health={health}
-          searchConsole={searchConsole}
-          searchConsoleConnected={searchConsoleConnected}
-          googleAdsConnected={googleAdsConnected}
           score={score}
           opportunities={opportunities}
           insights={insights}
@@ -240,6 +239,10 @@ export default function SeoDashboard() {
           filteredProducts={filteredProducts}
           searchConsoleV7={searchConsoleV7}
           onSearchConsoleV7Data={setSearchConsoleV7}
+          googleAdsV8={googleAdsV8}
+          onGoogleAdsV8Data={setGoogleAdsV8}
+          indexSummary={indexSummary}
+          onIndexSummaryData={setIndexSummary}
         />
       </Suspense>
     </main>

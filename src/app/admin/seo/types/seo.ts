@@ -212,6 +212,96 @@ export interface AiDailyBrief {
   level: SeoPriorityLevel;
 }
 
+
+export type GoogleAdsRecommendation = 'SEO trước' | 'Ads thử' | 'Cả hai' | 'Theo dõi' | 'Không ưu tiên';
+
+export interface GoogleAdsKeywordImportRow {
+  id: string;
+  keyword: string;
+  avg_monthly_searches?: number;
+  competition?: string;
+  competition_index?: number;
+  low_top_of_page_bid?: number;
+  high_top_of_page_bid?: number;
+  cpc?: number;
+  currency?: string;
+  ad_impression_share?: number;
+  organic_impression_share?: number;
+  organic_average_position?: number;
+  monthlySearches?: Record<string, number | null>;
+  campaign?: string;
+  ad_group?: string;
+  clicks?: number;
+  impressions?: number;
+  ctr?: number;
+  cost?: number;
+  conversions?: number;
+  conversion_rate?: number;
+  cluster?: string;
+  businessPriority: number;
+  commercialIntent: number;
+}
+
+export interface GoogleAdsImportSummary {
+  keywordCount: number;
+  totalSearchVolume: number;
+  averageCpc: number | null;
+  averageCompetitionIndex: number | null;
+  totalClicks: number;
+  totalImpressions: number;
+  totalCost: number;
+  totalConversions: number;
+  hasAdsPerformance: boolean;
+  lastUpdated: string;
+}
+
+export interface GoogleAdsOpportunity {
+  id: string;
+  keyword: string;
+  cluster: string;
+  score: number;
+  recommendation: GoogleAdsRecommendation;
+  reason: string;
+  action: string;
+  row: GoogleAdsKeywordImportRow;
+}
+
+export interface SeoAdsKeywordMatrixRow {
+  id: string;
+  keyword: string;
+  cluster: string;
+  searchConsolePosition?: number;
+  searchConsoleImpressions?: number;
+  searchConsoleClicks?: number;
+  adsSearchVolume?: number;
+  cpc?: number;
+  competition?: string;
+  recommendation: GoogleAdsRecommendation;
+  reason: string;
+}
+
+export interface GoogleAdsImportData {
+  source: 'import';
+  lastUpdated: string;
+  rows: GoogleAdsKeywordImportRow[];
+  summary: GoogleAdsImportSummary;
+  topVolume: GoogleAdsKeywordImportRow[];
+  lowCpcGoodVolume: GoogleAdsKeywordImportRow[];
+  lowCompetition: GoogleAdsKeywordImportRow[];
+  highCommercial: GoogleAdsKeywordImportRow[];
+  shouldSeo: GoogleAdsOpportunity[];
+  shouldAds: GoogleAdsOpportunity[];
+  shouldWatch: GoogleAdsOpportunity[];
+  wasteKeywords: GoogleAdsKeywordImportRow[];
+  lowCtrKeywords: GoogleAdsKeywordImportRow[];
+  highCpcKeywords: GoogleAdsKeywordImportRow[];
+  goodConversionKeywords: GoogleAdsKeywordImportRow[];
+  highImpressionLowClickKeywords: GoogleAdsKeywordImportRow[];
+  adGroupsToOptimize: Array<{ name: string; reason: string; cost: number; conversions: number; clicks: number; impressions: number; }>;
+  opportunities: GoogleAdsOpportunity[];
+  matrix: SeoAdsKeywordMatrixRow[];
+}
+
 export type SearchConsoleRange = '7d' | '28d' | '90d';
 export type SearchConsoleRequestType = 'overview' | 'queries' | 'pages' | 'devices' | 'countries' | 'opportunities';
 export type SearchConsoleSource = 'api' | 'fallback' | 'import';
@@ -294,4 +384,13 @@ export interface SearchConsoleV7Data {
   countries: SearchConsoleCountry[];
   trend: SearchConsoleDatePoint[];
   opportunities: SearchConsoleOpportunity[];
+}
+
+
+export interface IndexSummaryManual {
+  indexedUrls: number | null;
+  notIndexedUrls: number | null;
+  mainIssue: string;
+  lastCheckedDate: string;
+  updatedAt?: string;
 }

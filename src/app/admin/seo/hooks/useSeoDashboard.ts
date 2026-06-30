@@ -94,7 +94,7 @@ const initialState: DashboardState = {
   overview: null,
   searchConsole: null,
   searchConsoleV5: null,
-  adsMessage: 'Chưa kết nối Google Ads',
+  adsMessage: 'Chưa import dữ liệu Google Ads',
   adsKeywords: [],
   priorities: [],
   tasks: [],

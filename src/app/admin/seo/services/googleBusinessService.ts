@@ -8,5 +8,5 @@ export interface GoogleBusinessSnapshot {
 }
 
 export async function getGoogleBusinessSnapshot(): Promise<GoogleBusinessSnapshot> {
-  return { status: 'disconnected', message: 'Chưa kết nối Google Business API', businessName: '' };
+  return { status: 'disconnected', message: 'Chưa có dữ liệu Google Business thủ công', businessName: '' };
 }

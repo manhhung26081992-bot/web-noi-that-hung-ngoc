@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Badge, EmptyState, MetricCard, MiniBarChart, ModuleCard } from './Ui';
 import type { SearchConsoleV5Data } from '../services/searchConsole';
 import { getClusterProgress } from '../services/seoDashboardService';
-import type { ContentOpportunity, DoNotTouchItem, InternalLinkSuggestion, ProductSeoItem, SearchConsoleQuery, SearchConsoleV7Data, SeoCluster, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoOverview, TodayTask } from '../types/seo';
+import type { ContentOpportunity, DoNotTouchItem, GoogleAdsImportData, IndexSummaryManual, InternalLinkSuggestion, ProductSeoItem, SearchConsoleQuery, SearchConsoleV7Data, SeoCluster, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoOverview, TodayTask } from '../types/seo';
 import styles from '../seo-dashboard.module.css';
 
 export type DashboardSeoFilters = {
@@ -55,26 +55,27 @@ export function SearchConsoleCenter({ data }: { data: SearchConsoleV5Data | null
   const source = data;
   const topQueries = useMemo(() => uniqueBy(source?.topQueries || [], (item) => `${item.query || ''}-${item.page || ''}`), [source]);
   const topPages = useMemo(() => uniqueBy(source?.topPages || [], (item) => item.page || ''), [source]);
-  const fallbackMessage = 'Chưa kết nối Search Console API - dữ liệu hiện tại là mock/fallback.';
-  return <ModuleCard title="Search Console Center v5" description="Trung tâm dữ liệu Search Console. Khi chưa có API thật, dashboard dùng mock/fallback." action={<Badge status={source?.status === 'connected' ? 'connected' : 'pending'}>{source?.status === 'connected' ? 'Đã kết nối Search Console API' : fallbackMessage}</Badge>}>
-    {!source ? <EmptyState title="Chưa có dữ liệu Search Console" detail="Module đã sẵn kiến trúc để nối API sau này." /> : <div className={styles.v5Stack}>
-      {source.status !== 'connected' ? <div className={styles.v5Warning}>{fallbackMessage}</div> : null}
+  const fallbackMessage = 'Không dùng API ở phiên bản hiện tại. Hãy dùng Search Console Import Center để nhập dữ liệu thủ công.';
+
+  return <ModuleCard title="Search Console Center v5" description="Trạng thái cũ đã chuyển sang hướng import thủ công, không OAuth, không billing." action={<Badge status="pending">Import thủ công</Badge>}>
+    {!source ? <EmptyState title="Chưa import dữ liệu Search Console" detail={fallbackMessage} /> : <div className={styles.v5Stack}>
+      <div className={styles.v5Warning}>{fallbackMessage}</div>
       <div className={styles.metricGridSmall}>
-        <MetricCard label="Clicks" value={formatNumber(source.overview.clicks)} />
-        <MetricCard label="Impressions" value={formatNumber(source.overview.impressions)} />
-        <MetricCard label="CTR" value={formatCtr(source.overview.ctr)} />
-        <MetricCard label="Average Position" value={source.overview.position || 'Mock'} />
+        <MetricCard label="Clicks tham khảo" value={formatNumber(source.overview.clicks)} />
+        <MetricCard label="Impressions tham khảo" value={formatNumber(source.overview.impressions)} />
+        <MetricCard label="CTR tham khảo" value={formatCtr(source.overview.ctr)} />
+        <MetricCard label="Average Position tham khảo" value={source.overview.position || '-'} />
       </div>
-      <MiniBarChart data={source.keywordTrend.slice(-28).map((item) => ({ date: item.date, impressions: item.impressions, clicks: item.clicks }))} label="Trend 28 ngày" />
+      <MiniBarChart data={source.keywordTrend.slice(-28).map((item) => ({ date: item.date, impressions: item.impressions, clicks: item.clicks }))} label="Trend tham khảo 28 ngày" />
       <div className={styles.v5TwoTables}>
-        <div><h3>Top Queries</h3>{topQueries.length ? <table><tbody>{topQueries.map((item, index) => <tr key={safeKey('gsc-query', item.query, item.page, index)}><td>{item.query}</td><td>{item.page}</td><td>{formatNumber(item.impressions)}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có query" detail="Đợi API thật hoặc nhập thủ công." />}</div>
-        <div><h3>Top Pages</h3>{topPages.length ? <table><tbody>{topPages.map((item, index) => <tr key={safeKey('gsc-page', item.page, item.query, index)}><td>{item.page}</td><td>{formatNumber(item.clicks)}</td><td>{formatNumber(item.impressions)}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có page" detail="Đợi API thật hoặc nhập thủ công." />}</div>
+        <div><h3>Top Queries tham khảo</h3>{topQueries.length ? <table><tbody>{topQueries.map((item, index) => <tr key={safeKey('gsc-query', item.query, item.page, index)}><td>{item.query}</td><td>{item.page}</td><td>{formatNumber(item.impressions)}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có query" detail="Dùng Search Console Import Center để nhập dữ liệu thật thủ công." />}</div>
+        <div><h3>Top Pages tham khảo</h3>{topPages.length ? <table><tbody>{topPages.map((item, index) => <tr key={safeKey('gsc-page', item.page, item.query, index)}><td>{item.page}</td><td>{formatNumber(item.clicks)}</td><td>{formatNumber(item.impressions)}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có page" detail="Dùng Search Console Import Center để nhập dữ liệu thật thủ công." />}</div>
       </div>
     </div>}
   </ModuleCard>;
 }
 
-export function KeywordIntelligence({ keywords, searchConsoleQueries = [] }: { keywords: SeoKeyword[]; searchConsoleQueries?: SearchConsoleQuery[] }) {
+export function KeywordIntelligence({ keywords, searchConsoleQueries = [], adsData = null }: { keywords: SeoKeyword[]; searchConsoleQueries?: SearchConsoleQuery[]; adsData?: GoogleAdsImportData | null }) {
   const cleanKeywords = useMemo(() => uniqueBy(keywords, (item) => item.id || item.keyword.trim().toLowerCase()), [keywords]);
   const clusters = useMemo(() => Array.from(new Set(cleanKeywords.map((item) => item.cluster || 'Chưa phân cụm').filter(Boolean))), [cleanKeywords]);
   const duplicates = useMemo(() => keywords.filter((item, index) => keywords.findIndex((row) => row.keyword.trim().toLowerCase() === item.keyword.trim().toLowerCase()) !== index), [keywords]);
@@ -94,6 +95,7 @@ export function KeywordIntelligence({ keywords, searchConsoleQueries = [] }: { k
       fresh: searchConsoleQueries.filter((row) => !manual.has(normalize(row.query))).slice(0, 5),
     };
   }, [cleanKeywords, searchConsoleQueries]);
+  const adsRows = useMemo(() => (adsData?.matrix || []).slice(0, 8), [adsData]);
 
   return <ModuleCard title="Keyword Intelligence" description="Đọc bảng seo_keywords thật, gom theo cụm, trạng thái, intent và ưu tiên.">
     {cleanKeywords.length === 0 ? <EmptyState title="Chưa có keyword" detail="Thêm keyword ở Keyword Center để module tự phân tích." /> : <div className={styles.v5Stack}>
@@ -109,6 +111,7 @@ export function KeywordIntelligence({ keywords, searchConsoleQueries = [] }: { k
         <div><h3>Keyword từ Search Console</h3>{gscKeywordRows.matched.length ? <table><tbody>{gscKeywordRows.matched.map((item, index) => <tr key={safeKey('keyword-gsc-match', item.query, item.page, index)}><td>{item.query}</td><td>{formatNumber(item.impressions)}</td><td>Pos {item.position}</td></tr>)}</tbody></table> : <small>Chưa khớp keyword thủ công.</small>}</div>
         <div><h3>Từ khóa mới phát hiện</h3>{gscKeywordRows.fresh.length ? <table><tbody>{gscKeywordRows.fresh.map((item, index) => <tr key={safeKey('keyword-gsc-fresh', item.query, item.page, index)}><td>{item.query}</td><td>{formatNumber(item.impressions)}</td><td>CTR {formatCtr(item.ctr)}</td></tr>)}</tbody></table> : <small>Chưa có query mới.</small>}</div>
       </div> : null}
+      {adsRows.length ? <div className={styles.v5TwoTables}><div><h3>SEO + Ads signal</h3><table><tbody>{adsRows.map((item, index) => <tr key={safeKey('keyword-ads-matrix', item.id, item.keyword, index)}><td>{item.keyword}</td><td>{item.cluster}</td><td>{item.recommendation}</td></tr>)}</tbody></table></div><div><h3>Cơ hội từ Keyword Planner</h3><table><tbody>{(adsData?.opportunities || []).slice(0, 5).map((item, index) => <tr key={safeKey('keyword-ads-op', item.id, item.keyword, index)}><td>{item.keyword}</td><td>{item.score}/100</td><td>{item.recommendation}</td></tr>)}</tbody></table></div></div> : null}
       {duplicates.length ? <div className={styles.v5Warning}>Keyword bị trùng: {uniqueBy(duplicates, (item) => item.keyword.trim().toLowerCase()).map((item) => item.keyword).join(', ')}</div> : <Badge status="ok">Không thấy keyword trùng</Badge>}
     </div>}
   </ModuleCard>;
@@ -151,7 +154,7 @@ export function ProductQualityAIV5({ products }: { products: ProductSeoItem[] })
   </ModuleCard>;
 }
 
-export function ClusterHealth({ clusters, searchConsoleData }: { clusters: SeoCluster[]; searchConsoleData?: SearchConsoleV7Data | null }) {
+export function ClusterHealth({ clusters, searchConsoleData, adsData = null }: { clusters: SeoCluster[]; searchConsoleData?: SearchConsoleV7Data | null; adsData?: GoogleAdsImportData | null }) {
   const safeClusters = useMemo(() => uniqueBy(clusters, (cluster) => `${cluster.id}-${cluster.main_url}`), [clusters]);
   const gscByCluster = useMemo(() => {
     const map = new Map<string, { clicks: number; impressions: number; position: number; count: number }>();
@@ -171,8 +174,25 @@ export function ClusterHealth({ clusters, searchConsoleData }: { clusters: SeoCl
     });
     return map;
   }, [safeClusters, searchConsoleData]);
+  const adsByCluster = useMemo(() => {
+    const map = new Map<string, { count: number; bestScore: number; recommendation: string }>();
+    safeClusters.forEach((cluster) => {
+      const name = normalize(cluster.name);
+      const rows = (adsData?.opportunities || []).filter((row) => {
+        const clusterText = normalize(row.cluster);
+        const keywordText = normalize(row.keyword);
+        return (name && clusterText.includes(name)) || (name && name.includes(clusterText)) || (name && keywordText.includes(name));
+      });
+      map.set(String(cluster.id || cluster.name), {
+        count: rows.length,
+        bestScore: rows[0]?.score || 0,
+        recommendation: rows[0]?.recommendation || 'Chưa import',
+      });
+    });
+    return map;
+  }, [adsData, safeClusters]);
   return <ModuleCard title="Cluster Health" description="Điểm cụm tính từ sản phẩm, bài viết, keyword, task, log và internal link đã đo được.">
-    {safeClusters.length === 0 ? <EmptyState title="Chưa có cụm SEO" detail="Thêm cụm trong Cluster Manager." /> : <div className={styles.v5ClusterHealth}>{safeClusters.map((cluster, index) => { const score = getClusterProgress(cluster); const gsc = gscByCluster.get(String(cluster.id || cluster.name)); return <div key={safeKey('cluster-health', cluster.id, cluster.main_url, index)}><strong>{cluster.name}</strong><Badge status={levelByScore(score)}>{score}/100</Badge><span><i style={{ width: `${score}%` }} /></span><small>Sản phẩm {cluster.product_count} · Bài {cluster.post_count} · Keyword {cluster.keyword_count || 0} · Task {cluster.task_count || 0} · Log {cluster.log_count || 0} · Internal link {cluster.internal_link_measured ? cluster.internal_link_count : 'Chưa đo'}</small><small>Search Console: {gsc?.count ? `${formatNumber(gsc.impressions)} impression · ${formatNumber(gsc.clicks)} click · Pos ${gsc.position.toFixed(1)}` : 'Chưa đo'}</small></div>; })}</div>}
+    {safeClusters.length === 0 ? <EmptyState title="Chưa có cụm SEO" detail="Thêm cụm trong Cluster Manager." /> : <div className={styles.v5ClusterHealth}>{safeClusters.map((cluster, index) => { const score = getClusterProgress(cluster); const gsc = gscByCluster.get(String(cluster.id || cluster.name)); const ads = adsByCluster.get(String(cluster.id || cluster.name)); return <div key={safeKey('cluster-health', cluster.id, cluster.main_url, index)}><strong>{cluster.name}</strong><Badge status={levelByScore(score)}>{score}/100</Badge><span><i style={{ width: `${score}%` }} /></span><small>Sản phẩm {cluster.product_count} · Bài {cluster.post_count} · Keyword {cluster.keyword_count || 0} · Task {cluster.task_count || 0} · Log {cluster.log_count || 0} · Internal link {cluster.internal_link_measured ? cluster.internal_link_count : 'Chưa đo'}</small><small>Search Console: {gsc?.count ? `${formatNumber(gsc.impressions)} impression · ${formatNumber(gsc.clicks)} click · Pos ${gsc.position.toFixed(1)}` : 'Chưa đo'}</small><small>Keyword Planner: {ads?.count ? `${ads.count} keyword · Score tốt nhất ${ads.bestScore}/100 · ${ads.recommendation}` : 'Chưa import'}</small></div>; })}</div>}
   </ModuleCard>;
 }
 
@@ -193,30 +213,57 @@ export function DailySeoMission({ overview, health, opportunities, tasks, produc
       health?.sitemap.sitemapOk && health.sitemap.robotsOk ? 'Sitemap và robots đang ổn, hôm nay không sửa nếu không cần.' : 'Kiểm tra sitemap.xml và robots.txt trước khi gửi index.',
       recentLog ? `Không sửa liên tục mục vừa ghi log: ${recentLog.target || recentLog.title || recentLog.action}.` : '',
       (overview?.blogPosts || 0) < 60 ? 'Viết/cập nhật 1 bài dự án có link về danh mục chính.' : '',
-      'Kiểm tra Search Console thủ công vì API chưa kết nối.',
+      'Import dữ liệu Search Console thủ công nếu cần phân tích sâu hơn.',
     ].filter(Boolean);
     return uniqueBy(raw, (mission) => mission).slice(0, 5);
   }, [clusters, doNotTouch, health, keywords, logs, overview, products, tasks]);
   return <ModuleCard title="Daily SEO Mission" description="5 nhiệm vụ sinh từ dữ liệu thật của website hôm nay."><div className={styles.v5MissionList}>{missions.map((mission, index) => <div key={safeKey('mission', mission, mission, index)}><b>{index + 1}</b><span>{mission}</span></div>)}</div></ModuleCard>;
 }
 
-export function DashboardAnalytics({ overview, health, clusters, keywords, tasks, logs, doNotTouch }: { overview: SeoOverview | null; health: SeoHealthSnapshot | null; clusters: SeoCluster[]; keywords: SeoKeyword[]; tasks: TodayTask[]; logs: SeoLog[]; doNotTouch: DoNotTouchItem[] }) {
+export function DashboardAnalytics({ overview, health, clusters, keywords, tasks, logs, doNotTouch, searchConsoleV7, indexSummary }: { overview: SeoOverview | null; health: SeoHealthSnapshot | null; clusters: SeoCluster[]; keywords: SeoKeyword[]; tasks: TodayTask[]; logs: SeoLog[]; doNotTouch: DoNotTouchItem[]; searchConsoleV7?: SearchConsoleV7Data | null; indexSummary?: IndexSummaryManual | null }) {
   const pendingTasks = tasks.filter((item) => !item.completed).length;
   const completedTasks = tasks.filter((item) => item.completed).length;
-  return <ModuleCard title="Dashboard Analytics" description="Tổng quan vận hành SEO lấy từ Supabase và trạng thái hệ thống."><div className={styles.metricGridSmall}>
-    <MetricCard label="Tổng sản phẩm" value={formatNumber(overview?.products || 0)} />
-    <MetricCard label="Tổng bài viết" value={formatNumber(overview?.blogPosts || 0)} />
-    <MetricCard label="Tổng danh mục" value={formatNumber(overview?.categories || 0)} />
-    <MetricCard label="Tổng cụm SEO" value={formatNumber(overview?.clusters ?? uniqueBy(clusters, (item) => `${item.id}-${item.main_url}`).length)} />
-    <MetricCard label="Tổng keyword" value={formatNumber(overview?.keywords ?? keywords.length)} />
-    <MetricCard label="Tổng task" value={formatNumber(overview?.tasks ?? tasks.length)} />
-    <MetricCard label="Tổng log SEO" value={formatNumber(overview?.logs ?? logs.length)} />
-    <MetricCard label="URL tạo từ website" value={formatNumber(overview?.generatedUrls || 0)} />
-    <MetricCard label="Sitemap" value={health?.sitemap.sitemapOk ? 'OK' : 'Cần kiểm tra'} />
-    <MetricCard label="Robots" value={health?.sitemap.robotsOk ? 'OK' : 'Cần kiểm tra'} />
-    <MetricCard label="Index" value="Chưa kết nối Search Console" />
-    <MetricCard label="Pending" value={formatNumber(pendingTasks + doNotTouch.length)} />
-    <MetricCard label="Hoàn thành" value={formatNumber(completedTasks)} />
-  </div></ModuleCard>;
-}
+  const uniqueQueries = searchConsoleV7 ? new Set(searchConsoleV7.queries.map((item) => normalize(item.query)).filter(Boolean)).size : null;
+  const uniquePages = searchConsoleV7 ? new Set(searchConsoleV7.pages.filter((item) => item.impressions > 0).map((item) => normalize(item.page)).filter(Boolean)).size : null;
+  const hasIndexSummary = Boolean(indexSummary && (indexSummary.indexedUrls !== null || indexSummary.notIndexedUrls !== null || indexSummary.mainIssue || indexSummary.lastCheckedDate));
 
+  return <ModuleCard title="Dashboard Analytics" description="Dữ liệu website lấy tự động từ Supabase/website; dữ liệu Google chỉ dùng import thủ công.">
+    <div className={styles.metricGridSmall}>
+      <MetricCard label="Tổng sản phẩm" value={formatNumber(overview?.products || 0)} />
+      <MetricCard label="Tổng bài viết" value={formatNumber(overview?.blogPosts || 0)} />
+      <MetricCard label="Tổng danh mục" value={formatNumber(overview?.categories || 0)} />
+      <MetricCard label="Tổng cụm SEO" value={formatNumber(overview?.clusters ?? uniqueBy(clusters, (item) => `${item.id}-${item.main_url}`).length)} />
+      <MetricCard label="Tổng keyword" value={formatNumber(overview?.keywords ?? keywords.length)} />
+      <MetricCard label="Tổng task" value={formatNumber(overview?.tasks ?? tasks.length)} />
+      <MetricCard label="Tổng log SEO" value={formatNumber(overview?.logs ?? logs.length)} />
+      <MetricCard label="URL tạo từ website" value={formatNumber(overview?.generatedUrls || 0)} hint="Không đồng nghĩa với URL Google đã index." />
+      <MetricCard label="Sitemap" value={health?.sitemap.sitemapOk ? 'OK' : 'Cần kiểm tra'} />
+      <MetricCard label="Robots" value={health?.sitemap.robotsOk ? 'OK' : 'Cần kiểm tra'} />
+      <MetricCard label="Index" value={searchConsoleV7 ? 'Đang dùng Search Console import thủ công' : 'Chưa có dữ liệu index thật'} hint="URL có impression là URL đã được Google hiển thị; URL không có impression chưa chắc là chưa index." />
+      <MetricCard label="Task chưa làm" value={formatNumber(pendingTasks + doNotTouch.length)} />
+      <MetricCard label="Task hoàn thành" value={completedTasks ? formatNumber(completedTasks) : 'Chưa có task hoàn thành'} />
+    </div>
+    {searchConsoleV7 ? <div className={styles.indexAnalyticsBox}>
+      <strong>Dữ liệu Search Console import thủ công</strong>
+      <div className={styles.metricGridSmall}>
+        <MetricCard label="Tổng query import" value={formatNumber(uniqueQueries || 0)} />
+        <MetricCard label="Page có impression" value={formatNumber(uniquePages || 0)} />
+        <MetricCard label="Tổng impressions" value={formatNumber(searchConsoleV7.overview.impressions)} />
+        <MetricCard label="Tổng clicks" value={formatNumber(searchConsoleV7.overview.clicks)} />
+        <MetricCard label="CTR trung bình" value={formatCtr(searchConsoleV7.overview.ctr)} />
+        <MetricCard label="Position trung bình" value={searchConsoleV7.overview.position || '-'} />
+        <MetricCard label="Cập nhật lần cuối" value={searchConsoleV7.overview.lastUpdated ? new Date(searchConsoleV7.overview.lastUpdated).toLocaleString('vi-VN') : '-'} />
+      </div>
+    </div> : null}
+    {hasIndexSummary ? <div className={styles.indexAnalyticsBox}>
+      <strong>Index Summary thủ công</strong>
+      <div className={styles.metricGridSmall}>
+        {indexSummary?.indexedUrls !== null ? <MetricCard label="URL đã index" value={formatNumber(indexSummary?.indexedUrls || 0)} /> : null}
+        {indexSummary?.notIndexedUrls !== null ? <MetricCard label="URL chưa index" value={formatNumber(indexSummary?.notIndexedUrls || 0)} /> : null}
+        {indexSummary?.mainIssue ? <MetricCard label="Lý do chính" value={indexSummary.mainIssue} /> : null}
+        {indexSummary?.lastCheckedDate ? <MetricCard label="Ngày kiểm tra" value={new Date(indexSummary.lastCheckedDate).toLocaleDateString('vi-VN')} /> : null}
+      </div>
+    </div> : null}
+    <p className={styles.indexSummaryNote}>Số URL tạo từ website không đồng nghĩa với số URL Google đã index.</p>
+  </ModuleCard>;
+}

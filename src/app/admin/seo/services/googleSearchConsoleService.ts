@@ -55,6 +55,6 @@ export async function getSearchConsoleData(range: SearchConsoleRange = '28d', se
     range,
     selectedType,
     'manual_import',
-    'Đang dùng chế độ import thủ công. Dashboard không tự gọi Google Search Console API.'
+    'Đang dùng chế độ import thủ công. Dashboard không tự gọi Google Search Console tự động.'
   );
 }

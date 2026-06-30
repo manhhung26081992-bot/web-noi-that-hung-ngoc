@@ -5,7 +5,9 @@ import EditablePriorityList from './EditablePriorityList';
 import SeoNotesPanel from './SeoNotesPanel';
 import TodayTaskList from './TodayTaskList';
 import SearchConsoleV7Center from './SearchConsoleV7Center';
-import { Badge, EmptyState, MetricCard, MiniBarChart, ModuleCard } from './Ui';
+import GoogleAdsV8ImportCenter from './GoogleAdsV8ImportCenter';
+import IndexSummaryPanel from './IndexSummaryPanel';
+import { Badge, EmptyState, MetricCard, ModuleCard } from './Ui';
 import { AiInsightPanel, LocalSeoPanel, TodaySummaryPanel } from './SeoV3Modules';
 import {
   AiSeoScorePanelV41,
@@ -24,7 +26,7 @@ import {
 } from './SeoV4Modules';
 import { DashboardAnalytics, ClusterHealth, ContentPlanner, InternalLinkAIV5, KeywordIntelligence, ProductQualityAIV5 } from './SeoV5Modules';
 import type { useSeoDashboard } from '../hooks/useSeoDashboard';
-import type { AiInsight, ContentOpportunity, ProductSeoItem, RoadmapWeek, SearchConsoleV7Data, SeoCluster, SeoHealthSnapshot, SeoKeyword, SeoOverview, TodaySummary, TodayTask } from '../types/seo';
+import type { AiInsight, ContentOpportunity, ProductSeoItem, RoadmapWeek, GoogleAdsImportData, IndexSummaryManual, SearchConsoleV7Data, SeoCluster, SeoHealthSnapshot, SeoKeyword, SeoOverview, TodaySummary, TodayTask } from '../types/seo';
 import styles from '../seo-dashboard.module.css';
 
 type DashboardData = ReturnType<typeof useSeoDashboard>['dashboard'];
@@ -37,9 +39,6 @@ type Props = {
   actions: DashboardActions;
   overview: SeoOverview | null;
   health: SeoHealthSnapshot | null;
-  searchConsole: DashboardData['searchConsole'];
-  searchConsoleConnected: boolean;
-  googleAdsConnected: boolean;
   score: SeoScore;
   opportunities: ContentOpportunity[];
   insights: AiInsight[];
@@ -51,6 +50,10 @@ type Props = {
   filteredProducts: ProductSeoItem[];
   searchConsoleV7: SearchConsoleV7Data | null;
   onSearchConsoleV7Data: (data: SearchConsoleV7Data | null) => void;
+  googleAdsV8: GoogleAdsImportData | null;
+  onGoogleAdsV8Data: (data: GoogleAdsImportData | null) => void;
+  indexSummary: IndexSummaryManual | null;
+  onIndexSummaryData: (data: IndexSummaryManual | null) => void;
 };
 
 function formatNumber(value: number) {
@@ -80,9 +83,6 @@ function SeoDashboardLowerModules({
   actions,
   overview,
   health,
-  searchConsole,
-  searchConsoleConnected,
-  googleAdsConnected,
   score,
   opportunities,
   insights,
@@ -94,20 +94,27 @@ function SeoDashboardLowerModules({
   filteredProducts,
   searchConsoleV7,
   onSearchConsoleV7Data,
+  googleAdsV8,
+  onGoogleAdsV8Data,
+  indexSummary,
+  onIndexSummaryData,
 }: Props) {
   return (
     <div className={styles.v61Deferred}>
-      <AccordionSection id="search-console" title="Search Console và dữ liệu tổng quan" description="Các module đọc sau để dashboard nhẹ hơn." defaultOpen>
+      <AccordionSection id="search-console" title="Import Google thủ công và dữ liệu tổng quan" description="Search Console và Google Ads dùng dữ liệu copy/paste, không dùng API." defaultOpen>
         <section className={styles.gridTwo}>
           <SearchConsoleV7Center keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} onData={onSearchConsoleV7Data} />
-          <DashboardAnalytics overview={overview} health={health} clusters={dashboard.seoClusters} keywords={dashboard.seoKeywords} tasks={dashboard.tasks} logs={dashboard.seoLogs} doNotTouch={dashboard.doNotTouch} />
+          <GoogleAdsV8ImportCenter keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} searchConsoleData={searchConsoleV7} onData={onGoogleAdsV8Data} />
+        </section>
+        <section className={styles.stack}>
+          <DashboardAnalytics overview={overview} health={health} clusters={dashboard.seoClusters} keywords={dashboard.seoKeywords} tasks={dashboard.tasks} logs={dashboard.seoLogs} doNotTouch={dashboard.doNotTouch} searchConsoleV7={searchConsoleV7} indexSummary={indexSummary} />
         </section>
       </AccordionSection>
 
       <AccordionSection title="Keyword, cụm SEO và kế hoạch nội dung" description="Lọc bằng thanh tìm kiếm phía trên.">
         <section className={styles.gridTwo}>
-          <KeywordIntelligence keywords={filteredKeywords} searchConsoleQueries={searchConsoleV7?.queries || []} />
-          <ClusterHealth clusters={filteredClusters} searchConsoleData={searchConsoleV7} />
+          <KeywordIntelligence keywords={filteredKeywords} searchConsoleQueries={searchConsoleV7?.queries || []} adsData={googleAdsV8} />
+          <ClusterHealth clusters={filteredClusters} searchConsoleData={searchConsoleV7} adsData={googleAdsV8} />
         </section>
         <section className={styles.gridTwo}>
           <ContentPlanner opportunities={opportunities} keywords={filteredKeywords} />
@@ -170,34 +177,9 @@ function SeoDashboardLowerModules({
           <LocalSeoPanel items={dashboard.localSeo} saving={saving} actions={actions} />
         </section>
         <section className={styles.gridTwo}>
-          <ModuleCard title="Search Console" description="Kiến trúc đã sẵn sàng để gắn Google Search Console API." action={<Badge status={searchConsole?.status || 'pending'}>{searchConsole?.message || 'Chưa kết nối Search Console'}</Badge>}>
-            <div className={styles.metricGridSmall}>
-              <MetricCard label="Impression" value={formatNumber(searchConsole?.impressions || 0)} />
-              <MetricCard label="Click" value={formatNumber(searchConsole?.clicks || 0)} />
-              <MetricCard label="CTR" value={`${searchConsole?.ctr || 0}%`} />
-              <MetricCard label="Average Position" value={searchConsole?.averagePosition || 0} />
-            </div>
-            <div className={styles.chartTabs}>
-              <MiniBarChart data={searchConsole?.chart7Days || []} label="Biểu đồ 7 ngày" />
-              <MiniBarChart data={searchConsole?.chart28Days || []} label="Biểu đồ 28 ngày" />
-            </div>
-            <div className={styles.keywordGrid}>
-              <EmptyState title="Top Query" detail="Sẽ hiển thị sau khi kết nối API" />
-              <EmptyState title="Top Page" detail="Sẽ hiển thị sau khi kết nối API" />
-              <EmptyState title="Top Country" detail="Sẽ hiển thị sau khi kết nối API" />
-              <EmptyState title="Top Device" detail="Sẽ hiển thị sau khi kết nối API" />
-            </div>
-          </ModuleCard>
-          <ModuleCard title="Google Ads" description="Chuẩn bị sẵn cho Keyword Planner / Google Ads API." action={<Badge status={googleAdsConnected ? 'connected' : 'disconnected'}>{dashboard.adsMessage}</Badge>}>
-            {dashboard.adsKeywords.length === 0 ? <EmptyState title="Chưa kết nối Google Ads" detail="Sau này có API sẽ hiện Keyword, Competition, Monthly Search và Status." /> : null}
-            <div className={styles.tableWrap}>
-              <table>
-                <thead><tr><th>Keyword</th><th>Competition</th><th>Monthly Search</th><th>Status</th></tr></thead>
-                <tbody>{dashboard.adsKeywords.map((item, index) => <tr key={dashboardKey('ads', item, index)}><td>{item.keyword}</td><td>{item.competition}</td><td>{item.monthlySearch}</td><td>{item.status}</td></tr>)}</tbody>
-              </table>
-            </div>
-          </ModuleCard>
+          <IndexSummaryPanel onData={onIndexSummaryData} />
         </section>
+
 
         <section className={styles.gridTwo}>
           <ModuleCard title="404" description="Đọc public/404-log.json hoặc public/redirects.json nếu có.">
@@ -222,19 +204,12 @@ function SeoDashboardLowerModules({
         </section>
 
         <section className={styles.gridTwo}>
-          <ModuleCard title="Index Status" description="URL đã index: Chưa kết nối Search Console. Module này sẵn sàng nhận dữ liệu khi có API.">
+          <ModuleCard title="Index Status" description="Index thật chỉ hiển thị khi có Search Console import hoặc Index Summary thủ công. Không dùng công cụ kiểm tra URL tự động.">
             <div className={styles.metricGridSmall}>
               <MetricCard label="URL tạo từ website" value={formatNumber(overview?.generatedUrls || 0)} />
-              <MetricCard label="URL đã index" value="Chưa kết nối Search Console" />
+              <MetricCard label="Index thật" value={indexSummary ? 'Đang dùng tóm tắt thủ công' : searchConsoleV7 ? 'Đang dùng Search Console import thủ công' : 'Chưa có dữ liệu index thật'} />
             </div>
-            {dashboard.indexStatus.length === 0 ? <EmptyState title="Chưa có dữ liệu index" detail="Không dùng nhãn đã index khi chưa có Search Console API." /> : (
-              <div className={styles.tableWrap}>
-                <table>
-                  <thead><tr><th>URL mới</th><th>Ngày tạo</th><th>Đã gửi index</th><th>Đã index</th></tr></thead>
-                  <tbody>{dashboard.indexStatus.map((item, index) => <tr key={dashboardKey('index-status', item, index)}><td>{item.url}</td><td>{new Date(item.created_at).toLocaleDateString('vi-VN')}</td><td>{item.submitted ? 'Có' : 'Chưa'}</td><td>{item.indexed ? 'Có' : 'Chưa'}</td></tr>)}</tbody>
-                </table>
-              </div>
-            )}
+            <p className={styles.indexSummaryNote}>URL tạo từ website không đồng nghĩa với URL Google đã index. URL có impression trong Search Console import là URL đã được Google hiển thị; URL không có impression chưa chắc là chưa index.</p>
           </ModuleCard>
           <ModuleCard title="System Health" description="Theo dõi những điểm quan trọng của hệ thống SEO.">
             <div className={styles.healthList}>{health?.systemHealth.map((item, index) => <div className={styles.healthItem} key={dashboardKey('system-health', item, index)}><div><strong>{item.name}</strong><span>{item.detail}</span></div><Badge status={item.status}>{item.status}</Badge></div>)}</div>

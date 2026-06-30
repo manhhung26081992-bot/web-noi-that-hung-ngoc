@@ -133,3 +133,59 @@
 @media (max-width:720px){.scV7Toolbar{align-items:stretch}.scV7Tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}.scV7Tabs button{border-radius:8px}.scV7Toolbar select,.scV7Toolbar button{width:100%}.scV7OpportunityList{grid-template-columns:1fr}}
 
 .scImportBox{display:grid;gap:10px}.scImportBox textarea{width:100%;min-height:180px;border:1px solid var(--seo-border);border-radius:8px;background:var(--seo-panel);color:var(--seo-text);padding:12px;resize:vertical;font:13px/1.5 Consolas,Monaco,monospace}.scImportActions{display:flex;flex-wrap:wrap;gap:10px}.scImportActions button{min-height:40px}.scV7Tabs{margin-top:2px}.scV7Stack .tableWrap{max-width:100%}@media (max-width:720px){.scImportActions{display:grid;grid-template-columns:1fr}.scImportBox textarea{min-height:220px}.scV7Stack{padding-bottom:12px}}
+
+.adsV8TableTitle{margin:0 0 10px;font-size:15px;color:var(--seo-primary)}
+.adsV8CompactText{color:var(--seo-muted);font-size:13px;line-height:1.5}
+@media (max-width:720px){.scV7OpportunityList article{padding:10px}.adsV8TableTitle{font-size:14px}}
+
+
+.indexSummaryGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.indexSummaryGrid label{display:grid;gap:6px;font-weight:700;color:var(--seo-text)}
+.indexSummaryGrid span{font-size:13px;color:var(--seo-muted)}
+.indexSummaryGrid input{width:100%;min-height:40px;border:1px solid var(--seo-border);border-radius:8px;background:var(--seo-panel);color:var(--seo-text);padding:9px 10px}
+.indexSummaryNote{margin:12px 0 0;color:var(--seo-muted);font-size:13px;line-height:1.5}
+.indexAnalyticsBox{display:grid;gap:10px;margin-top:12px;padding:12px;border:1px solid var(--seo-border);border-radius:8px;background:rgba(0,104,183,.04)}
+.indexAnalyticsBox>strong{color:var(--seo-primary)}
+.v6ProgressGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.v6ProgressGrid div{display:grid;gap:6px;padding:12px;border:1px solid var(--seo-border);border-radius:8px;background:var(--seo-panel)}
+.v6ProgressGrid span{color:var(--seo-muted);font-size:13px}
+.v6ProgressGrid strong{font-size:24px;color:var(--seo-text)}
+@media (max-width:720px){.indexSummaryGrid,.v6ProgressGrid{grid-template-columns:1fr}.indexAnalyticsBox{padding:10px}}
+
+
+.fileImportRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.fileImportButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid var(--seo-border, #d8e4f2);
+  border-radius: 8px;
+  background: var(--seo-card, #fff);
+  color: var(--seo-text, #1f2937);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fileImportButton input {
+  display: none;
+}
+
+.fileImportMeta {
+  color: var(--seo-muted, #64748b);
+  font-size: 13px;
+}
+
+.secondaryButton {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -3,10 +3,10 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import { Badge, EmptyState, ModuleCard } from './Ui';
 import type { SearchConsoleV5Data } from '../services/searchConsole';
-import type { AiDailyBrief, AiRecommendationHistoryItem, DoNotTouchItem, ProductSeoItem, SearchConsoleV7Data, SeoBlogQualityItem, SeoCluster, SeoCommand, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoOverview, TodayTask, V6Analysis, V6Decision, V6Notification, V6Opportunity, V6RadarPoint } from '../types/seo';
+import type { AiDailyBrief, AiRecommendationHistoryItem, GoogleAdsImportData, DoNotTouchItem, ProductSeoItem, SearchConsoleV7Data, SeoBlogQualityItem, SeoCluster, SeoCommand, SeoHealthSnapshot, SeoKeyword, SeoLog, SeoOverview, TodayTask, V6Analysis, V6Decision, V6Notification, V6Opportunity, V6RadarPoint } from '../types/seo';
 import styles from '../seo-dashboard.module.css';
 
-type V6Input = { overview: SeoOverview | null; health: SeoHealthSnapshot | null; products: ProductSeoItem[]; blogs: SeoBlogQualityItem[]; keywords: SeoKeyword[]; clusters: SeoCluster[]; tasks: TodayTask[]; logs: SeoLog[]; doNotTouch: DoNotTouchItem[]; searchConsole: SearchConsoleV5Data | null; searchConsoleV7?: SearchConsoleV7Data | null; };
+type V6Input = { overview: SeoOverview | null; health: SeoHealthSnapshot | null; products: ProductSeoItem[]; blogs: SeoBlogQualityItem[]; keywords: SeoKeyword[]; clusters: SeoCluster[]; tasks: TodayTask[]; logs: SeoLog[]; doNotTouch: DoNotTouchItem[]; searchConsole: SearchConsoleV5Data | null; searchConsoleV7?: SearchConsoleV7Data | null; googleAdsV8?: GoogleAdsImportData | null; };
 
 function n(value: unknown) { return String(value || '').trim().toLowerCase(); }
 function clamp(value: number) { return Math.max(0, Math.min(100, Math.round(Number.isFinite(value) ? value : 0))); }
@@ -59,6 +59,8 @@ function decisions(input: V6Input, products: ProductSeoItem[], blogs: SeoBlogQua
   const c = opps[0];
   const kw = [...input.keywords].sort((a, b) => Number(a.priority || 99) - Number(b.priority || 99))[0];
   const dnt = input.doNotTouch.find((item) => n(item.status).includes('theo dõi') || Date.parse(item.until_date) > Date.now());
+  const ads = input.googleAdsV8?.opportunities?.[0];
+  if (ads) list.push({ id: 'p1-ads-' + ads.id, priority: ads.recommendation === 'Cả hai' ? 1 : 2, title: 'Tận dụng keyword ' + ads.keyword, reason: ads.reason, action: ads.action, level: ads.score >= 75 ? 'critical' : 'high', source: 'google_ads_import' });
   if (p && (p.qualityScore || 0) < 80) list.push({ id: 'p1-product-' + p.id, priority: 1, title: 'Bổ sung SEO cho ' + p.name, reason: p.issues.slice(0, 3).join(', ') || 'sản phẩm còn thiếu dữ liệu', action: p.action, level: 'critical', source: 'products' });
   if (c && c.score < 75) list.push({ id: 'p2-cluster-' + c.id, priority: 2, title: 'Đẩy cụm ' + c.cluster, reason: c.reasons.join(', '), action: c.nextAction, level: 'high', source: 'seo_clusters' });
   if (b && b.score < 75) list.push({ id: 'p2-blog-' + b.id, priority: 2, title: 'Cập nhật bài ' + b.title, reason: b.issues.slice(0, 3).join(', '), action: b.action, level: 'high', source: 'blog_posts' });
@@ -77,7 +79,8 @@ function notifications(input: V6Input, products: ProductSeoItem[], blogs: SeoBlo
   if (missingImage) list.push({ id: 'missing-image', title: missingImage + ' sản phẩm cần kiểm tra ảnh', detail: 'Ảnh thật giúp tăng niềm tin và SEO hình ảnh.', level: 'high', count: missingImage });
   if (weakBlog) list.push({ id: 'weak-blog', title: weakBlog + ' bài viết cần tối ưu', detail: 'Kiểm tra nội dung, ảnh, meta và internal link.', level: 'high', count: weakBlog });
   if (weakCluster) list.push({ id: 'weak-cluster', title: weakCluster + ' cụm SEO dưới 70 điểm', detail: 'Cần thêm bài, sản phẩm hoặc liên kết nội bộ.', level: 'critical', count: weakCluster });
-  if (input.searchConsole?.status !== 'connected') list.push({ id: 'gsc-pending', title: 'Search Console chưa kết nối API', detail: 'Dashboard đang dùng mock/fallback cho dữ liệu GSC.', level: 'medium' });
+  if (input.googleAdsV8?.summary.keywordCount) list.push({ id: 'ads-import', title: input.googleAdsV8.summary.keywordCount + ' keyword Keyword Planner đã import', detail: 'AI đang dùng dữ liệu Ads import thủ công để ưu tiên SEO/Ads.', level: 'medium', count: input.googleAdsV8.summary.keywordCount });
+  if (!input.searchConsoleV7?.overview.impressions) list.push({ id: 'gsc-import-pending', title: 'Chưa import dữ liệu Search Console', detail: 'Có thể import thủ công nếu cần phân tích query, page, CTR và position. Không dùng API ở phiên bản hiện tại.', level: 'medium' });
   return list;
 }
 
@@ -85,7 +88,7 @@ function radar(input: V6Input, products: ProductSeoItem[], blogs: SeoBlogQuality
   const technical = avg([input.health?.sitemap.sitemapOk ? 100 : 45, input.health?.sitemap.robotsOk ? 100 : 45, input.overview?.generatedUrls ? 90 : 40]);
   const content = avg([input.overview?.blogPosts ? 80 : 30, blogs.length ? avg(blogs.map((item) => item.score)) : 35]);
   const internalLink = input.clusters.length ? avg(input.clusters.map((cluster) => cluster.internal_link_measured === false ? 45 : Math.min((cluster.internal_link_count || 0) * 20, 100))) : 40;
-  const keyword = input.keywords.length ? clamp(Math.min(input.keywords.length * 8, 100)) : 35;
+  const keyword = input.googleAdsV8?.summary.keywordCount ? clamp(Math.min((input.keywords.length + input.googleAdsV8.summary.keywordCount) * 6, 100)) : (input.keywords.length ? clamp(Math.min(input.keywords.length * 8, 100)) : 35);
   const product = products.length ? avg(products.map((item) => item.qualityScore || 0)) : 30;
   const cluster = opps.length ? avg(opps.map((item) => item.score)) : 35;
   const blog = blogs.length ? avg(blogs.map((item) => item.score)) : 35;
@@ -103,9 +106,10 @@ export function buildV6Analysis(input: V6Input): V6Analysis {
     opportunityScore[0] ? opportunityScore[0].cluster + ' còn dư địa tăng SEO: ' + opportunityScore[0].reasons[0] + '.' : '',
     productNeedFaq ? productNeedFaq.name + ' nên bổ sung FAQ trước khi đổi slug hoặc title.' : '',
     blogRanking[0] ? 'Bài ' + blogRanking[0].title + ' cần tối ưu: ' + blogRanking[0].issues.slice(0, 2).join(', ') + '.' : '',
-    input.searchConsole?.status !== 'connected' ? 'Search Console API chưa kết nối nên click/impression vẫn là fallback rõ ràng.' : '',
+    !input.searchConsoleV7?.overview.impressions ? 'Chưa import dữ liệu Search Console nên dashboard chưa thể đọc query/click/impression thật.' : 'Dashboard đang dùng dữ liệu Search Console import thủ công để phân tích cơ hội SEO.',
   ].filter(Boolean), (item) => n(item)).slice(0, 3);
-  const progress = { yesterday: input.logs.filter((log) => Date.parse(log.created_at || log.log_date) > Date.now() - 86400000).length, today: input.tasks.filter((task) => !task.completed).length, sevenDays: input.logs.filter((log) => Date.parse(log.created_at || log.log_date) > Date.now() - 7 * 86400000).length, thirtyDays: input.logs.filter((log) => Date.parse(log.created_at || log.log_date) > Date.now() - 30 * 86400000).length, improved: [productRanking.filter((item) => (item.qualityScore || 0) >= 80).length + ' sản phẩm đạt điểm tốt', blogRanking.filter((item) => item.score >= 80).length + ' bài viết đạt điểm tốt', input.tasks.filter((task) => task.completed).length + ' task đã hoàn thành'] };
+  const completedTasks = input.tasks.filter((task) => task.completed || ['done', 'completed', 'hoàn thành'].includes(n(task.status))).length;
+  const progress = { yesterday: input.logs.filter((log) => Date.parse(log.created_at || log.log_date) > Date.now() - 86400000).length, today: input.tasks.filter((task) => !task.completed && !['done', 'completed', 'hoàn thành'].includes(n(task.status))).length, sevenDays: input.logs.filter((log) => Date.parse(log.created_at || log.log_date) > Date.now() - 7 * 86400000).length, thirtyDays: input.logs.filter((log) => Date.parse(log.created_at || log.log_date) > Date.now() - 30 * 86400000).length, improved: [productRanking.filter((item) => (item.qualityScore || 0) >= 80).length + ' sản phẩm đạt điểm tốt', blogRanking.filter((item) => item.score >= 80).length + ' bài viết đạt điểm tốt', completedTasks ? completedTasks + ' task đã hoàn thành' : 'Chưa có task hoàn thành'] };
   return { decisions: decisions(input, productRanking, blogRanking, opportunityScore), opportunities: opportunityScore, productRanking, blogRanking, notifications: notifications(input, productRanking, blogRanking, opportunityScore), radar: radarPoints, progress, insights };
 }
 
@@ -148,7 +152,17 @@ export function AiRecommendationHistory({ decisions }: { decisions: V6Decision[]
 }
 
 export function AiProgressEngine({ analysis }: { analysis: V6Analysis }) {
-  return <ModuleCard title="AI Progress Engine" description="Theo dõi cải thiện hôm qua, hôm nay, 7 ngày và 30 ngày."><div className={styles.metricGridSmall}><div><strong>{analysis.progress.yesterday}</strong><span>Hôm qua</span></div><div><strong>{analysis.progress.today}</strong><span>Việc còn hôm nay</span></div><div><strong>{analysis.progress.sevenDays}</strong><span>7 ngày</span></div><div><strong>{analysis.progress.thirtyDays}</strong><span>30 ngày</span></div></div><div className={styles.v6List}>{analysis.progress.improved.map((item, index) => <span className={styles.v6Pill} key={key('improved', item, '', index)}>{item}</span>)}</div></ModuleCard>;
+  const hasHistory = analysis.progress.yesterday > 0 || analysis.progress.sevenDays > 0 || analysis.progress.thirtyDays > 0 || analysis.progress.today > 0 || analysis.progress.improved.some((item) => !item.startsWith('0 ') && item !== 'Chưa có task hoàn thành');
+
+  return <ModuleCard title="AI Progress Engine" description="Theo dõi cải thiện hôm qua, hôm nay, 7 ngày và 30 ngày.">
+    {hasHistory ? <div className={styles.v6ProgressGrid}>
+      <div><span>Hôm qua</span><strong>{analysis.progress.yesterday}</strong></div>
+      <div><span>Việc còn hôm nay</span><strong>{analysis.progress.today}</strong></div>
+      <div><span>7 ngày</span><strong>{analysis.progress.sevenDays}</strong></div>
+      <div><span>30 ngày</span><strong>{analysis.progress.thirtyDays}</strong></div>
+    </div> : <EmptyState title="Chưa có dữ liệu tiến độ đủ để so sánh." detail="Khi có seo_logs, seo_progress hoặc task hoàn thành, phần này sẽ tự tổng hợp." />}
+    <div className={styles.v6List}>{analysis.progress.improved.map((item, index) => <span className={styles.v6Pill} key={key('improved', item, '', index)}>{item}</span>)}</div>
+  </ModuleCard>;
 }
 
 export function SeoHealthRadar({ points }: { points: V6RadarPoint[] }) {

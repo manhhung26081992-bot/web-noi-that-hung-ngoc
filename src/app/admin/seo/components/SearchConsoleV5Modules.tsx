@@ -14,8 +14,8 @@ export function SearchConsoleV5Panel({ data }: { data: SearchConsoleV5Data | nul
   const topPages = uniqueBy(source?.topPages || [], (item) => item.page || '');
   const newQueries = uniqueBy(source?.newQueries || [], (item) => `${item.query || ''}-${item.page || ''}`);
   const losingPages = uniqueBy(source?.pagesLosingImpression || [], (item) => `${item.page}-${item.query || ''}`);
-  return <ModuleCard title="Search Console v5" description="Kiến trúc sẵn sàng cho Google Search Console API." action={<Badge status={source?.status === 'connected' ? 'connected' : 'pending'}>{source?.message || 'Chưa kết nối Search Console API - đang dùng dữ liệu thủ công/mock.'}</Badge>}>
-    {!source ? <EmptyState title="Chưa có dữ liệu Search Console" detail="Module đang chờ dữ liệu mock hoặc API thật." /> : <>
+  return <ModuleCard title="Search Console v5" description="Dữ liệu Search Console dùng import thủ công." action={<Badge status={source?.status === 'connected' ? 'connected' : 'pending'}>{source?.message || 'Chưa import dữ liệu Search Console - đang dùng dữ liệu thủ công/mock.'}</Badge>}>
+    {!source ? <EmptyState title="Chưa import dữ liệu Search Console" detail="Dữ liệu Google hiện dùng import thủ công; không gọi API ở phiên bản hiện tại." /> : <>
       <div className={styles.metricGridSmall}>
         <MetricCard label="Clicks" value={formatNumber(source.overview.clicks)} />
         <MetricCard label="Impressions" value={formatNumber(source.overview.impressions)} />

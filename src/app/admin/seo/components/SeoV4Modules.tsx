@@ -59,7 +59,7 @@ export function buildAiDailyBrief({ overview, health, productSeoItems, logs, sea
     { id: 'overview', text: `Hiện có ${overview?.products || 0} sản phẩm, ${overview?.blogPosts || 0} bài viết, khoảng ${overview?.generatedUrls || health?.sitemap.urlCount || 0} URL tạo từ website.`, level: 'low' },
     { id: 'sitemap', text: health?.sitemap.sitemapOk ? 'Sitemap và robots đang đọc được, hôm nay không nên sửa nếu không có lỗi mới.' : 'Sitemap hoặc robots cần kiểm tra trước khi submit Search Console.', level: health?.sitemap.sitemapOk ? 'low' : 'critical' },
     { id: 'products', text: weakProducts ? `Có ${weakProducts} sản phẩm gần đây cần làm dày dữ liệu: ảnh thật, mô tả, thông số hoặc FAQ.` : 'Nhóm sản phẩm mới kiểm tra chưa thấy lỗi dữ liệu lớn.', level: weakProducts ? 'high' : 'low' },
-    { id: 'console', text: searchConsoleConnected ? 'Search Console đã sẵn sàng để dùng dữ liệu query/page.' : 'Chưa kết nối Search Console API, nên kiểm tra index và query thủ công.', level: searchConsoleConnected ? 'low' : 'medium' },
+    { id: 'console', text: searchConsoleConnected ? 'Search Console đã sẵn sàng để dùng dữ liệu query/page.' : 'Chưa import dữ liệu Search Console, nên kiểm tra index và query thủ công.', level: searchConsoleConnected ? 'low' : 'medium' },
     { id: 'stability', text: recentLogs ? 'Có thay đổi SEO gần đây, tránh đổi slug/title liên tục để Google ổn định đánh giá.' : 'Chưa có log SEO mới gần đây, có thể chọn một trang cũ để cập nhật nội dung thật.', level: recentLogs ? 'low' : 'medium' },
   ];
   return brief;

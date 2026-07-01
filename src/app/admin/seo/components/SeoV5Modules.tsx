@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Badge, EmptyState, MetricCard, MiniBarChart, ModuleCard } from './Ui';
 import type { SearchConsoleV5Data } from '../services/searchConsole';
 import { getClusterProgress } from '../services/seoDashboardService';
@@ -22,14 +22,47 @@ function levelByScore(score: number) { return score >= 80 ? 'ok' : score >= 55 ?
 function safeKey(table: string, id: unknown, slug: unknown, index: number) { return `${table}-${String(id ?? 'no-id')}-${String(slug ?? 'no-slug')}-${index}`; }
 function uniqueBy<T>(items: T[], getKey: (item: T, index: number) => string) { const map = new Map<string, T>(); items.forEach((item, index) => { const key = getKey(item, index); if (!map.has(key)) map.set(key, item); }); return Array.from(map.values()); }
 function productHref(product: ProductSeoItem) { return `/san-pham/${product.slug}`; }
-function normalize(value: unknown) { return String(value || '').trim().toLowerCase(); }
+function normalize(value: unknown) { return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').trim().toLowerCase().replace(/\s+/g, ' '); }
 function statusIncludes(itemStatus: string | undefined, keyword: string) { return normalize(itemStatus).includes(normalize(keyword)); }
 
+const emptyFilters: DashboardSeoFilters = {
+  search: '',
+  priority: 'all',
+  status: 'all',
+  pendingOnly: false,
+  productIssuesOnly: false,
+};
+
+function describeAppliedFilters(filters: DashboardSeoFilters) {
+  const labels: string[] = [];
+  if (filters.search.trim()) labels.push(filters.search.trim());
+  if (filters.priority !== 'all') labels.push(`Ưu tiên ${filters.priority}`);
+  if (filters.status !== 'all') labels.push(filters.status);
+  if (filters.pendingOnly) labels.push('Chỉ việc chưa làm');
+  if (filters.productIssuesOnly) labels.push('Sản phẩm cần tối ưu');
+  return labels.length ? `Đang lọc: ${labels.join(' · ')}` : 'Chưa áp dụng bộ lọc';
+}
+
 export function SeoV51FilterBar({ filters, onChange }: { filters: DashboardSeoFilters; onChange: (next: DashboardSeoFilters) => void }) {
-  return <ModuleCard title="Bộ lọc SEO v5.1" description="Lọc nhanh keyword, sản phẩm, cụm SEO và task từ dữ liệu thật.">
+  const [draftFilters, setDraftFilters] = useState<DashboardSeoFilters>(filters);
+
+  useEffect(() => {
+    setDraftFilters(filters);
+  }, [filters]);
+
+  const applyFilters = () => {
+    onChange({ ...draftFilters, search: draftFilters.search.trim().replace(/\s+/g, ' ') });
+  };
+
+  const clearFilters = () => {
+    setDraftFilters(emptyFilters);
+    onChange(emptyFilters);
+  };
+
+  return <ModuleCard title="Bộ lọc SEO v5.1" description="Bộ lọc áp dụng cho danh sách sản phẩm, bài viết, từ khóa, cơ hội SEO và việc cần làm. Các chỉ số tổng quan vẫn hiển thị toàn website.">
     <div className={styles.v51FilterBar}>
-      <input value={filters.search} onChange={(event) => onChange({ ...filters, search: event.target.value })} placeholder="Tìm keyword, sản phẩm, cluster..." />
-      <select value={filters.priority} onChange={(event) => onChange({ ...filters, priority: event.target.value })}>
+      <input value={draftFilters.search} onChange={(event) => setDraftFilters({ ...draftFilters, search: event.target.value })} placeholder="Tìm keyword, sản phẩm, cụm SEO..." />
+      <select value={draftFilters.priority} onChange={(event) => setDraftFilters({ ...draftFilters, priority: event.target.value })}>
         <option value="all">Tất cả ưu tiên</option>
         <option value="5">Ưu tiên 5</option>
         <option value="4">Ưu tiên 4</option>
@@ -37,7 +70,7 @@ export function SeoV51FilterBar({ filters, onChange }: { filters: DashboardSeoFi
         <option value="2">Ưu tiên 2</option>
         <option value="1">Ưu tiên 1</option>
       </select>
-      <select value={filters.status} onChange={(event) => onChange({ ...filters, status: event.target.value })}>
+      <select value={draftFilters.status} onChange={(event) => setDraftFilters({ ...draftFilters, status: event.target.value })}>
         <option value="all">Tất cả trạng thái</option>
         <option value="đang đẩy">Đang đẩy</option>
         <option value="theo dõi">Theo dõi</option>
@@ -45,9 +78,14 @@ export function SeoV51FilterBar({ filters, onChange }: { filters: DashboardSeoFi
         <option value="cần tối ưu">Cần tối ưu</option>
         <option value="đã top">Đã top</option>
       </select>
-      <label className={styles.v51Toggle}><input type="checkbox" checked={filters.pendingOnly} onChange={(event) => onChange({ ...filters, pendingOnly: event.target.checked })} /> Chỉ việc chưa làm</label>
-      <label className={styles.v51Toggle}><input type="checkbox" checked={filters.productIssuesOnly} onChange={(event) => onChange({ ...filters, productIssuesOnly: event.target.checked })} /> Sản phẩm cần tối ưu</label>
+      <label className={styles.v51Toggle}><input type="checkbox" checked={draftFilters.pendingOnly} onChange={(event) => setDraftFilters({ ...draftFilters, pendingOnly: event.target.checked })} /> Chỉ việc chưa làm</label>
+      <label className={styles.v51Toggle}><input type="checkbox" checked={draftFilters.productIssuesOnly} onChange={(event) => setDraftFilters({ ...draftFilters, productIssuesOnly: event.target.checked })} /> Sản phẩm cần tối ưu</label>
+      <div className={styles.v51FilterActions}>
+        <button className={`${styles.primaryButton} ${styles.v51ApplyButton}`} type="button" onClick={applyFilters}>Áp dụng lọc</button>
+        <button className={`${styles.secondaryButton} ${styles.v51ClearButton}`} type="button" onClick={clearFilters}>Xóa lọc</button>
+      </div>
     </div>
+    <p className={styles.v51FilterStatus}>{describeAppliedFilters(filters)}</p>
   </ModuleCard>;
 }
 
@@ -55,9 +93,9 @@ export function SearchConsoleCenter({ data }: { data: SearchConsoleV5Data | null
   const source = data;
   const topQueries = useMemo(() => uniqueBy(source?.topQueries || [], (item) => `${item.query || ''}-${item.page || ''}`), [source]);
   const topPages = useMemo(() => uniqueBy(source?.topPages || [], (item) => item.page || ''), [source]);
-  const fallbackMessage = 'Không dùng API ở phiên bản hiện tại. Hãy dùng Search Console Import Center để nhập dữ liệu thủ công.';
+  const fallbackMessage = 'Không dùng API ở phiên bản hiện tại. Hãy dùng mục Nhập dữ liệu Search Console để nhập dữ liệu thủ công.';
 
-  return <ModuleCard title="Search Console Center v5" description="Trạng thái cũ đã chuyển sang hướng import thủ công, không OAuth, không billing." action={<Badge status="pending">Import thủ công</Badge>}>
+  return <ModuleCard title="Trung tâm Search Console v5" description="Trạng thái cũ đã chuyển sang hướng import thủ công, không OAuth, không billing." action={<Badge status="pending">Import thủ công</Badge>}>
     {!source ? <EmptyState title="Chưa import dữ liệu Search Console" detail={fallbackMessage} /> : <div className={styles.v5Stack}>
       <div className={styles.v5Warning}>{fallbackMessage}</div>
       <div className={styles.metricGridSmall}>
@@ -68,8 +106,8 @@ export function SearchConsoleCenter({ data }: { data: SearchConsoleV5Data | null
       </div>
       <MiniBarChart data={source.keywordTrend.slice(-28).map((item) => ({ date: item.date, impressions: item.impressions, clicks: item.clicks }))} label="Trend tham khảo 28 ngày" />
       <div className={styles.v5TwoTables}>
-        <div><h3>Top Queries tham khảo</h3>{topQueries.length ? <table><tbody>{topQueries.map((item, index) => <tr key={safeKey('gsc-query', item.query, item.page, index)}><td>{item.query}</td><td>{item.page}</td><td>{formatNumber(item.impressions)}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có query" detail="Dùng Search Console Import Center để nhập dữ liệu thật thủ công." />}</div>
-        <div><h3>Top Pages tham khảo</h3>{topPages.length ? <table><tbody>{topPages.map((item, index) => <tr key={safeKey('gsc-page', item.page, item.query, index)}><td>{item.page}</td><td>{formatNumber(item.clicks)}</td><td>{formatNumber(item.impressions)}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có page" detail="Dùng Search Console Import Center để nhập dữ liệu thật thủ công." />}</div>
+        <div><h3>Top từ khóa tham khảo</h3>{topQueries.length ? <table><tbody>{topQueries.map((item, index) => <tr key={safeKey('gsc-query', item.query, item.page, index)}><td>{item.query}</td><td>{item.page}</td><td>{formatNumber(item.impressions)}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có query" detail="Dùng Search Console Import Center để nhập dữ liệu thật thủ công." />}</div>
+        <div><h3>Top trang tham khảo</h3>{topPages.length ? <table><tbody>{topPages.map((item, index) => <tr key={safeKey('gsc-page', item.page, item.query, index)}><td>{item.page}</td><td>{formatNumber(item.clicks)}</td><td>{formatNumber(item.impressions)}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có page" detail="Dùng Search Console Import Center để nhập dữ liệu thật thủ công." />}</div>
       </div>
     </div>}
   </ModuleCard>;
@@ -97,8 +135,8 @@ export function KeywordIntelligence({ keywords, searchConsoleQueries = [], adsDa
   }, [cleanKeywords, searchConsoleQueries]);
   const adsRows = useMemo(() => (adsData?.matrix || []).slice(0, 8), [adsData]);
 
-  return <ModuleCard title="Keyword Intelligence" description="Đọc bảng seo_keywords thật, gom theo cụm, trạng thái, intent và ưu tiên.">
-    {cleanKeywords.length === 0 ? <EmptyState title="Chưa có keyword" detail="Thêm keyword ở Keyword Center để module tự phân tích." /> : <div className={styles.v5Stack}>
+  return <ModuleCard title="Phân tích từ khóa" description="Đọc bảng seo_keywords thật, gom theo cụm, trạng thái, intent và ưu tiên.">
+    {cleanKeywords.length === 0 ? <EmptyState title="Chưa có từ khóa" detail="Thêm từ khóa ở Trung tâm từ khóa để module tự phân tích." /> : <div className={styles.v5Stack}>
       <div className={styles.v5PillGrid}>{clusters.map((cluster, index) => <span key={safeKey('keyword-cluster', cluster, cluster, index)}>{cluster}: {cleanKeywords.filter((item) => (item.cluster || 'Chưa phân cụm') === cluster).length}</span>)}</div>
       <div className={styles.v5FourColumns}>
         {statusGroups.slice(0, 4).map((group, index) => <div key={safeKey('keyword-status', group.label, group.label, index)}><h3>{group.label}</h3>{cleanKeywords.filter(group.test).slice(0, 5).map((item, itemIndex) => <p key={safeKey('keyword-row', item.id, item.keyword, itemIndex)}>{item.keyword}<small>{item.cluster || 'Chưa phân cụm'} · Ưu tiên {item.priority}</small></p>) || null}{cleanKeywords.filter(group.test).length === 0 ? <small>Chưa có dữ liệu.</small> : null}</div>)}
@@ -122,7 +160,7 @@ export function InternalLinkAIV5({ suggestions, clusters, products }: { suggesti
   const measuredLinks = clusters.filter((item) => item.internal_link_measured);
   const linkScore = clamp(40 + Math.min(safeSuggestions.length * 4, 35) + Math.min(measuredLinks.reduce((sum, item) => sum + item.internal_link_count, 0), 25));
   const productTargets = useMemo(() => uniqueBy(products.filter((item) => item.issues.includes('Thiếu link nội bộ') || item.issues.length > 0), (item) => `${item.id}-${item.slug}`).slice(0, 6), [products]);
-  return <ModuleCard title="Internal Link AI v5" description="Phân tích liên kết nội bộ, gợi ý bài và sản phẩm nên liên kết." action={<Badge status={levelByScore(linkScore)}>Điểm Internal Link: {linkScore}/100</Badge>}>
+  return <ModuleCard title="AI liên kết nội bộ" description="Phân tích liên kết nội bộ, gợi ý bài và sản phẩm nên liên kết." action={<Badge status={levelByScore(linkScore)}>Điểm liên kết nội bộ: {linkScore}/100</Badge>}>
     <div className={styles.v5Stack}>
       {safeSuggestions.length ? <div className={styles.tableWrap}><table><thead><tr><th>Bài nên liên kết</th><th>Anchor</th><th>URL đích</th></tr></thead><tbody>{safeSuggestions.slice(0, 8).map((item, index) => <tr key={safeKey('internal-link', item.id, item.target_url, index)}><td>{item.post_title}</td><td>{item.anchor}</td><td>{item.target_url}</td></tr>)}</tbody></table></div> : <EmptyState title="Chưa có gợi ý bài viết" detail="Khi bài chứa keyword, module sẽ đề xuất anchor phù hợp." />}
       <div className={styles.v5PillGrid}>{productTargets.map((item, index) => <a href={productHref(item)} target="_blank" rel="noreferrer" key={safeKey('internal-product', item.id, item.slug, index)}>{item.name}</a>)}</div>
@@ -144,7 +182,7 @@ export function ContentPlanner({ opportunities, keywords }: { opportunities: Con
 export function ProductQualityAIV5({ products }: { products: ProductSeoItem[] }) {
   const rows = useMemo(() => uniqueBy(products.filter((item) => item.issues.length > 0), (item) => `${item.id}-${item.slug}`).slice(0, 20), [products]);
   const checkLabels: Array<[keyof NonNullable<ProductSeoItem['checks']>, string]> = [['mainImage', 'Ảnh chính'], ['multipleImages', 'Nhiều ảnh'], ['alt', 'Alt'], ['description', 'Mô tả'], ['detailDescription', 'Nội dung'], ['specs', 'Thông số'], ['features', 'Đặc điểm'], ['category', 'Danh mục'], ['slug', 'Slug'], ['internalLink', 'Link'], ['faq', 'FAQ']];
-  return <ModuleCard title="Product Quality AI" description="Đánh giá sản phẩm từ dữ liệu thật: ảnh, alt, mô tả, thông số, FAQ và internal link.">
+  return <ModuleCard title="AI kiểm tra chất lượng sản phẩm" description="Đánh giá sản phẩm từ dữ liệu thật: ảnh, alt, mô tả, thông số, FAQ và internal link.">
     {rows.length === 0 ? <EmptyState title="Chưa thấy sản phẩm cần xử lý" detail="Dữ liệu sản phẩm gần đây tương đối ổn." /> : <div className={styles.productQualityCards}>{rows.map((item, index) => <article className={styles.productQualityCard} key={safeKey('product-quality', item.id, item.slug, index)}>
       <div className={styles.qualityHeader}><a className={styles.linkInline} href={productHref(item)} target="_blank" rel="noreferrer">{item.name}</a><Badge status={levelByScore(item.qualityScore || 0)}>{item.qualityScore || 0}/100</Badge></div>
       <p>{item.action}</p>
@@ -191,7 +229,7 @@ export function ClusterHealth({ clusters, searchConsoleData, adsData = null }: {
     });
     return map;
   }, [adsData, safeClusters]);
-  return <ModuleCard title="Cluster Health" description="Điểm cụm tính từ sản phẩm, bài viết, keyword, task, log và internal link đã đo được.">
+  return <ModuleCard title="Sức khỏe cụm SEO" description="Điểm cụm tính từ sản phẩm, bài viết, keyword, task, log và internal link đã đo được.">
     {safeClusters.length === 0 ? <EmptyState title="Chưa có cụm SEO" detail="Thêm cụm trong Cluster Manager." /> : <div className={styles.v5ClusterHealth}>{safeClusters.map((cluster, index) => { const score = getClusterProgress(cluster); const gsc = gscByCluster.get(String(cluster.id || cluster.name)); const ads = adsByCluster.get(String(cluster.id || cluster.name)); return <div key={safeKey('cluster-health', cluster.id, cluster.main_url, index)}><strong>{cluster.name}</strong><Badge status={levelByScore(score)}>{score}/100</Badge><span><i style={{ width: `${score}%` }} /></span><small>Sản phẩm {cluster.product_count} · Bài {cluster.post_count} · Keyword {cluster.keyword_count || 0} · Task {cluster.task_count || 0} · Log {cluster.log_count || 0} · Internal link {cluster.internal_link_measured ? cluster.internal_link_count : 'Chưa đo'}</small><small>Search Console: {gsc?.count ? `${formatNumber(gsc.impressions)} impression · ${formatNumber(gsc.clicks)} click · Pos ${gsc.position.toFixed(1)}` : 'Chưa đo'}</small><small>Keyword Planner: {ads?.count ? `${ads.count} keyword · Score tốt nhất ${ads.bestScore}/100 · ${ads.recommendation}` : 'Chưa import'}</small></div>; })}</div>}
   </ModuleCard>;
 }
@@ -227,7 +265,7 @@ export function DashboardAnalytics({ overview, health, clusters, keywords, tasks
   const uniquePages = searchConsoleV7 ? new Set(searchConsoleV7.pages.filter((item) => item.impressions > 0).map((item) => normalize(item.page)).filter(Boolean)).size : null;
   const hasIndexSummary = Boolean(indexSummary && (indexSummary.indexedUrls !== null || indexSummary.notIndexedUrls !== null || indexSummary.mainIssue || indexSummary.lastCheckedDate));
 
-  return <ModuleCard title="Dashboard Analytics" description="Dữ liệu website lấy tự động từ Supabase/website; dữ liệu Google chỉ dùng import thủ công.">
+  return <ModuleCard title="Tổng quan dữ liệu" description="Dữ liệu website lấy tự động từ Supabase/website; dữ liệu Google chỉ dùng import thủ công.">
     <div className={styles.metricGridSmall}>
       <MetricCard label="Tổng sản phẩm" value={formatNumber(overview?.products || 0)} />
       <MetricCard label="Tổng bài viết" value={formatNumber(overview?.blogPosts || 0)} />
@@ -267,3 +305,6 @@ export function DashboardAnalytics({ overview, health, clusters, keywords, tasks
     <p className={styles.indexSummaryNote}>Số URL tạo từ website không đồng nghĩa với số URL Google đã index.</p>
   </ModuleCard>;
 }
+
+
+

@@ -1,6 +1,6 @@
-.dashboard{--seo-bg:#f4f7fb;--seo-panel:#fff;--seo-text:#172033;--seo-muted:#687386;--seo-border:#dbe5f1;--seo-primary:#0068b7;--seo-accent:#f39800;--seo-danger:#dc143c;min-height:100vh;padding:24px;background:var(--seo-bg);color:var(--seo-text)}
+﻿.dashboard{--seo-bg:#f4f7fb;--seo-panel:#fff;--seo-text:#172033;--seo-muted:#687386;--seo-border:#dbe5f1;--seo-primary:#0068b7;--seo-accent:#f39800;--seo-danger:#dc143c;min-height:100vh;padding:24px;background:var(--seo-bg);color:var(--seo-text)}
 .dark{--seo-bg:#101623;--seo-panel:#172033;--seo-text:#f7fbff;--seo-muted:#b8c3d4;--seo-border:#2d3b50;--seo-primary:#36a9c5;--seo-accent:#ffb000;--seo-danger:#ff4d6d}.hero,.card,.metricCard{background:var(--seo-panel);border:1px solid var(--seo-border);border-radius:8px;box-shadow:0 8px 24px rgba(15,40,70,.06)}
-.hero{display:flex;justify-content:space-between;gap:16px;padding:24px;margin-bottom:20px}.hero h1,.card h2{margin:0;letter-spacing:0}.hero p,.cardHeader p,.muted{color:var(--seo-muted)}.eyebrow{margin:0 0 8px;text-transform:uppercase;font-weight:700;color:var(--seo-primary)!important}.heroActions,.cardHeader,.healthItem,.editRow,.taskItem{display:flex;align-items:center;gap:12px}.cardHeader{justify-content:space-between;margin-bottom:16px}.metricGrid,.metricGridSmall,.gridTwo,.gridThree,.keywordGrid,.skeletonGrid{display:grid;gap:16px}.metricGrid{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}.metricGridSmall{grid-template-columns:repeat(2,minmax(0,1fr))}.gridTwo{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:16px}.gridThree{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:16px}.keywordGrid{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:16px}.card,.metricCard{padding:18px}.metricCard span,.metricCard small{display:block;color:var(--seo-muted)}.metricCard strong{display:block;margin:8px 0;font-size:28px}.primaryButton,.secondaryButton,.iconButton{border:1px solid var(--seo-border);border-radius:6px;cursor:pointer;font-weight:700}.primaryButton{background:var(--seo-primary);color:#fff;padding:10px 14px}.secondaryButton{background:var(--seo-panel);color:var(--seo-text);padding:10px 14px}.iconButton{width:34px;height:34px;background:transparent;color:var(--seo-text)}.badge{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;background:#eef3f8;color:#42526b}.ok,.connected{background:#e8f8ee;color:#14783c}.warning,.pending{background:#fff4d9;color:#a26400}.error,.disconnected{background:#ffe8ee;color:#b10f32}.alert{margin-bottom:16px;padding:12px 14px;border-radius:8px;background:#fff4d9;color:#7b4d00;border:1px solid #ffd788}.stack{display:grid;gap:12px}.editRow,.taskItem{align-items:stretch}.editRow input,.editRow select,.taskItem input:not([type='checkbox']),.noteArea{width:100%;border:1px solid var(--seo-border);border-radius:6px;padding:10px;background:var(--seo-panel);color:var(--seo-text)}.starBox{min-width:96px;color:var(--seo-accent);font-weight:700;align-self:center}.noteArea{min-height:180px;resize:vertical}.emptyState{padding:18px;border:1px dashed var(--seo-border);border-radius:8px;color:var(--seo-muted);display:grid;gap:6px}.emptyState strong{color:var(--seo-text)}.tableWrap{overflow-x:auto}.tableWrap table{width:100%;border-collapse:collapse}.tableWrap th,.tableWrap td{border-bottom:1px solid var(--seo-border);padding:10px;text-align:left;vertical-align:top}.chartTabs{margin-top:16px}.chart{display:flex;align-items:end;gap:8px;height:150px;padding:12px;border:1px solid var(--seo-border);border-radius:8px}.chartColumn{flex:1;height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:6px}.chartColumn span{width:100%;max-width:18px;border-radius:6px 6px 0 0;background:var(--seo-primary)}.chartColumn small{font-size:10px;color:var(--seo-muted)}.healthList{display:grid;gap:10px}.healthItem{justify-content:space-between;border:1px solid var(--seo-border);border-radius:8px;padding:12px}.healthItem span{display:block;color:var(--seo-muted);margin-top:4px}.link{display:inline-block;margin-top:12px;color:var(--seo-primary);font-weight:700;text-decoration:none}.skeletonGrid{grid-template-columns:repeat(4,1fr)}.skeleton{height:160px;border-radius:8px;background:linear-gradient(90deg,#e9eef5 25%,#f6f8fb 37%,#e9eef5 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite}@keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+.hero{display:flex;justify-content:space-between;gap:16px;padding:24px;margin-bottom:20px}.hero h1,.card h2{margin:0;letter-spacing:0}.hero p,.cardHeader p,.muted{color:var(--seo-muted)}.eyebrow{margin:0 0 8px;text-transform:uppercase;font-weight:700;color:var(--seo-primary)!important}.heroActions,.cardHeader,.healthItem,.editRow,.taskItem{display:flex;align-items:center;gap:12px}.cardHeader{justify-content:space-between;margin-bottom:16px}.metricGrid,.metricGridSmall,.gridTwo,.gridThree,.keywordGrid,.skeletonGrid{display:grid;gap:16px}.metricGrid{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}.metricGridSmall{grid-template-columns:repeat(2,minmax(0,1fr))}.gridTwo{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:16px}.gridThree{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:16px}.keywordGrid{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:16px}.card,.metricCard{padding:18px}.metricCard span,.metricCard small{display:block;color:var(--seo-muted)}.metricCard strong{display:block;margin:8px 0;font-size:28px}.primaryButton,.secondaryButton,.iconButton{border:1px solid var(--seo-border);border-radius:6px;cursor:pointer;font-weight:700}.primaryButton{background:var(--seo-primary);color:#b44141;padding:10px 14px}.secondaryButton{background:var(--seo-panel);color:var(--seo-text);padding:10px 14px}.iconButton{width:34px;height:34px;background:transparent;color:var(--seo-text)}.badge{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;background:#eef3f8;color:#42526b}.ok,.connected{background:#e8f8ee;color:#14783c}.warning,.pending{background:#fff4d9;color:#a26400}.error,.disconnected{background:#ffe8ee;color:#b10f32}.alert{margin-bottom:16px;padding:12px 14px;border-radius:8px;background:#fff4d9;color:#7b4d00;border:1px solid #ffd788}.stack{display:grid;gap:12px}.editRow,.taskItem{align-items:stretch}.editRow input,.editRow select,.taskItem input:not([type='checkbox']),.noteArea{width:100%;border:1px solid var(--seo-border);border-radius:6px;padding:10px;background:var(--seo-panel);color:var(--seo-text)}.starBox{min-width:96px;color:var(--seo-accent);font-weight:700;align-self:center}.noteArea{min-height:180px;resize:vertical}.emptyState{padding:18px;border:1px dashed var(--seo-border);border-radius:8px;color:var(--seo-muted);display:grid;gap:6px}.emptyState strong{color:var(--seo-text)}.tableWrap{overflow-x:auto}.tableWrap table{width:100%;border-collapse:collapse}.tableWrap th,.tableWrap td{border-bottom:1px solid var(--seo-border);padding:10px;text-align:left;vertical-align:top}.chartTabs{margin-top:16px}.chart{display:flex;align-items:end;gap:8px;height:150px;padding:12px;border:1px solid var(--seo-border);border-radius:8px}.chartColumn{flex:1;height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:6px}.chartColumn span{width:100%;max-width:18px;border-radius:6px 6px 0 0;background:var(--seo-primary)}.chartColumn small{font-size:10px;color:var(--seo-muted)}.healthList{display:grid;gap:10px}.healthItem{justify-content:space-between;border:1px solid var(--seo-border);border-radius:8px;padding:12px}.healthItem span{display:block;color:var(--seo-muted);margin-top:4px}.link{display:inline-block;margin-top:12px;color:var(--seo-primary);font-weight:700;text-decoration:none}.skeletonGrid{grid-template-columns:repeat(4,1fr)}.skeleton{height:160px;border-radius:8px;background:linear-gradient(90deg,#e9eef5 25%,#f6f8fb 37%,#e9eef5 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite}@keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
 @media (max-width:1100px){.metricGrid,.gridTwo,.gridThree,.keywordGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:720px){.dashboard{padding:12px}.hero,.cardHeader,.editRow,.taskItem{flex-direction:column;align-items:stretch}.metricGrid,.metricGridSmall,.gridTwo,.gridThree,.keywordGrid,.skeletonGrid{grid-template-columns:1fr}.metricCard strong{font-size:24px}}
 
@@ -29,11 +29,15 @@
 
 
 
-.v51FilterBar{display:grid;grid-template-columns:2fr 1fr 1fr auto auto;gap:10px;align-items:center}
+.v51FilterBar{display:grid;grid-template-columns:2fr 1fr 1fr auto auto auto;gap:10px;align-items:center}
 
 .v51FilterBar input,.v51FilterBar select{width:100%;min-height:42px;border:1px solid var(--seo-border);border-radius:8px;padding:9px 12px;background:var(--seo-panel);color:var(--seo-text)}
 
 .v51Toggle{display:flex;align-items:center;gap:8px;min-height:42px;border:1px solid var(--seo-border);border-radius:8px;padding:8px 10px;background:var(--seo-panel);font-weight:700;color:var(--seo-text);white-space:nowrap}
+.v51FilterActions{display:flex;gap:8px;align-items:center;justify-content:flex-start;flex-wrap:wrap;min-width:max-content}
+.v51FilterActions button{min-height:42px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center}
+.v51FilterStatus{margin:12px 0 0;font-weight:700;color:var(--seo-text)}
+.v51FilterNote{margin:6px 0 0;color:var(--seo-muted);font-size:13px;line-height:1.5}
 
 .productQualityCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 
@@ -59,7 +63,7 @@
 
 @media (max-width:1100px){.v51FilterBar{grid-template-columns:1fr 1fr}.v51FilterBar input{grid-column:1/-1}.productQualityCards{grid-template-columns:1fr}}
 
-@media (max-width:720px){.v51FilterBar{grid-template-columns:1fr}.v51Toggle{white-space:normal}.qualityHeader{flex-direction:column}.productQualityCard{padding:12px}.productQualityCards{grid-template-columns:1fr}}
+@media (max-width:720px){.v51FilterBar{grid-template-columns:1fr}.v51FilterActions{min-width:0;display:grid;grid-template-columns:1fr 1fr}.v51FilterActions button{width:100%}.v51Toggle{white-space:normal}.qualityHeader{flex-direction:column}.productQualityCard{padding:12px}.productQualityCards{grid-template-columns:1fr}}
 
 
 
@@ -189,3 +193,216 @@
   align-items: center;
   justify-content: center;
 }
+
+.v9SourceBar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.v9Tabs{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 16px}
+.v9Tabs button{border:1px solid var(--seo-border);background:var(--seo-panel);color:var(--seo-text);border-radius:999px;padding:9px 14px;font-weight:800;cursor:pointer}
+.v9Tabs .v9ActiveTab{background:var(--seo-primary);border-color:var(--seo-primary);color:#fff}
+.v9Stack{display:grid;gap:16px}
+.v9Panel{display:grid;gap:12px;min-width:0}
+.v9Panel h3{margin:0;color:var(--seo-text);font-size:18px}
+.v9ActionList{display:grid;gap:10px}
+.v9ActionCard{display:grid;gap:8px;border:1px solid var(--seo-border);background:var(--seo-panel);border-radius:10px;padding:12px;min-width:0}
+.v9ActionCard h4{margin:0;color:var(--seo-primary);font-size:16px;line-height:1.35}
+.v9ActionCard p{margin:0;color:var(--seo-muted);line-height:1.45}
+.v9ActionCard strong{color:var(--seo-text);line-height:1.45}
+.v9StatusRow,.v9MetaRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:var(--seo-muted);font-size:13px}
+.v9WeeklyGrid{display:grid;grid-template-columns:repeat(7,minmax(180px,1fr));gap:10px;overflow-x:auto;padding-bottom:8px}
+.v9WeekCard{display:grid;gap:8px;min-width:180px;border:1px solid var(--seo-border);background:var(--seo-panel);border-radius:10px;padding:12px}
+.v9WeekCard h3{margin:0;color:var(--seo-primary)}
+.v9WeekCard strong{line-height:1.35}.v9WeekCard p{margin:0;color:var(--seo-muted);line-height:1.45}.v9WeekCard ul{margin:0;padding-left:18px;color:var(--seo-text)}
+@media (max-width:720px){.v9Tabs{display:grid;grid-template-columns:1fr 1fr}.v9Tabs button{border-radius:8px}.v9WeeklyGrid{grid-template-columns:1fr;overflow:visible}.v9WeekCard{min-width:0}.v9SourceBar{display:grid}.v9ActionCard{padding:10px}}
+
+
+.importModeBox{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--seo-border);border-radius:8px;background:var(--seo-panel)}
+.importModeBox strong{margin-right:6px}
+.importModeOption{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--seo-text)}
+.importModeOption input{accent-color:var(--seo-primary)}
+.importResultBox{display:grid;gap:4px;padding:12px;border:1px solid var(--seo-border);border-radius:8px;background:#f7fbff;color:var(--seo-text)}
+.importResultBox span{color:var(--seo-muted);font-size:13px}
+.dark .importResultBox{background:#132235}
+@media (max-width:720px){.importModeBox{display:grid;align-items:stretch}.importModeBox strong{margin-right:0}}
+/* Giữ chữ trên các nút/tab admin luôn dễ đọc khi bấm hoặc focus. */
+.scV7Tabs button,
+.v9Tabs button,
+.primaryButton,
+.secondaryButton,
+.fileImportButton,
+.quickButton,
+.quickButtonSmall {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.scV7Tabs button:active,
+.scV7Tabs button:focus-visible,
+.v9Tabs button:active,
+.v9Tabs button:focus-visible {
+  outline: 2px solid rgba(0, 104, 183, 0.25);
+  outline-offset: 2px;
+  color: var(--seo-text);
+  background: var(--seo-panel);
+}
+
+.scV7Tabs .scV7TabActive,
+.scV7Tabs .scV7TabActive:active,
+.scV7Tabs .scV7TabActive:focus-visible,
+.v9Tabs .v9ActiveTab,
+.v9Tabs .v9ActiveTab:active,
+.v9Tabs .v9ActiveTab:focus-visible {
+  background: var(--seo-primary) !important;
+  border-color: var(--seo-primary) !important;
+  color: #fff !important;
+}
+
+.primaryButton:active,
+.primaryButton:focus-visible,
+.fileImportButton:active,
+.fileImportButton:focus-visible {
+  background: var(--seo-primary);
+  border-color: var(--seo-primary);
+  color: #fff;
+  outline: 2px solid rgba(0, 104, 183, 0.25);
+  outline-offset: 2px;
+}
+
+.secondaryButton:active,
+.secondaryButton:focus-visible,
+.quickButton:active,
+.quickButton:focus-visible,
+.quickButtonSmall:active,
+.quickButtonSmall:focus-visible {
+  background: var(--seo-panel);
+  border-color: var(--seo-primary);
+  color: var(--seo-primary);
+  outline: 2px solid rgba(0, 104, 183, 0.18);
+  outline-offset: 2px;
+}
+/* Chuẩn hóa độ tương phản cho toàn bộ nút trong SEO Dashboard. */
+.dashboard .primaryButton,
+.dashboard button.primaryButton {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 40px !important;
+  padding: 10px 14px !important;
+  border: 1px solid var(--seo-primary) !important;
+  border-radius: 8px !important;
+  background: var(--seo-primary) !important;
+  color: #fff !important;
+  font-weight: 800 !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,.04) !important;
+}
+
+.dashboard .secondaryButton,
+.dashboard button.secondaryButton,
+.dashboard a.secondaryButton,
+.dashboard .fileImportButton,
+.dashboard .quickButton,
+.dashboard .quickButtonSmall {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 40px !important;
+  padding: 10px 14px !important;
+  border: 1px solid var(--seo-border) !important;
+  border-radius: 8px !important;
+  background: var(--seo-panel) !important;
+  color: var(--seo-primary) !important;
+  font-weight: 800 !important;
+  text-decoration: none !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,.04) !important;
+}
+
+.dashboard .secondaryButton:hover,
+.dashboard button.secondaryButton:hover,
+.dashboard a.secondaryButton:hover,
+.dashboard .fileImportButton:hover,
+.dashboard .quickButton:hover,
+.dashboard .quickButtonSmall:hover {
+  border-color: var(--seo-primary) !important;
+  background: rgba(0,104,183,.06) !important;
+  color: var(--seo-primary) !important;
+}
+
+.dashboard .secondaryButton:active,
+.dashboard .secondaryButton:focus,
+.dashboard .secondaryButton:focus-visible,
+.dashboard button.secondaryButton:active,
+.dashboard button.secondaryButton:focus,
+.dashboard button.secondaryButton:focus-visible,
+.dashboard .fileImportButton:active,
+.dashboard .fileImportButton:focus,
+.dashboard .fileImportButton:focus-visible,
+.dashboard .quickButton:active,
+.dashboard .quickButton:focus,
+.dashboard .quickButton:focus-visible,
+.dashboard .quickButtonSmall:active,
+.dashboard .quickButtonSmall:focus,
+.dashboard .quickButtonSmall:focus-visible {
+  border-color: var(--seo-primary) !important;
+  background: rgba(0,104,183,.1) !important;
+  color: var(--seo-primary) !important;
+  outline: 2px solid rgba(0,104,183,.18) !important;
+  outline-offset: 2px !important;
+}
+
+.dashboard .scV7Tabs button,
+.dashboard .v9Tabs button {
+  border: 1px solid var(--seo-border) !important;
+  background: var(--seo-panel) !important;
+  color: var(--seo-text) !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,.04) !important;
+}
+
+.dashboard .scV7Tabs button:hover,
+.dashboard .v9Tabs button:hover {
+  border-color: var(--seo-primary) !important;
+  color: var(--seo-primary) !important;
+  background: rgba(0,104,183,.06) !important;
+}
+
+.dashboard .scV7Tabs .scV7TabActive,
+.dashboard .v9Tabs .v9ActiveTab {
+  background: var(--seo-primary) !important;
+  border-color: var(--seo-primary) !important;
+  color: #fff !important;
+}
+
+.dashboard .scV7Tabs .scV7TabActive:hover,
+.dashboard .scV7Tabs .scV7TabActive:active,
+.dashboard .scV7Tabs .scV7TabActive:focus,
+.dashboard .scV7Tabs .scV7TabActive:focus-visible,
+.dashboard .v9Tabs .v9ActiveTab:hover,
+.dashboard .v9Tabs .v9ActiveTab:active,
+.dashboard .v9Tabs .v9ActiveTab:focus,
+.dashboard .v9Tabs .v9ActiveTab:focus-visible {
+  background: var(--seo-primary) !important;
+  border-color: var(--seo-primary) !important;
+  color: #fff !important;
+}
+/* Nút riêng của Bộ lọc SEO v5.1: luôn rõ chữ, không bị trắng khi bấm. */
+.dashboard .v51ApplyButton,
+.dashboard .v51ApplyButton:hover,
+.dashboard .v51ApplyButton:active,
+.dashboard .v51ApplyButton:focus,
+.dashboard .v51ApplyButton:focus-visible {
+  background: var(--seo-primary) !important;
+  border-color: var(--seo-primary) !important;
+  color: #fff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.dashboard .v51ClearButton,
+.dashboard .v51ClearButton:hover,
+.dashboard .v51ClearButton:active,
+.dashboard .v51ClearButton:focus,
+.dashboard .v51ClearButton:focus-visible {
+  background: var(--seo-panel) !important;
+  border-color: var(--seo-primary) !important;
+  color: var(--seo-primary) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+

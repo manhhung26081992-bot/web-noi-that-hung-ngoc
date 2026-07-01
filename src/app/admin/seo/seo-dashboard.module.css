@@ -1,6 +1,6 @@
-﻿.dashboard{--seo-bg:#f4f7fb;--seo-panel:#fff;--seo-text:#172033;--seo-muted:#687386;--seo-border:#dbe5f1;--seo-primary:#0068b7;--seo-accent:#f39800;--seo-danger:#dc143c;min-height:100vh;padding:24px;background:var(--seo-bg);color:var(--seo-text)}
-.dark{--seo-bg:#101623;--seo-panel:#172033;--seo-text:#f7fbff;--seo-muted:#b8c3d4;--seo-border:#2d3b50;--seo-primary:#36a9c5;--seo-accent:#ffb000;--seo-danger:#ff4d6d}.hero,.card,.metricCard{background:var(--seo-panel);border:1px solid var(--seo-border);border-radius:8px;box-shadow:0 8px 24px rgba(15,40,70,.06)}
-.hero{display:flex;justify-content:space-between;gap:16px;padding:24px;margin-bottom:20px}.hero h1,.card h2{margin:0;letter-spacing:0}.hero p,.cardHeader p,.muted{color:var(--seo-muted)}.eyebrow{margin:0 0 8px;text-transform:uppercase;font-weight:700;color:var(--seo-primary)!important}.heroActions,.cardHeader,.healthItem,.editRow,.taskItem{display:flex;align-items:center;gap:12px}.cardHeader{justify-content:space-between;margin-bottom:16px}.metricGrid,.metricGridSmall,.gridTwo,.gridThree,.keywordGrid,.skeletonGrid{display:grid;gap:16px}.metricGrid{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}.metricGridSmall{grid-template-columns:repeat(2,minmax(0,1fr))}.gridTwo{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:16px}.gridThree{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:16px}.keywordGrid{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:16px}.card,.metricCard{padding:18px}.metricCard span,.metricCard small{display:block;color:var(--seo-muted)}.metricCard strong{display:block;margin:8px 0;font-size:28px}.primaryButton,.secondaryButton,.iconButton{border:1px solid var(--seo-border);border-radius:6px;cursor:pointer;font-weight:700}.primaryButton{background:var(--seo-primary);color:#b44141;padding:10px 14px}.secondaryButton{background:var(--seo-panel);color:var(--seo-text);padding:10px 14px}.iconButton{width:34px;height:34px;background:transparent;color:var(--seo-text)}.badge{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;background:#eef3f8;color:#42526b}.ok,.connected{background:#e8f8ee;color:#14783c}.warning,.pending{background:#fff4d9;color:#a26400}.error,.disconnected{background:#ffe8ee;color:#b10f32}.alert{margin-bottom:16px;padding:12px 14px;border-radius:8px;background:#fff4d9;color:#7b4d00;border:1px solid #ffd788}.stack{display:grid;gap:12px}.editRow,.taskItem{align-items:stretch}.editRow input,.editRow select,.taskItem input:not([type='checkbox']),.noteArea{width:100%;border:1px solid var(--seo-border);border-radius:6px;padding:10px;background:var(--seo-panel);color:var(--seo-text)}.starBox{min-width:96px;color:var(--seo-accent);font-weight:700;align-self:center}.noteArea{min-height:180px;resize:vertical}.emptyState{padding:18px;border:1px dashed var(--seo-border);border-radius:8px;color:var(--seo-muted);display:grid;gap:6px}.emptyState strong{color:var(--seo-text)}.tableWrap{overflow-x:auto}.tableWrap table{width:100%;border-collapse:collapse}.tableWrap th,.tableWrap td{border-bottom:1px solid var(--seo-border);padding:10px;text-align:left;vertical-align:top}.chartTabs{margin-top:16px}.chart{display:flex;align-items:end;gap:8px;height:150px;padding:12px;border:1px solid var(--seo-border);border-radius:8px}.chartColumn{flex:1;height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:6px}.chartColumn span{width:100%;max-width:18px;border-radius:6px 6px 0 0;background:var(--seo-primary)}.chartColumn small{font-size:10px;color:var(--seo-muted)}.healthList{display:grid;gap:10px}.healthItem{justify-content:space-between;border:1px solid var(--seo-border);border-radius:8px;padding:12px}.healthItem span{display:block;color:var(--seo-muted);margin-top:4px}.link{display:inline-block;margin-top:12px;color:var(--seo-primary);font-weight:700;text-decoration:none}.skeletonGrid{grid-template-columns:repeat(4,1fr)}.skeleton{height:160px;border-radius:8px;background:linear-gradient(90deg,#e9eef5 25%,#f6f8fb 37%,#e9eef5 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite}@keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
+﻿.dashboard{--seo-bg:#f8fafc;--seo-panel:#ffffff;--seo-soft:#f1f5f9;--seo-text:#0f172a;--seo-muted:#64748b;--seo-border:#dbe4f0;--seo-primary:#0ea5e9;--seo-primary-hover:#0284c7;--seo-accent:#f59e0b;--seo-danger:#dc143c;min-height:100vh;padding:24px;background:var(--seo-bg);color:var(--seo-text)}
+.dark{--seo-bg:#0f172a;--seo-panel:#172033;--seo-soft:#111827;--seo-text:#f8fafc;--seo-muted:#cbd5e1;--seo-border:#334155;--seo-primary:#38bdf8;--seo-primary-hover:#7dd3fc;--seo-accent:#fbbf24;--seo-danger:#fb7185}.hero,.card,.metricCard{background:var(--seo-panel);border:1px solid var(--seo-border);border-radius:16px;box-shadow:0 10px 28px rgba(15,40,70,.07)}
+.hero{display:flex;justify-content:space-between;gap:16px;padding:24px;margin-bottom:20px}.hero h1,.card h2{margin:0;letter-spacing:0}.hero p,.cardHeader p,.muted{color:var(--seo-muted)}.eyebrow{margin:0 0 8px;text-transform:uppercase;font-weight:700;color:var(--seo-primary)}.heroActions,.cardHeader,.healthItem,.editRow,.taskItem{display:flex;align-items:center;gap:12px}.cardHeader{justify-content:space-between;margin-bottom:16px}.metricGrid,.metricGridSmall,.gridTwo,.gridThree,.keywordGrid,.skeletonGrid{display:grid;gap:16px}.metricGrid{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}.metricGridSmall{grid-template-columns:repeat(2,minmax(0,1fr))}.gridTwo{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:16px}.gridThree{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:16px}.keywordGrid{grid-template-columns:repeat(4,minmax(0,1fr));margin-top:16px}.card,.metricCard{padding:18px}.metricCard span,.metricCard small{display:block;color:var(--seo-muted)}.metricCard strong{display:block;margin:8px 0;font-size:28px}.primaryButton,.secondaryButton,.iconButton{border:1px solid var(--seo-border);border-radius:6px;cursor:pointer;font-weight:700}.primaryButton{background:var(--seo-primary);border-color:var(--seo-primary);color:#fff;padding:10px 14px}.secondaryButton{background:var(--seo-panel);color:var(--seo-text);padding:10px 14px}.iconButton{width:34px;height:34px;background:transparent;color:var(--seo-text)}.badge{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;background:#eef3f8;color:#42526b}.ok,.connected{background:#e8f8ee;color:#14783c}.warning,.pending{background:#fff4d9;color:#a26400}.error,.disconnected{background:#ffe8ee;color:#b10f32}.alert{margin-bottom:16px;padding:12px 14px;border-radius:8px;background:#fff4d9;color:#7b4d00;border:1px solid #ffd788}.stack{display:grid;gap:12px}.editRow,.taskItem{align-items:stretch}.editRow input,.editRow select,.taskItem input:not([type='checkbox']),.noteArea{width:100%;border:1px solid var(--seo-border);border-radius:6px;padding:10px;background:var(--seo-panel);color:var(--seo-text)}.starBox{min-width:96px;color:var(--seo-accent);font-weight:700;align-self:center}.noteArea{min-height:180px;resize:vertical}.emptyState{padding:18px;border:1px dashed var(--seo-border);border-radius:8px;color:var(--seo-muted);display:grid;gap:6px}.emptyState strong{color:var(--seo-text)}.tableWrap{overflow-x:auto}.tableWrap table{width:100%;border-collapse:collapse}.tableWrap th,.tableWrap td{border-bottom:1px solid var(--seo-border);padding:10px;text-align:left;vertical-align:top}.chartTabs{margin-top:16px}.chart{display:flex;align-items:end;gap:8px;height:150px;padding:12px;border:1px solid var(--seo-border);border-radius:8px}.chartColumn{flex:1;height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:6px}.chartColumn span{width:100%;max-width:18px;border-radius:6px 6px 0 0;background:var(--seo-primary)}.chartColumn small{font-size:10px;color:var(--seo-muted)}.healthList{display:grid;gap:10px}.healthItem{justify-content:space-between;border:1px solid var(--seo-border);border-radius:8px;padding:12px}.healthItem span{display:block;color:var(--seo-muted);margin-top:4px}.link{display:inline-block;margin-top:12px;color:var(--seo-primary);font-weight:700;text-decoration:none}.skeletonGrid{grid-template-columns:repeat(4,1fr)}.skeleton{height:160px;border-radius:8px;background:linear-gradient(90deg,#e9eef5 25%,#f6f8fb 37%,#e9eef5 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite}@keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
 @media (max-width:1100px){.metricGrid,.gridTwo,.gridThree,.keywordGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:720px){.dashboard{padding:12px}.hero,.cardHeader,.editRow,.taskItem{flex-direction:column;align-items:stretch}.metricGrid,.metricGridSmall,.gridTwo,.gridThree,.keywordGrid,.skeletonGrid{grid-template-columns:1fr}.metricCard strong{font-size:24px}}
 
@@ -222,187 +222,792 @@
 .importResultBox span{color:var(--seo-muted);font-size:13px}
 .dark .importResultBox{background:#132235}
 @media (max-width:720px){.importModeBox{display:grid;align-items:stretch}.importModeBox strong{margin-right:0}}
-/* Giữ chữ trên các nút/tab admin luôn dễ đọc khi bấm hoặc focus. */
-.scV7Tabs button,
-.v9Tabs button,
-.primaryButton,
-.secondaryButton,
-.fileImportButton,
-.quickButton,
-.quickButtonSmall {
-  -webkit-tap-highlight-color: transparent;
-}
 
-.scV7Tabs button:active,
-.scV7Tabs button:focus-visible,
-.v9Tabs button:active,
-.v9Tabs button:focus-visible {
-  outline: 2px solid rgba(0, 104, 183, 0.25);
-  outline-offset: 2px;
+
+/* SEO Dashboard v9.0 - stable layout restore */
+.dashboard {
+  --seo-bg: #f8fafc;
+  --seo-panel: #ffffff;
+  --seo-soft: #f1f5f9;
+  --seo-text: #0f172a;
+  --seo-muted: #64748b;
+  --seo-border: #dbe4f0;
+  --seo-primary: #0ea5e9;
+  --seo-primary-hover: #0284c7;
+  --seo-accent: #f59e0b;
+  --seo-danger: #dc143c;
+  --card: var(--seo-panel);
+  --card-soft: var(--seo-soft);
+  --border: var(--seo-border);
+  --text: var(--seo-text);
+  --muted: var(--seo-muted);
+  --primary: var(--seo-primary);
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--seo-bg);
   color: var(--seo-text);
+  box-sizing: border-box;
+  overflow-x: hidden;
+  scroll-padding-top: 84px;
+}
+
+.dashboard * { box-sizing: border-box; }
+
+.dark {
+  --seo-bg: #0f172a;
+  --seo-panel: #172033;
+  --seo-soft: #111827;
+  --seo-text: #f8fafc;
+  --seo-muted: #cbd5e1;
+  --seo-border: #334155;
+  --seo-primary: #38bdf8;
+  --seo-primary-hover: #7dd3fc;
+  --seo-accent: #fbbf24;
+  --seo-danger: #fb7185;
+  --card: var(--seo-panel);
+  --card-soft: var(--seo-soft);
+  --border: var(--seo-border);
+  --text: var(--seo-text);
+  --muted: var(--seo-muted);
+  --primary: var(--seo-primary);
+}
+
+:global(body:has([data-admin-seo="true"]) > header),
+:global(body:has([data-admin-seo="true"]) > footer) {
+  display: none;
+}
+
+.dashboardShell,
+.dashboardBody {
+  display: grid;
+  gap: 16px;
+}
+
+.dashboardHeader,
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 24px;
+  border: 1px solid var(--seo-border);
+  border-radius: 16px;
   background: var(--seo-panel);
+  color: var(--seo-text);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
 }
 
+.hero h1,
+.card h2,
+.v9Panel h3,
+.adsV8TableTitle {
+  color: var(--seo-text);
+  letter-spacing: 0;
+}
+
+.hero p,
+.cardHeader p,
+.muted,
+.fileImportMeta,
+.adsV8CompactText,
+.v9ActionCard p,
+.v9WeekCard p,
+.v6Decision p,
+.v6ScoreRow p,
+.v6Notice p {
+  color: var(--seo-muted);
+}
+
+.eyebrow {
+  color: var(--seo-primary);
+  font-weight: 800;
+}
+
+.sectionCard,
+.panelCard,
+.card,
+.metricCard,
+.v61Accordion,
+.v61TodayColumn,
+.v6Decision,
+.v6ScoreRow,
+.v6History,
+.v6Notice,
+.v6RankItem,
+.v6Pill,
+.v6Insight,
+.v9ActionCard,
+.v9WeekCard,
+.v5TwoTables > div,
+.v5FourColumns > div,
+.v5ClusterHealth > div,
+.v5MissionList > div,
+.productQualityCard,
+.clusterCard,
+.roadmapCard,
+.briefItem,
+.issueItem,
+.commandCard,
+.scV7InlinePanel,
+.scV7OpportunityList article,
+.importModeBox,
+.importResultBox,
+.indexAnalyticsBox,
+.indexSummaryGrid label {
+  border: 1px solid var(--seo-border);
+  border-radius: 16px;
+  background: var(--seo-panel);
+  color: var(--seo-text);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.card,
+.metricCard,
+.sectionCard,
+.panelCard,
+.v61TodayColumn,
+.v6Decision,
+.v6ScoreRow,
+.v6History,
+.v6Notice,
+.v6RankItem,
+.v6Insight,
+.v9ActionCard,
+.v9WeekCard,
+.v5TwoTables > div,
+.v5FourColumns > div,
+.v5ClusterHealth > div,
+.productQualityCard,
+.clusterCard,
+.roadmapCard,
+.briefItem,
+.issueItem,
+.commandCard,
+.scV7InlinePanel,
+.scV7OpportunityList article,
+.importModeBox,
+.importResultBox,
+.indexAnalyticsBox {
+  padding: 16px;
+}
+
+.metricCard strong {
+  color: var(--seo-text);
+  overflow-wrap: anywhere;
+}
+
+.metricCard span,
+.metricCard small,
+.v9StatusRow,
+.v9MetaRow,
+.v6Decision span,
+.v6ScoreRow span,
+.v6RankItem span,
+.v6History small,
+.v5FourColumns small,
+.v5ClusterHealth small,
+.scV7OpportunityList span,
+.scV7OpportunityList small,
+.indexSummaryNote {
+  color: var(--seo-muted);
+}
+
+.gridTwo,
+.gridThree,
+.summaryGrid,
+.actionGrid,
+.metricGrid,
+.metricGridSmall,
+.keywordGrid,
+.commandGrid,
+.clusterCards,
+.roadmapGrid,
+.productQualityCards,
+.searchConsoleTables,
+.v5TwoTables,
+.v5FourColumns,
+.v61TodayGrid {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.gridTwo { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gridThree { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.summaryGrid,
+.metricGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.actionGrid,
+.commandGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+.v61Tabs,
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 12px 0;
+  background: var(--seo-bg);
+  scrollbar-width: thin;
+}
+
+.v61Tabs a,
+.tabButton,
+.scV7Tabs button,
+.v9Tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 16px;
+  border: 1px solid var(--seo-border);
+  border-radius: 999px;
+  background: var(--seo-panel);
+  color: var(--seo-text);
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+.v61Tabs a:hover,
+.v61Tabs a:focus-visible,
+.tabButton:hover,
+.tabButton:focus-visible,
+.scV7Tabs button:hover,
+.scV7Tabs button:focus-visible,
+.v9Tabs button:hover,
+.v9Tabs button:focus-visible {
+  border-color: var(--seo-primary);
+  background: rgba(14, 165, 233, 0.08);
+  color: var(--seo-primary);
+  outline: 3px solid rgba(14, 165, 233, 0.14);
+  outline-offset: 2px;
+}
+
+.activeTab,
 .scV7Tabs .scV7TabActive,
-.scV7Tabs .scV7TabActive:active,
-.scV7Tabs .scV7TabActive:focus-visible,
-.v9Tabs .v9ActiveTab,
-.v9Tabs .v9ActiveTab:active,
-.v9Tabs .v9ActiveTab:focus-visible {
-  background: var(--seo-primary) !important;
-  border-color: var(--seo-primary) !important;
-  color: #fff !important;
-}
-
-.primaryButton:active,
-.primaryButton:focus-visible,
-.fileImportButton:active,
-.fileImportButton:focus-visible {
+.v9Tabs .v9ActiveTab {
   background: var(--seo-primary);
   border-color: var(--seo-primary);
-  color: #fff;
-  outline: 2px solid rgba(0, 104, 183, 0.25);
+  color: #ffffff;
+}
+
+.scV7Tabs .scV7TabActive:hover,
+.scV7Tabs .scV7TabActive:focus-visible,
+.v9Tabs .v9ActiveTab:hover,
+.v9Tabs .v9ActiveTab:focus-visible {
+  background: var(--seo-primary-hover);
+  border-color: var(--seo-primary-hover);
+  color: #ffffff;
+}
+
+.heroActions,
+.scImportActions,
+.fileImportRow,
+.v51FilterActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.primaryButton,
+.secondaryButton,
+.dangerButton,
+.uploadButton,
+.fileImportButton,
+.quickButton,
+.quickButtonSmall,
+.v51ApplyButton,
+.v51ClearButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1px solid var(--seo-border);
+  border-radius: 10px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
+}
+
+.primaryButton,
+.v51ApplyButton,
+.refreshButton {
+  background: var(--seo-primary);
+  border-color: var(--seo-primary);
+  color: #ffffff;
+}
+
+.primaryButton:hover,
+.primaryButton:active,
+.primaryButton:focus-visible,
+.v51ApplyButton:hover,
+.v51ApplyButton:active,
+.v51ApplyButton:focus-visible,
+.refreshButton:hover,
+.refreshButton:active,
+.refreshButton:focus-visible {
+  background: var(--seo-primary-hover);
+  border-color: var(--seo-primary-hover);
+  color: #ffffff;
+  outline: 3px solid rgba(14, 165, 233, 0.18);
   outline-offset: 2px;
 }
 
+.secondaryButton,
+.uploadButton,
+.fileImportButton,
+.quickButton,
+.quickButtonSmall,
+.v51ClearButton,
+.themeButton {
+  background: var(--seo-panel);
+  border-color: var(--seo-border);
+  color: var(--seo-text);
+}
+
+.secondaryButton:hover,
 .secondaryButton:active,
 .secondaryButton:focus-visible,
+.uploadButton:hover,
+.uploadButton:active,
+.uploadButton:focus-visible,
+.fileImportButton:hover,
+.fileImportButton:active,
+.fileImportButton:focus-visible,
+.quickButton:hover,
 .quickButton:active,
 .quickButton:focus-visible,
+.quickButtonSmall:hover,
 .quickButtonSmall:active,
-.quickButtonSmall:focus-visible {
-  background: var(--seo-panel);
+.quickButtonSmall:focus-visible,
+.v51ClearButton:hover,
+.v51ClearButton:active,
+.v51ClearButton:focus-visible,
+.themeButton:hover,
+.themeButton:active,
+.themeButton:focus-visible {
   border-color: var(--seo-primary);
+  background: rgba(14, 165, 233, 0.08);
   color: var(--seo-primary);
-  outline: 2px solid rgba(0, 104, 183, 0.18);
+  outline: 3px solid rgba(14, 165, 233, 0.14);
   outline-offset: 2px;
 }
-/* Chuẩn hóa độ tương phản cho toàn bộ nút trong SEO Dashboard. */
-.dashboard .primaryButton,
-.dashboard button.primaryButton {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-height: 40px !important;
-  padding: 10px 14px !important;
-  border: 1px solid var(--seo-primary) !important;
-  border-radius: 8px !important;
-  background: var(--seo-primary) !important;
-  color: #fff !important;
-  font-weight: 800 !important;
-  text-decoration: none !important;
-  box-shadow: 0 1px 0 rgba(0,0,0,.04) !important;
+
+.dangerButton {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #991b1b;
 }
 
-.dashboard .secondaryButton,
-.dashboard button.secondaryButton,
-.dashboard a.secondaryButton,
-.dashboard .fileImportButton,
-.dashboard .quickButton,
-.dashboard .quickButtonSmall {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-height: 40px !important;
-  padding: 10px 14px !important;
-  border: 1px solid var(--seo-border) !important;
-  border-radius: 8px !important;
-  background: var(--seo-panel) !important;
-  color: var(--seo-primary) !important;
-  font-weight: 800 !important;
-  text-decoration: none !important;
-  box-shadow: 0 1px 0 rgba(0,0,0,.04) !important;
+.dangerButton:hover,
+.dangerButton:active,
+.dangerButton:focus-visible {
+  background: #fecaca;
+  border-color: #fca5a5;
+  color: #7f1d1d;
 }
 
-.dashboard .secondaryButton:hover,
-.dashboard button.secondaryButton:hover,
-.dashboard a.secondaryButton:hover,
-.dashboard .fileImportButton:hover,
-.dashboard .quickButton:hover,
-.dashboard .quickButtonSmall:hover {
-  border-color: var(--seo-primary) !important;
-  background: rgba(0,104,183,.06) !important;
-  color: var(--seo-primary) !important;
+.dark .primaryButton,
+.dark .v51ApplyButton,
+.dark .refreshButton {
+  background: #38bdf8;
+  border-color: #67e8f9;
+  color: #082f49;
 }
 
-.dashboard .secondaryButton:active,
-.dashboard .secondaryButton:focus,
-.dashboard .secondaryButton:focus-visible,
-.dashboard button.secondaryButton:active,
-.dashboard button.secondaryButton:focus,
-.dashboard button.secondaryButton:focus-visible,
-.dashboard .fileImportButton:active,
-.dashboard .fileImportButton:focus,
-.dashboard .fileImportButton:focus-visible,
-.dashboard .quickButton:active,
-.dashboard .quickButton:focus,
-.dashboard .quickButton:focus-visible,
-.dashboard .quickButtonSmall:active,
-.dashboard .quickButtonSmall:focus,
-.dashboard .quickButtonSmall:focus-visible {
-  border-color: var(--seo-primary) !important;
-  background: rgba(0,104,183,.1) !important;
-  color: var(--seo-primary) !important;
-  outline: 2px solid rgba(0,104,183,.18) !important;
-  outline-offset: 2px !important;
+.dark .primaryButton:hover,
+.dark .primaryButton:active,
+.dark .primaryButton:focus-visible,
+.dark .v51ApplyButton:hover,
+.dark .v51ApplyButton:active,
+.dark .v51ApplyButton:focus-visible,
+.dark .refreshButton:hover,
+.dark .refreshButton:active,
+.dark .refreshButton:focus-visible {
+  background: #7dd3fc;
+  border-color: #a5f3fc;
+  color: #082f49;
 }
 
-.dashboard .scV7Tabs button,
-.dashboard .v9Tabs button {
-  border: 1px solid var(--seo-border) !important;
-  background: var(--seo-panel) !important;
-  color: var(--seo-text) !important;
-  box-shadow: 0 1px 0 rgba(0,0,0,.04) !important;
+.dark .secondaryButton,
+.dark .uploadButton,
+.dark .fileImportButton,
+.dark .quickButton,
+.dark .quickButtonSmall,
+.dark .v51ClearButton,
+.dark .themeButton {
+  background: #172033;
+  border-color: #475569;
+  color: #f8fafc;
 }
 
-.dashboard .scV7Tabs button:hover,
-.dashboard .v9Tabs button:hover {
-  border-color: var(--seo-primary) !important;
-  color: var(--seo-primary) !important;
-  background: rgba(0,104,183,.06) !important;
+.dark .secondaryButton:hover,
+.dark .uploadButton:hover,
+.dark .fileImportButton:hover,
+.dark .quickButton:hover,
+.dark .quickButtonSmall:hover,
+.dark .v51ClearButton:hover,
+.dark .themeButton:hover {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.14);
+  color: #f8fafc;
 }
 
-.dashboard .scV7Tabs .scV7TabActive,
-.dashboard .v9Tabs .v9ActiveTab {
-  background: var(--seo-primary) !important;
-  border-color: var(--seo-primary) !important;
-  color: #fff !important;
+.dark .dangerButton {
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fee2e2;
 }
 
-.dashboard .scV7Tabs .scV7TabActive:hover,
-.dashboard .scV7Tabs .scV7TabActive:active,
-.dashboard .scV7Tabs .scV7TabActive:focus,
-.dashboard .scV7Tabs .scV7TabActive:focus-visible,
-.dashboard .v9Tabs .v9ActiveTab:hover,
-.dashboard .v9Tabs .v9ActiveTab:active,
-.dashboard .v9Tabs .v9ActiveTab:focus,
-.dashboard .v9Tabs .v9ActiveTab:focus-visible {
-  background: var(--seo-primary) !important;
-  border-color: var(--seo-primary) !important;
-  color: #fff !important;
-}
-/* Nút riêng của Bộ lọc SEO v5.1: luôn rõ chữ, không bị trắng khi bấm. */
-.dashboard .v51ApplyButton,
-.dashboard .v51ApplyButton:hover,
-.dashboard .v51ApplyButton:active,
-.dashboard .v51ApplyButton:focus,
-.dashboard .v51ApplyButton:focus-visible {
-  background: var(--seo-primary) !important;
-  border-color: var(--seo-primary) !important;
-  color: #fff !important;
-  opacity: 1 !important;
-  visibility: visible !important;
+.scImportBox,
+.scV7Stack,
+.v9Stack,
+.v9Panel,
+.v9ActionList,
+.v5Stack,
+.briefList,
+.issueList,
+.v6List,
+.healthList,
+.stack {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
 }
 
-.dashboard .v51ClearButton,
-.dashboard .v51ClearButton:hover,
-.dashboard .v51ClearButton:active,
-.dashboard .v51ClearButton:focus,
-.dashboard .v51ClearButton:focus-visible {
-  background: var(--seo-panel) !important;
-  border-color: var(--seo-primary) !important;
-  color: var(--seo-primary) !important;
-  opacity: 1 !important;
-  visibility: visible !important;
+.scImportBox textarea,
+.noteArea,
+.editRow input,
+.editRow select,
+.taskItem input:not([type='checkbox']),
+.v51FilterBar input,
+.v51FilterBar select,
+.indexSummaryGrid input,
+.clusterCard input,
+.inlineEdit input,
+.memoryItem input,
+.tableWrap input,
+.v6Toolbar select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--seo-border);
+  border-radius: 10px;
+  background: var(--seo-panel);
+  color: var(--seo-text);
+}
+
+.scImportBox textarea {
+  min-height: 160px;
+  max-height: 280px;
+  overflow: auto;
+  padding: 12px;
+  resize: vertical;
+  font: 13px/1.5 Consolas, Monaco, monospace;
+}
+
+.fileImportButton input { display: none; }
+
+.scV7Status,
+.alert,
+.v5Warning,
+.importResultBox {
+  border-radius: 12px;
+  line-height: 1.5;
+}
+
+.scV7Status {
+  border: 1px solid var(--seo-border);
+  background: var(--seo-soft);
+  color: var(--seo-text);
+  padding: 12px 14px;
+  font-weight: 800;
+}
+
+.importResultBox {
+  background: #f0f9ff;
+}
+
+.dark .importResultBox {
+  background: #132235;
+}
+
+.metricGridSmall {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.v9SourceBar,
+.v9StatusRow,
+.v9MetaRow,
+.scoreStatus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.v9Panel {
+  padding: 0;
+}
+
+.v9ActionCard h4,
+.v9WeekCard h3,
+.scV7OpportunityList strong,
+.v5TwoTables h3,
+.v5FourColumns h3,
+.adsV8TableTitle {
+  color: var(--seo-primary);
+}
+
+.v9ActionCard,
+.v9WeekCard {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.v9WeeklyGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(190px, 1fr));
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.tableWrap,
+.keywordTableWrapper,
+.searchConsoleTables > div {
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tableWrap table,
+.searchConsoleTables table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.tableWrap th,
+.tableWrap td,
+.searchConsoleTables td {
+  border-bottom: 1px solid var(--seo-border);
+  padding: 10px;
+  color: var(--seo-text);
+  text-align: left;
+  vertical-align: top;
+}
+
+.tableWrap th {
+  background: var(--seo-soft);
+  font-weight: 800;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.ok,
+.connected { background: #dcfce7; color: #166534; }
+.warning,
+.pending { background: #fef3c7; color: #92400e; }
+.error,
+.disconnected { background: #fee2e2; color: #991b1b; }
+.dark .ok,
+.dark .connected { background: #14532d; color: #dcfce7; }
+.dark .warning,
+.dark .pending { background: #713f12; color: #fef3c7; }
+.dark .error,
+.dark .disconnected { background: #7f1d1d; color: #fee2e2; }
+
+.v51FilterBar {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) minmax(150px, 1fr) minmax(150px, 1fr) auto auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.v51Toggle {
+  min-height: 42px;
+  border: 1px solid var(--seo-border);
+  border-radius: 10px;
+  background: var(--seo-panel);
+  color: var(--seo-text);
+}
+
+@media (max-width: 1100px) {
+  .metricGrid,
+  .summaryGrid,
+  .gridTwo,
+  .gridThree,
+  .keywordGrid,
+  .commandGrid,
+  .actionGrid,
+  .v5FourColumns,
+  .v61TodayGrid,
+  .clusterCards,
+  .roadmapGrid,
+  .productQualityCards,
+  .searchConsoleTables {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .v5TwoTables,
+  .scV7OpportunityList {
+    grid-template-columns: 1fr;
+  }
+
+  .v51FilterBar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .v51FilterBar input {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 12px 10px 150px;
+    overflow-x: hidden;
+  }
+
+  .hero,
+  .dashboardHeader,
+  .cardHeader,
+  .editRow,
+  .taskItem {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .heroActions,
+  .scImportActions,
+  .fileImportRow,
+  .v51FilterActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+  }
+
+  .v61Tabs,
+  .tabs {
+    position: relative;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-left: -2px;
+    margin-right: -2px;
+    padding: 8px 2px;
+  }
+
+  .v61Tabs a,
+  .tabButton {
+    min-width: max-content;
+  }
+
+  .metricGrid,
+  .summaryGrid,
+  .metricGridSmall,
+  .gridTwo,
+  .gridThree,
+  .keywordGrid,
+  .commandGrid,
+  .actionGrid,
+  .v5FourColumns,
+  .v61TodayGrid,
+  .clusterCards,
+  .roadmapGrid,
+  .productQualityCards,
+  .searchConsoleTables,
+  .indexSummaryGrid,
+  .v6ProgressGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .card,
+  .metricCard,
+  .sectionCard,
+  .panelCard,
+  .hero {
+    padding: 14px;
+  }
+
+  .hero h1 {
+    font-size: 28px;
+  }
+
+  .scImportBox textarea {
+    min-height: 180px;
+  }
+
+  .v9Tabs,
+  .scV7Tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .v9Tabs button,
+  .scV7Tabs button {
+    border-radius: 10px;
+  }
+
+  .v9WeeklyGrid {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .v9WeekCard {
+    min-width: 0;
+  }
+
+  .tableWrap table,
+  .searchConsoleTables table {
+    min-width: 680px;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroActions,
+  .scImportActions,
+  .fileImportRow,
+  .v51FilterActions,
+  .v51FilterBar {
+    grid-template-columns: 1fr;
+  }
+
+  .primaryButton,
+  .secondaryButton,
+  .dangerButton,
+  .uploadButton,
+  .fileImportButton,
+  .quickButton,
+  .quickButtonSmall,
+  .v51ApplyButton,
+  .v51ClearButton {
+    width: 100%;
+    white-space: normal;
+  }
 }
 

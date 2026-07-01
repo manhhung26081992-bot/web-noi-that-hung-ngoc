@@ -280,6 +280,26 @@ export interface SeoAdsKeywordMatrixRow {
   reason: string;
 }
 
+export type GoogleAdsImportMode = 'merge' | 'replace';
+
+export interface GoogleAdsImportSource {
+  fileName?: string;
+  importedAt: string;
+  rowCount: number;
+  mode: GoogleAdsImportMode;
+  addedCount?: number;
+  updatedCount?: number;
+  totalCount?: number;
+}
+
+export interface GoogleAdsImportMergeResult {
+  data: GoogleAdsImportData;
+  source: GoogleAdsImportSource;
+  addedCount: number;
+  updatedCount: number;
+  totalCount: number;
+}
+
 export interface GoogleAdsImportData {
   source: 'import';
   lastUpdated: string;
@@ -300,6 +320,8 @@ export interface GoogleAdsImportData {
   adGroupsToOptimize: Array<{ name: string; reason: string; cost: number; conversions: number; clicks: number; impressions: number; }>;
   opportunities: GoogleAdsOpportunity[];
   matrix: SeoAdsKeywordMatrixRow[];
+  sources?: GoogleAdsImportSource[];
+  lastImportedAt?: string;
 }
 
 export type SearchConsoleRange = '7d' | '28d' | '90d';

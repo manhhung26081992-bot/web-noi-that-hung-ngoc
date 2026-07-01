@@ -7,6 +7,7 @@ import { buildAiDailyBrief, buildSeoScoreV41 } from './SeoV4Modules';
 import { buildContentOpportunities, getRoadmap30Days } from '../services/seoDashboardService';
 import { SeoV51FilterBar, type DashboardSeoFilters } from './SeoV5Modules';
 import { AiBlogRanking, AiProductRanking, AiProgressEngine, AiRecommendationHistory, OpportunityScorePanel, SeoHealthRadar, TodaySeoFocusV61, buildV6Analysis } from './SeoV6Modules';
+import SeoV9Modules from './SeoV9Modules';
 import { useSeoDashboard } from '../hooks/useSeoDashboard';
 import styles from '../seo-dashboard.module.css';
 import type { GoogleAdsImportData, IndexSummaryManual, SearchConsoleV7Data } from '../types/seo';
@@ -22,13 +23,20 @@ function isConnected(status?: string) {
 }
 
 function norm(value: unknown) {
-  return String(value || '').toLowerCase().trim();
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function matchesSearch(search: string, ...values: unknown[]) {
   const needle = norm(search);
   if (!needle) return true;
-  return values.some((value) => norm(value).includes(needle));
+  return norm(values.filter(Boolean).join(' ')).includes(needle);
 }
 
 const defaultFilters: DashboardSeoFilters = {
@@ -68,10 +76,15 @@ export default function SeoDashboard() {
   }), [dashboard.tasks, filters]);
 
   const filteredProducts = useMemo(() => dashboard.productSeoItems.filter((item) => {
-    if (!matchesSearch(filters.search, item.name, item.slug, item.category, item.parent_slug, item.issues.join(' '))) return false;
+    if (!matchesSearch(filters.search, item.name, item.slug, item.category, item.parent_slug, item.action, item.issues.join(' '))) return false;
     if (filters.productIssuesOnly && item.issues.length === 0) return false;
     return true;
   }), [dashboard.productSeoItems, filters]);
+
+  const filteredBlogs = useMemo(() => dashboard.blogSeoItems.filter((item) => {
+    if (!matchesSearch(filters.search, item.title, item.slug, item.excerpt, item.action, item.issues.join(' '))) return false;
+    return true;
+  }), [dashboard.blogSeoItems, filters]);
 
   const overview = dashboard.overview;
   const health = dashboard.health;
@@ -142,9 +155,38 @@ export default function SeoDashboard() {
     googleAdsV8,
   }), [dashboard.blogSeoItems, dashboard.doNotTouch, dashboard.productSeoItems, dashboard.searchConsoleV5, dashboard.seoClusters, dashboard.seoKeywords, dashboard.seoLogs, dashboard.tasks, health, overview, searchConsoleV7, googleAdsV8]);
 
+  const filteredV6Decisions = useMemo(() => v6Analysis.decisions.filter((item) => {
+    if (!matchesSearch(filters.search, item.title, item.reason, item.action, item.source)) return false;
+    if (filters.priority !== 'all' && String(item.priority) !== filters.priority) return false;
+    if (filters.status !== 'all' && !matchesSearch(filters.status, item.level, item.source, item.title)) return false;
+    return true;
+  }), [filters, v6Analysis.decisions]);
+
+  const filteredV6Opportunities = useMemo(() => v6Analysis.opportunities.filter((item) => {
+    if (!matchesSearch(filters.search, item.cluster, item.reasons.join(' '), item.nextAction)) return false;
+    if (filters.status !== 'all' && !matchesSearch(filters.status, item.cluster, item.reasons.join(' '), item.nextAction)) return false;
+    return true;
+  }), [filters.search, filters.status, v6Analysis.opportunities]);
+
+  const filteredV6ProductRanking = useMemo(() => v6Analysis.productRanking.filter((item) => {
+    if (!matchesSearch(filters.search, item.name, item.slug, item.category, item.parent_slug, item.action, item.issues.join(' '))) return false;
+    if (filters.productIssuesOnly && item.issues.length === 0) return false;
+    return true;
+  }), [filters, v6Analysis.productRanking]);
+
+  const filteredV6BlogRanking = useMemo(() => v6Analysis.blogRanking.filter((item) => matchesSearch(filters.search, item.title, item.slug, item.excerpt, item.action, item.issues.join(' '))), [filters.search, v6Analysis.blogRanking]);
+
+  const filteredCommands = useMemo(() => commands.filter((item) => {
+    if (!matchesSearch(filters.search, item.title, item.detail, item.source, item.level)) return false;
+    if (filters.status !== 'all' && !matchesSearch(filters.status, item.title, item.detail, item.level)) return false;
+    return true;
+  }), [commands, filters.search, filters.status]);
+
+  const filteredDailyBrief = useMemo(() => dailyBrief.filter((item) => matchesSearch(filters.search, item.text, item.level)), [dailyBrief, filters.search]);
+
   if (loading) {
     return (
-      <main className={styles.dashboard}>
+      <main className={styles.dashboard} data-admin-seo="true">
         <header className={styles.hero}>
           <h1>SEO Dashboard</h1>
           <p>Đang tải dữ liệu SEO...</p>
@@ -155,16 +197,16 @@ export default function SeoDashboard() {
   }
 
   return (
-    <main className={`${styles.dashboard} ${darkMode ? styles.dark : ''}`}>
+    <main className={`${styles.dashboard} ${darkMode ? styles.dark : ''}`} data-admin-seo="true">
       <header className={styles.hero}>
         <div>
           <p className={styles.eyebrow}>Nội Thất Hùng Ngọc</p>
-          <h1>SEO Dashboard v8.1</h1>
-          <p>AI SEO Operating System dùng dữ liệu Supabase và dữ liệu Google import thủ công. Không dùng Google API/OAuth/billing.</p>
+          <h1>SEO Dashboard v9.0</h1>
+          <p>AI SEO Operating System ra quyết định SEO hằng ngày từ Supabase và dữ liệu Google import thủ công. Không dùng Google API/OAuth/billing.</p>
         </div>
         <div className={styles.heroActions}>
-          <button className={styles.secondaryButton} onClick={() => setDarkMode((value) => !value)}>{darkMode ? 'Light Mode' : 'Dark Mode'}</button>
-          <button className={styles.primaryButton} onClick={actions.reload}>Làm mới</button>
+          <button className={`${styles.secondaryButton} ${styles.themeButton}`} onClick={() => setDarkMode((value) => !value)}>{darkMode ? 'Giao diện sáng' : 'Giao diện tối'}</button>
+          <button className={`${styles.primaryButton} ${styles.refreshButton}`} onClick={actions.reload}>Làm mới</button>
         </div>
       </header>
 
@@ -173,26 +215,44 @@ export default function SeoDashboard() {
       <nav className={styles.v61Tabs} aria-label="Điều hướng SEO Dashboard">
         <a href="#tong-quan">Tổng quan</a>
         <a href="#hom-nay">Hôm nay</a>
+        <a href="#action-plan">Kế hoạch SEO AI</a>
         <a href="#san-pham">Sản phẩm</a>
         <a href="#bai-viet">Bài viết</a>
         <a href="#cum-seo">Cụm SEO</a>
-        <a href="#internal-link">Internal Link</a>
+        <a href="#internal-link">Liên kết nội bộ</a>
         <a href="#search-console">Search Console</a>
         <a href="#he-thong">Hệ thống</a>
       </nav>
 
       <section id="hom-nay">
         <TodaySeoFocusV61
-          decisions={v6Analysis.decisions}
+          decisions={filteredV6Decisions}
           notifications={v6Analysis.notifications}
           insights={v6Analysis.insights}
-          tasks={dashboard.tasks}
-          commands={commands}
-          dailyBrief={dailyBrief}
+          tasks={filteredTasks}
+          commands={filteredCommands}
+          dailyBrief={filteredDailyBrief}
           lastUpdated={lastUpdated}
         />
       </section>
 
+
+      <section id="action-plan">
+        <SeoV9Modules
+          overview={overview}
+          products={filteredProducts}
+          blogs={filteredBlogs}
+          keywords={filteredKeywords}
+          clusters={filteredClusters}
+          tasks={filteredTasks}
+          logs={dashboard.seoLogs}
+          internalLinks={dashboard.internalLinkSuggestions}
+          opportunities={opportunities}
+          searchConsole={searchConsoleV7}
+          googleAds={googleAdsV8}
+          indexSummary={indexSummary}
+        />
+      </section>
       <section id="tong-quan" className={styles.metricGrid}>
         <MetricCard label="Tổng sản phẩm" value={formatNumber(overview?.products || 0)} />
         <MetricCard label="Tổng bài viết" value={formatNumber(overview?.blogPosts || 0)} />
@@ -208,16 +268,16 @@ export default function SeoDashboard() {
       </section>
 
       <section id="cum-seo" className={styles.gridTwo}>
-        <OpportunityScorePanel items={v6Analysis.opportunities} />
-        <AiRecommendationHistory decisions={v6Analysis.decisions} />
+        <OpportunityScorePanel items={filteredV6Opportunities} />
+        <AiRecommendationHistory decisions={filteredV6Decisions} />
       </section>
 
       <section className={styles.gridTwo}>
         <div id="san-pham">
-          <AiProductRanking products={v6Analysis.productRanking} />
+          <AiProductRanking products={filteredV6ProductRanking} />
         </div>
         <div id="bai-viet">
-          <AiBlogRanking blogs={v6Analysis.blogRanking} />
+          <AiBlogRanking blogs={filteredV6BlogRanking} />
         </div>
       </section>
 

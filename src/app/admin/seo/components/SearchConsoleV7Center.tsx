@@ -53,11 +53,11 @@ const STORAGE_KEY = 'noithathungngoc-search-console-import-v1';
 const LEGACY_STORAGE_KEY = 'noithathungoc-search-console-import-v1';
 
 const tabs: Array<{ id: SearchConsoleRequestType; label: string }> = [
-  { id: 'overview', label: 'Tong quan' },
-  { id: 'queries', label: 'Top query' },
-  { id: 'pages', label: 'Top page' },
-  { id: 'opportunities', label: 'Co hoi' },
-  { id: 'devices', label: 'Thiet bi' },
+  { id: 'overview', label: 'Tổng quan' },
+  { id: 'queries', label: 'Top từ khóa' },
+  { id: 'pages', label: 'Top trang' },
+  { id: 'opportunities', label: 'Cơ hội' },
+  { id: 'devices', label: 'Thiết bị' },
 ];
 
 const sampleData = [
@@ -194,20 +194,20 @@ function businessPriority(text: string): 1 | 2 | 3 {
 
 function clusterFromText(text: string) {
   const value = normalize(text);
-  if (value.includes('giuong')) return 'Giuong sat';
-  if (value.includes('ban hoc') || value.includes('truong hoc') || value.includes('bang tu')) return 'Truong hoc';
-  if (value.includes('ban')) return 'Ban lam viec';
-  if (value.includes('ghe')) return 'Ghe van phong';
-  if (value.includes('tu') || value.includes('locker')) return 'Tu van phong';
+  if (value.includes('giuong')) return 'Giường sắt';
+  if (value.includes('ban hoc') || value.includes('truong hoc') || value.includes('bang tu')) return 'Trường học';
+  if (value.includes('ban')) return 'Bàn làm việc';
+  if (value.includes('ghe')) return 'Ghế văn phòng';
+  if (value.includes('tu') || value.includes('locker')) return 'Tủ văn phòng';
   return undefined;
 }
 
 function actionFor(row: SearchConsoleQuery | SearchConsolePage, reason: string) {
-  if (reason.includes('11-20')) return 'Bo sung FAQ, them internal link va giu slug on dinh de day vao top 10.';
-  if (reason.includes('21-40')) return 'Viet bai phu hoac cap nhat noi dung chi tiet, anh thuc te va lien ket ve trang dich.';
-  if (reason.includes('CTR')) return 'Toi uu title/meta de ro gia tri mua hang, khong doi URL neu trang moi index.';
-  if ('page' in row && row.page) return 'Kiem tra noi dung trang, them link noi bo va CTA phu hop.';
-  return 'Theo doi them neu du lieu con it, uu tien hang chu dao truoc.';
+  if (reason.includes('11-20')) return 'Bổ sung FAQ, thêm liên kết nội bộ và giữ slug ổn định để đẩy vào top 10.';
+  if (reason.includes('21-40')) return 'Viết bài phụ hoặc cập nhật nội dung chi tiết, ảnh thực tế và liên kết về trang đích.';
+  if (reason.includes('CTR')) return 'Tối ưu title/meta để rõ giá trị mua hàng, không đổi URL nếu trang mới index.';
+  if ('page' in row && row.page) return 'Kiểm tra nội dung trang, thêm liên kết nội bộ và CTA phù hợp.';
+  return 'Theo dõi thêm nếu dữ liệu còn ít, ưu tiên hàng chủ đạo trước.';
 }
 
 function buildOpportunities(queries: SearchConsoleQuery[], pages: SearchConsolePage[], keywords: SeoKeyword[]): SearchConsoleOpportunity[] {
@@ -233,14 +233,14 @@ function buildOpportunities(queries: SearchConsoleQuery[], pages: SearchConsoleP
   };
 
   queries.forEach((row) => {
-    if (row.position >= 11 && row.position <= 20) add(row, 'Query position 11-20, gan top 10.');
-    else if (row.position > 20 && row.position <= 40) add(row, 'Query position 21-40, can them noi dung ho tro.');
-    if (row.impressions >= 100 && row.ctr < 2) add(row, 'Impression cao nhung CTR thap.');
-    if (row.query && !knownKeywords.has(normalize(row.query))) add(row, 'Query moi chua co trong seo_keywords.');
+    if (row.position >= 11 && row.position <= 20) add(row, 'Từ khóa đang ở vị trí 11-20, gần top 10.');
+    else if (row.position > 20 && row.position <= 40) add(row, 'Từ khóa đang ở vị trí 21-40, cần thêm nội dung hỗ trợ.');
+    if (row.impressions >= 100 && row.ctr < 2) add(row, 'Lượt hiển thị cao nhưng CTR thấp.');
+    if (row.query && !knownKeywords.has(normalize(row.query))) add(row, 'Từ khóa mới chưa có trong seo_keywords.');
   });
 
   pages.forEach((row) => {
-    if (row.impressions >= 100 && row.clicks <= 3) add(row, 'Page co impression cao nhung it click.');
+    if (row.impressions >= 100 && row.clicks <= 3) add(row, 'Trang có lượt hiển thị cao nhưng ít nhấp.');
   });
 
   return Array.from(new Map(opportunities.map((item) => [item.id, item])).values())
@@ -304,7 +304,7 @@ function analyzeImport(text: string, keywords: SeoKeyword[]): SearchConsoleV7Dat
     overview: {
       connected: true,
       reason: 'manual_import',
-      message: 'Dang dung du lieu Search Console import thu cong.',
+      message: 'Đang dùng dữ liệu Search Console nhập thủ công.',
       siteUrl: 'https://www.noithathungngoc.com/',
       range: '28d',
       clicks,
@@ -358,10 +358,10 @@ function clusterSignal(data: SearchConsoleV7Data | null, clusters: SeoCluster[])
       clicks,
       position,
       action: impressions > 150 && position > 10
-        ? 'Toi uu landing page va them internal link cho cum nay.'
+        ? 'Tối ưu landing page và thêm liên kết nội bộ cho cụm này.'
         : impressions > 0
-          ? 'Theo doi them tin hieu tu query va page da import.'
-          : 'Chua co tin hieu Search Console import cho cum nay.',
+          ? 'Theo dõi thêm tín hiệu từ từ khóa và trang đã nhập.'
+          : 'Chưa có tín hiệu Search Console nhập thủ công cho cụm này.',
     };
   }).filter((item) => item.impressions > 0);
 }
@@ -390,7 +390,7 @@ function buildMergedOverview(rows: ImportRow[], previous?: SearchConsoleV7Data |
     ...(previous?.overview || incoming?.overview || {}),
     connected: true,
     reason: 'manual_import',
-    message: 'Dang dung du lieu Search Console import thu cong. URL tao tu website khong dong nghia voi URL Google da index.',
+    message: 'Đang dùng dữ liệu Search Console nhập thủ công. URL tao tu website khong dòng nghia voi URL Google da index.',
     siteUrl: 'https://www.noithathungngoc.com/',
     range: '28d',
     clicks,
@@ -518,7 +518,7 @@ function SearchConsoleV7Center({ keywords, clusters, onData }: Props) {
   const analyze = () => {
     const result = analyzeImport(rawText, keywords);
     if (!result) {
-      setError('Chua doc duoc du lieu. Hay dan CSV hoac du lieu tab tu Google Search Console.');
+      setError('Chưa đọc được dữ liệu. Hãy dán CSV hoặc dữ liệu dạng tab từ Google Search Console.');
       return;
     }
     const kind = detectImportKind(result);
@@ -551,7 +551,7 @@ function SearchConsoleV7Center({ keywords, clusters, onData }: Props) {
       const text = await readCsvFileAsText(file);
       const result = analyzeImport(text, keywords);
       if (!result) {
-        setError('File chua dung dinh dang. Vui long export CSV tu Google Search Console hoac copy bang vao o nhap.');
+        setError('File chưa đúng định dạng. Vui lòng xuất CSV từ Google Search Console hoặc copy bảng vào ô nhập.');
         return;
       }
       const kind = detectImportKind(result);
@@ -560,7 +560,7 @@ function SearchConsoleV7Center({ keywords, clusters, onData }: Props) {
       setError('');
       saveImport(nextData, text, file.name, nextRowCount, kind);
     } catch {
-      setError('Khong doc duoc file CSV. Neu dung Excel, hay luu thanh CSV truoc.');
+      setError('Không đọc được file CSV. Nếu dùng Excel, hãy lưu thành CSV trước.');
     }
   };
 
@@ -573,35 +573,35 @@ function SearchConsoleV7Center({ keywords, clusters, onData }: Props) {
 
   return (
     <ModuleCard
-      title="Search Console Import Center"
-      description="Vao Google Search Console -> Performance -> Export -> copy du lieu Query/Page roi dan vao day."
-      action={<Badge status={data ? 'connected' : 'pending'}>{data ? 'Đang dùng dữ liệu thủ công' : 'Chưa import dữ liệu'}</Badge>}
+      title="Nhập dữ liệu Search Console"
+      description="Vào Google Search Console > Hiệu suất > Xuất dữ liệu, sau đó tải file CSV hoặc dán dữ liệu vào đây."
+      action={<Badge status={data ? 'connected' : 'pending'}>{data ? 'Đang dùng dữ liệu nhập thủ công' : 'Chưa nhập dữ liệu'}</Badge>}
     >
       <div className={styles.scV7Stack}>
         <div className={styles.scImportBox}>
           <textarea
             value={rawText}
             onChange={(event) => setRawText(event.target.value)}
-            placeholder="Dan du lieu CSV hoac tab-separated tu Google Search Console: Query, Page, Clicks, Impressions, CTR, Position..."
+            placeholder="Dán dữ liệu CSV hoặc tab-separated từ Google Search Console: Query, Page, Clicks, Impressions, CTR, Position..."
           />
           <div className={styles.fileImportRow}>
             <label className={styles.fileImportButton}>
-              Tai file Search Console CSV
+              Tải file Search Console CSV
               <input type="file" accept=".csv,text/csv,text/tab-separated-values" onChange={handleFileUpload} />
             </label>
             <span className={styles.fileImportMeta}>
-              {fileName ? fileName + ' - ' + rowCount + ' dong' : 'Nếu dùng Excel, hãy lưu thành CSV trước.'}{importSummaryText ? ' - ' + importSummaryText : ''}
+              {fileName ? fileName + ' - ' + rowCount + ' dòng' : 'Nếu dùng Excel, hãy lưu thành CSV trước.'}{importSummaryText ? ' - ' + importSummaryText : ''}
             </span>
           </div>
           <div className={styles.scImportActions}>
-            <button className={styles.primaryButton} onClick={analyze}>Phân tích dữ liệu </button>
-            <button className={styles.secondaryButton} onClick={useSample}>Dùng dữu liệu mẫu</button>
+            <button className={styles.primaryButton} onClick={analyze}>Phân tích dữ liệu</button>
+            <button className={styles.secondaryButton} onClick={useSample}>Dùng dữ liệu mẫu</button>
             <button className={styles.secondaryButton} onClick={clearImport}>Xóa dữ liệu import</button>
           </div>
           <div className={styles.scV7Status}>
             {error || (data?.overview.lastUpdated
-              ? 'Cap nhat lan cuoi: ' + new Date(data.overview.lastUpdated).toLocaleString('vi-VN')
-              : 'Chua import du lieu Search Console. Dashboard van dung du lieu Supabase cu.')}
+              ? 'Cập nhật lần cuối: ' + new Date(data.overview.lastUpdated).toLocaleString('vi-VN')
+              : 'Chưa nhập dữ liệu Search Console. Dashboard vẫn dùng dữ liệu Supabase cũ.')}
           </div>
         </div>
 
@@ -612,20 +612,20 @@ function SearchConsoleV7Center({ keywords, clusters, onData }: Props) {
             </div>
 
             <div className={styles.metricGridSmall}>
-              <MetricCard label="Tong clicks" value={formatNumber(data.overview.clicks)} />
-              <MetricCard label="Tong impressions" value={formatNumber(data.overview.impressions)} />
-              <MetricCard label="CTR trung binh" value={formatCtr(data.overview.ctr)} />
-              <MetricCard label="Position trung binh" value={data.overview.position || '-'} />
-              <MetricCard label="Tong query" value={formatNumber(uniqueQueries)} />
-              <MetricCard label="Tong page" value={formatNumber(uniquePages)} />
+              <MetricCard label="Tổng lượt nhấp" value={formatNumber(data.overview.clicks)} />
+              <MetricCard label="Tổng lượt hiển thị" value={formatNumber(data.overview.impressions)} />
+              <MetricCard label="CTR trung bình" value={formatCtr(data.overview.ctr)} />
+              <MetricCard label="Vị trí trung bình" value={data.overview.position || '-'} />
+              <MetricCard label="Tổng từ khóa" value={formatNumber(uniqueQueries)} />
+              <MetricCard label="Tổng trang" value={formatNumber(uniquePages)} />
             </div>
 
             {activeTab === 'overview' ? (
               <div className={styles.gridTwo}>
-                <MiniBarChart data={data.trend.slice(-28).map((item) => ({ date: item.date.slice(5), clicks: item.clicks, impressions: item.impressions }))} label="Xu huong 28 ngay" />
+                <MiniBarChart data={data.trend.slice(-28).map((item) => ({ date: item.date.slice(5), clicks: item.clicks, impressions: item.impressions }))} label="Xu hướng 28 ngày" />
                 <div className={styles.scV7InlinePanel}>
-                  <h3>Tin hieu cum SEO</h3>
-                  {clusterRows.length ? clusterRows.map((row, index) => <p key={'cluster-signal-' + row.cluster + '-' + index}><strong>{row.cluster}</strong><span>{formatNumber(row.impressions)} impression - {formatNumber(row.clicks)} click - Pos {row.position.toFixed(1)}</span></p>) : <EmptyState title="Chua co tin hieu cum" detail="Import them query/page de dashboard gom theo cum SEO." />}
+                  <h3>Tín hiệu cụm SEO</h3>
+                  {clusterRows.length ? clusterRows.map((row, index) => <p key={'cluster-signal-' + row.cluster + '-' + index}><strong>{row.cluster}</strong><span>{formatNumber(row.impressions)} impression - {formatNumber(row.clicks)} click - Pos {row.position.toFixed(1)}</span></p>) : <EmptyState title="Chưa có tín hiệu cụm" detail="Nhập thêm query/page để dashboard gom theo cụm SEO." />}
                 </div>
               </div>
             ) : null}
@@ -633,32 +633,32 @@ function SearchConsoleV7Center({ keywords, clusters, onData }: Props) {
             {activeTab === 'queries' ? (
               <div className={styles.v5TwoTables}>
                 <div>
-                  <h3>Keyword da co trong dashboard</h3>
-                  {keywordRows.matched.length ? <table><tbody>{keywordRows.matched.map((row, index) => <tr key={'gsc-matched-' + row.query + '-' + index}><td>{row.query}</td><td>{formatNumber(row.impressions)}</td><td>{formatCtr(row.ctr)}</td><td>Pos {row.position}</td></tr>)}</tbody></table> : <EmptyState title="Chưa Khớp keyword thủ công" detail="Query mới sẽ nằm ở cột bên cạnh." />}
+                  <h3>Từ khóa đã có trong dashboard</h3>
+                  {keywordRows.matched.length ? <table><tbody>{keywordRows.matched.map((row, index) => <tr key={'gsc-matched-' + row.query + '-' + index}><td>{row.query}</td><td>{formatNumber(row.impressions)}</td><td>{formatCtr(row.ctr)}</td><td>Pos {row.position}</td></tr>)}</tbody></table> : <EmptyState title="Chưa khớp keyword thủ công" detail="Query mới sẽ nằm ở cột bên cạnh." />}
                 </div>
                 <div>
-                  <h3>từ khóa mới phát hiện</h3>
-                  {keywordRows.fresh.length ? <table><tbody>{keywordRows.fresh.map((row, index) => <tr key={'gsc-fresh-' + row.query + '-' + index}><td>{row.query}</td><td>{formatNumber(row.impressions)}</td><td>{formatCtr(row.ctr)}</td><td>Pos {row.position}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có query mới" detail="Dữ Liệu import Chưa phát hiện từ khóa mới" />}
+                  <h3>Từ khóa mới phát hiện</h3>
+                  {keywordRows.fresh.length ? <table><tbody>{keywordRows.fresh.map((row, index) => <tr key={'gsc-fresh-' + row.query + '-' + index}><td>{row.query}</td><td>{formatNumber(row.impressions)}</td><td>{formatCtr(row.ctr)}</td><td>Pos {row.position}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có query mới" detail="Dữ liệu import chưa phát hiện từ khóa mới." />}
                 </div>
               </div>
             ) : null}
 
             {activeTab === 'pages' ? (
-              <div className={styles.tableWrap}><table><thead><tr><th>Page</th><th>Loai trang</th><th>Click</th><th>Impression</th><th>CTR</th><th>Position</th></tr></thead><tbody>{data.pages.slice(0, 30).map((row, index) => <tr key={'gsc-page-' + row.page + '-' + index}><td>{row.page}</td><td>{pageType(row.page)}</td><td>{formatNumber(row.clicks)}</td><td>{formatNumber(row.impressions)}</td><td>{formatCtr(row.ctr)}</td><td>{row.position}</td></tr>)}</tbody></table></div>
+              <div className={styles.tableWrap}><table><thead><tr><th>Page</th><th>Loại trang</th><th>Click</th><th>Impression</th><th>CTR</th><th>Position</th></tr></thead><tbody>{data.pages.slice(0, 30).map((row, index) => <tr key={'gsc-page-' + row.page + '-' + index}><td>{row.page}</td><td>{pageType(row.page)}</td><td>{formatNumber(row.clicks)}</td><td>{formatNumber(row.impressions)}</td><td>{formatCtr(row.ctr)}</td><td>{row.position}</td></tr>)}</tbody></table></div>
             ) : null}
 
             {activeTab === 'opportunities' ? (
-              data.opportunities.length ? <div className={styles.scV7OpportunityList}>{data.opportunities.slice(0, 16).map((row, index) => <article key={'gsc-op-' + row.id + '-' + index}><Badge status={row.priority === 1 ? 'warning' : 'pending'}>P{row.priority}</Badge><strong>{row.query}</strong><p>{row.reason}</p><span>{row.action}</span><small>{formatNumber(row.impressions)} impression - CTR {formatCtr(row.ctr)} - Pos {row.position}</small></article>)}</div> : <EmptyState title="Chua co co hoi Search Console" detail="Import them du lieu co impressions/position de tim co hoi SEO." />
+              data.opportunities.length ? <div className={styles.scV7OpportunityList}>{data.opportunities.slice(0, 16).map((row, index) => <article key={'gsc-op-' + row.id + '-' + index}><Badge status={row.priority === 1 ? 'warning' : 'pending'}>P{row.priority}</Badge><strong>{row.query}</strong><p>{row.reason}</p><span>{row.action}</span><small>{formatNumber(row.impressions)} impression - CTR {formatCtr(row.ctr)} - Pos {row.position}</small></article>)}</div> : <EmptyState title="Chưa có cơ hội Search Console" detail="Nhập thêm dữ liệu có lượt hiển thị/vị trí để tìm cơ hội SEO." />
             ) : null}
 
             {activeTab === 'devices' ? (
               <div className={styles.v5TwoTables}>
-                <div><h3>Thiet bi</h3>{data.devices.length ? <table><tbody>{data.devices.map((row, index) => <tr key={'gsc-device-' + row.device + '-' + index}><td>{row.device}</td><td>{formatNumber(row.clicks)}</td><td>{formatNumber(row.impressions)}</td><td>{formatCtr(row.ctr)}</td></tr>)}</tbody></table> : <EmptyState title="Chua co thiet bi" detail="Du lieu import chua co cot device." />}</div>
-                <div><h3>Quoc gia</h3>{data.countries.length ? <table><tbody>{data.countries.map((row, index) => <tr key={'gsc-country-' + row.country + '-' + index}><td>{row.country}</td><td>{formatNumber(row.clicks)}</td><td>{formatNumber(row.impressions)}</td><td>{formatCtr(row.ctr)}</td></tr>)}</tbody></table> : <EmptyState title="Chua co quoc gia" detail="Du lieu import chua co cot country." />}</div>
+                <div><h3>Thiết bị</h3>{data.devices.length ? <table><tbody>{data.devices.map((row, index) => <tr key={'gsc-device-' + row.device + '-' + index}><td>{row.device}</td><td>{formatNumber(row.clicks)}</td><td>{formatNumber(row.impressions)}</td><td>{formatCtr(row.ctr)}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có thiết bị" detail="Dữ liệu nhập chưa có cột device." />}</div>
+                <div><h3>Quốc gia</h3>{data.countries.length ? <table><tbody>{data.countries.map((row, index) => <tr key={'gsc-country-' + row.country + '-' + index}><td>{row.country}</td><td>{formatNumber(row.clicks)}</td><td>{formatNumber(row.impressions)}</td><td>{formatCtr(row.ctr)}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có quốc gia" detail="Dữ liệu nhập chưa có cột country." />}</div>
               </div>
             ) : null}
           </>
-        ) : <EmptyState title="Chua import du lieu Search Console" detail="Du lieu se duoc luu trong localStorage cua trinh duyet, khong tao bang Supabase moi." />}
+        ) : <EmptyState title="Chưa nhập dữ liệu Search Console" detail="Dữ liệu sẽ được lưu trong localStorage của trình duyệt, không tạo bảng Supabase mới." />}
       </div>
     </ModuleCard>
   );

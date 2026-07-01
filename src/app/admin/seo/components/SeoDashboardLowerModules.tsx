@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { memo } from 'react';
 import EditablePriorityList from './EditablePriorityList';
@@ -101,7 +101,7 @@ function SeoDashboardLowerModules({
 }: Props) {
   return (
     <div className={styles.v61Deferred}>
-      <AccordionSection id="search-console" title="Import Google thủ công và dữ liệu tổng quan" description="Search Console và Google Ads dùng dữ liệu copy/paste, không dùng API." defaultOpen>
+      <AccordionSection id="search-console" title="Import Google thủ công và dữ liệu tổng quan" description="Search Console và Google Ads dùng dữ liệu import thủ công, không dùng API." defaultOpen>
         <section className={styles.gridTwo}>
           <SearchConsoleV7Center keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} onData={onSearchConsoleV7Data} />
           <GoogleAdsV8ImportCenter keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} searchConsoleData={searchConsoleV7} onData={onGoogleAdsV8Data} />
@@ -111,7 +111,7 @@ function SeoDashboardLowerModules({
         </section>
       </AccordionSection>
 
-      <AccordionSection title="Keyword, cụm SEO và kế hoạch nội dung" description="Lọc bằng thanh tìm kiếm phía trên.">
+      <AccordionSection title="Từ khóa, cụm SEO và kế hoạch nội dung" description="Lọc bằng thanh tìm kiếm phía trên.">
         <section className={styles.gridTwo}>
           <KeywordIntelligence keywords={filteredKeywords} searchConsoleQueries={searchConsoleV7?.queries || []} adsData={googleAdsV8} />
           <ClusterHealth clusters={filteredClusters} searchConsoleData={searchConsoleV7} adsData={googleAdsV8} />
@@ -122,10 +122,10 @@ function SeoDashboardLowerModules({
         </section>
       </AccordionSection>
 
-      <AccordionSection id="internal-link" title="Internal Link và chất lượng sản phẩm" description="Các gợi ý liên kết nội bộ, sản phẩm cần tối ưu.">
+      <AccordionSection id="internal-link" title="Liên kết nội bộ và chất lượng sản phẩm" description="Các gợi ý liên kết nội bộ và sản phẩm cần tối ưu.">
         <section className={styles.gridTwo}>
           <InternalLinkAIV5 suggestions={dashboard.internalLinkSuggestions} clusters={filteredClusters} products={filteredProducts} />
-          <ProductSeoAiPanel items={dashboard.productSeoItems} />
+          <ProductSeoAiPanel items={filteredProducts} />
         </section>
         <section className={styles.gridTwo}>
           <InternalLinkAiPanel items={dashboard.internalLinkSuggestions} />
@@ -133,7 +133,7 @@ function SeoDashboardLowerModules({
         </section>
       </AccordionSection>
 
-      <AccordionSection title="Quản trị SEO thủ công" description="Keyword, cluster, log, do-not-touch và đối thủ.">
+      <AccordionSection title="Quản trị SEO thủ công" description="Từ khóa, cụm SEO, log, danh sách không sửa và đối thủ.">
         <section className={styles.gridTwo}>
           <KeywordCenter keywords={dashboard.seoKeywords} saving={saving} actions={actions} />
           <AiSeoScorePanelV41 score={score} />
@@ -148,12 +148,12 @@ function SeoDashboardLowerModules({
         </section>
       </AccordionSection>
 
-      <AccordionSection title="Mục tiêu, ghi chú và tác vụ" description="Các phần nhập liệu dùng hằng ngày.">
+      <AccordionSection title="Mục tiêu, ghi chú và tác vụ" description="Các gợi ý liên kết nội bộ và sản phẩm cần tối ưu.">
         <section className={styles.gridThree}>
           <ModuleCard title="SEO Priority" description="Danh sách ưu tiên theo sao, lưu trong Supabase.">
             <EditablePriorityList priorities={dashboard.priorities} saving={saving} onSave={actions.savePriority} onDelete={actions.removePriority} />
           </ModuleCard>
-          <ModuleCard title="Today Task" description="Checklist SEO hằng ngày.">
+          <ModuleCard title="Today Task" description="Các gợi ý liên kết nội bộ và sản phẩm cần tối ưu.">
             <TodayTaskList tasks={filteredTasks} suggestions={[]} saving={saving} onSave={actions.saveTask} onDelete={actions.removeTask} />
           </ModuleCard>
           <ModuleCard title="SEO Note" description="Ghi chú nhanh cho kế hoạch SEO.">
@@ -171,7 +171,7 @@ function SeoDashboardLowerModules({
         </section>
       </AccordionSection>
 
-      <AccordionSection id="he-thong-chi-tiet" title="Hệ thống và quick actions" description="Sitemap, robots, 404, index và trạng thái hệ thống.">
+      <AccordionSection id="he-thong-chi-tiet" title="Hệ thống và thao tác nhanh" description="Sitemap, robots, 404, index và trạng thái hệ thống.">
         <section className={styles.gridTwo}>
           <QuickActionPanelV41 />
           <LocalSeoPanel items={dashboard.localSeo} saving={saving} actions={actions} />

@@ -1,8 +1,11 @@
-'use client';
+﻿'use client';
 
 import { detectDelimiterFromLine, splitDelimitedRow } from './importFileReader';
 import type {
   GoogleAdsImportData,
+  GoogleAdsImportMergeResult,
+  GoogleAdsImportMode,
+  GoogleAdsImportSource,
   GoogleAdsImportSummary,
   GoogleAdsKeywordImportRow,
   GoogleAdsOpportunity,
@@ -85,6 +88,10 @@ function stripAccent(value: string) {
 
 export function normalizeText(value: unknown) {
   return stripAccent(String(value || '').toLowerCase().trim()).replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+export function normalizeGoogleAdsKeyword(value: unknown) {
+  return normalizeText(value);
 }
 
 function headerKey(value: string) {
@@ -202,13 +209,13 @@ function recommendation(row: GoogleAdsKeywordImportRow, score: number, sc?: Sear
 }
 
 function actionFor(reco: GoogleAdsRecommendation, row: GoogleAdsKeywordImportRow, sc?: SearchConsoleQuery) {
-  if (reco === 'Cả hai') return 'Tối ưu landing page, thêm internal link rồi chạy Ads thử ngân sách nhỏ.';
+  if (reco === 'Cả hai') return 'Tối ưu landing page, thêm liên kết nội bộ rồi chạy Ads thử với ngân sách nhỏ.';
   if (reco === 'SEO trước') {
-    if (sc && sc.position >= 11 && sc.position <= 20) return 'SEO trước vì position đang 11-20 và volume tốt; bổ sung nội dung, FAQ và link nội bộ.';
-    return 'Viết/cập nhật nội dung hỗ trợ danh mục, thêm sản phẩm hoặc dự án thực tế cho cụm này.';
+    if (sc && sc.position >= 11 && sc.position <= 20) return 'SEO trước vì vị trí đang 11-20 và volume tốt; bổ sung nội dung, FAQ và liên kết nội bộ.';
+    return 'Viết hoặc cập nhật nội dung hỗ trợ danh mục, thêm sản phẩm hoặc dự án thực tế cho cụm này.';
   }
-  if (reco === 'Ads thử') return 'Chạy Ads thử vì CPC tương đối thấp hoặc intent mua hàng rõ; theo dõi chuyển đổi.';
-  if (reco === 'Không ưu tiên') return 'Không chạy Ads lúc này vì chi phí/cạnh tranh cao hoặc chưa có chuyển đổi; tối ưu trang đích trước.';
+  if (reco === 'Ads thử') return 'Chạy Ads thử vì CPC tương đối thấp hoặc ý định mua hàng rõ; theo dõi chuyển đổi.';
+  if (reco === 'Không ưu tiên') return 'Không chạy Ads lúc này vì chi phí hoặc cạnh tranh cao; tối ưu trang đích trước.';
   return 'Theo dõi thêm vì dữ liệu còn ít; chưa nên đổi slug hoặc title mạnh.';
 }
 
@@ -219,7 +226,7 @@ function reasonFor(row: GoogleAdsKeywordImportRow, sc?: SearchConsoleQuery) {
     'Cạnh tranh ' + normalizeCompetition(row.competition, row.competition_index),
     'Ưu tiên ngành ' + row.businessPriority,
   ];
-  if (sc) parts.push('SC pos ' + sc.position + ', ' + sc.impressions + ' impressions');
+  if (sc) parts.push('Search Console vị trí ' + sc.position + ', ' + sc.impressions + ' lượt hiển thị');
   return parts.join(' · ');
 }
 
@@ -366,8 +373,214 @@ export function analyzeGoogleAdsImport(text: string, searchConsoleData?: SearchC
     highCpcKeywords: rows.filter((row) => Number(row.cpc || row.high_top_of_page_bid || row.low_top_of_page_bid || 0) > Math.max(10000, (avgCpcValue || 0) * 1.5)).slice(0, 10),
     goodConversionKeywords: rows.filter((row) => Number(row.conversions || 0) > 0).sort((a, b) => Number(b.conversions || 0) - Number(a.conversions || 0)).slice(0, 10),
     highImpressionLowClickKeywords: rows.filter((row) => Number(row.impressions || 0) >= 500 && Number(row.clicks || 0) <= 5).slice(0, 10),
-    adGroupsToOptimize: Array.from(byAdGroup.values()).filter((group) => group.cost > 0 || group.impressions > 0).map((group) => ({ ...group, reason: group.cost > 0 && group.conversions === 0 ? 'Tốn chi phí nhưng chưa có chuyển đổi.' : group.impressions > 500 && group.clicks < 10 ? 'Impression cao nhưng click thấp.' : 'Theo dõi thêm.' })).slice(0, 8),
+    adGroupsToOptimize: Array.from(byAdGroup.values()).filter((group) => group.cost > 0 || group.impressions > 0).map((group) => ({ ...group, reason: group.cost > 0 && group.conversions === 0 ? 'Tốn chi phí nhưng chưa có chuyển đổi.' : group.impressions > 500 && group.clicks < 10 ? 'Hiển thị cao nhưng nhấp thấp.' : 'Theo dõi thêm.' })).slice(0, 8),
     opportunities,
     matrix,
   };
+}
+
+function rowsToGoogleAdsText(rows: GoogleAdsKeywordImportRow[]) {
+  const headers = [
+    'Keyword',
+    'Currency',
+    'Avg. monthly searches',
+    'Competition',
+    'Competition (indexed value)',
+    'Top of page bid (low range)',
+    'Top of page bid (high range)',
+    'CPC',
+    'Clicks',
+    'Impressions',
+    'CTR',
+    'Cost',
+    'Conversions',
+    'Conversion rate',
+    'Campaign',
+    'Ad group',
+  ];
+  const escapeCell = (value: unknown) => String(value ?? '').replace(/\r?\n/g, ' ').replace(/\t/g, ' ');
+  const lines = rows.map((row) => [
+    row.keyword,
+    row.currency,
+    row.avg_monthly_searches,
+    row.competition,
+    row.competition_index,
+    row.low_top_of_page_bid,
+    row.high_top_of_page_bid,
+    row.cpc,
+    row.clicks,
+    row.impressions,
+    row.ctr,
+    row.cost,
+    row.conversions,
+    row.conversion_rate,
+    row.campaign,
+    row.ad_group,
+  ].map(escapeCell).join('\t'));
+  return [headers.join('\t'), ...lines].join('\n');
+}
+
+function normalizeGoogleAdsRow(row: Partial<GoogleAdsKeywordImportRow>, index: number): GoogleAdsKeywordImportRow | null {
+  const keyword = String(row.keyword || '').trim();
+  if (!keyword) return null;
+  const cluster = businessCluster(keyword);
+  return {
+    id: row.id || 'ads-' + normalizeGoogleAdsKeyword(keyword).replace(/\s+/g, '-') + '-' + index,
+    keyword,
+    avg_monthly_searches: row.avg_monthly_searches,
+    competition: row.competition || normalizeCompetition(row.competition, row.competition_index),
+    competition_index: row.competition_index,
+    low_top_of_page_bid: row.low_top_of_page_bid,
+    high_top_of_page_bid: row.high_top_of_page_bid,
+    cpc: row.cpc,
+    currency: row.currency,
+    ad_impression_share: row.ad_impression_share,
+    organic_impression_share: row.organic_impression_share,
+    organic_average_position: row.organic_average_position,
+    monthlySearches: row.monthlySearches,
+    campaign: row.campaign,
+    ad_group: row.ad_group,
+    clicks: row.clicks,
+    impressions: row.impressions,
+    ctr: row.ctr,
+    cost: row.cost,
+    conversions: row.conversions,
+    conversion_rate: row.conversion_rate,
+    cluster: row.cluster || cluster.cluster,
+    businessPriority: Number(row.businessPriority || cluster.priority),
+    commercialIntent: Number(row.commercialIntent || commercialIntent(keyword)),
+  };
+}
+
+export function analyzeGoogleAdsRows(rows: GoogleAdsKeywordImportRow[], searchConsoleData?: SearchConsoleV7Data | null, keywords: SeoKeyword[] = [], clusters: SeoCluster[] = []): GoogleAdsImportData | null {
+  const cleanRows = rows
+    .map((row, index) => normalizeGoogleAdsRow(row, index))
+    .filter((row): row is GoogleAdsKeywordImportRow => Boolean(row));
+  if (!cleanRows.length) return null;
+  return analyzeGoogleAdsImport(rowsToGoogleAdsText(cleanRows), searchConsoleData, keywords, clusters);
+}
+
+function normalizeSources(value: unknown): GoogleAdsImportSource[] {
+  if (!Array.isArray(value)) return [];
+  const sources: GoogleAdsImportSource[] = [];
+  value.forEach((item) => {
+    const source = item as Partial<GoogleAdsImportSource>;
+    if (!source.importedAt) return;
+    sources.push({
+      fileName: source.fileName,
+      importedAt: source.importedAt,
+      rowCount: Number(source.rowCount || 0),
+      mode: source.mode === 'replace' ? 'replace' : 'merge',
+      addedCount: source.addedCount,
+      updatedCount: source.updatedCount,
+      totalCount: source.totalCount,
+    });
+  });
+  return sources;
+}
+
+export function normalizeGoogleAdsImportData(value: unknown): GoogleAdsImportData | null {
+  if (!value || typeof value !== 'object') return null;
+  const wrapper = value as { data?: unknown; rows?: unknown; items?: unknown; summary?: unknown; sources?: unknown; lastImportedAt?: string; lastUpdated?: string; fileName?: string; rowCount?: number };
+  const sourceValue = wrapper.data && typeof wrapper.data === 'object' ? wrapper.data as typeof wrapper : wrapper;
+  const rawRows = Array.isArray(sourceValue.rows) ? sourceValue.rows : Array.isArray(sourceValue.items) ? sourceValue.items : [];
+  const rows = rawRows
+    .map((row, index) => normalizeGoogleAdsRow(row as Partial<GoogleAdsKeywordImportRow>, index))
+    .filter((row): row is GoogleAdsKeywordImportRow => Boolean(row));
+  if (!rows.length) return null;
+  const data = sourceValue as Partial<GoogleAdsImportData>;
+  const fallbackSummary = data.summary as Partial<GoogleAdsImportSummary> | undefined;
+  const lastUpdated = data.lastUpdated || fallbackSummary?.lastUpdated || wrapper.lastUpdated || new Date().toISOString();
+  const normalized: GoogleAdsImportData = {
+    source: 'import',
+    lastUpdated,
+    rows,
+    summary: {
+      keywordCount: rows.length,
+      totalSearchVolume: Number(fallbackSummary?.totalSearchVolume || sum(rows.map((row) => row.avg_monthly_searches))),
+      averageCpc: fallbackSummary?.averageCpc ?? average(rows.map((row) => row.cpc || row.high_top_of_page_bid || row.low_top_of_page_bid)),
+      averageCompetitionIndex: fallbackSummary?.averageCompetitionIndex ?? average(rows.map((row) => row.competition_index)),
+      totalClicks: Number(fallbackSummary?.totalClicks || sum(rows.map((row) => row.clicks))),
+      totalImpressions: Number(fallbackSummary?.totalImpressions || sum(rows.map((row) => row.impressions))),
+      totalCost: Number(fallbackSummary?.totalCost || sum(rows.map((row) => row.cost))),
+      totalConversions: Number(fallbackSummary?.totalConversions || sum(rows.map((row) => row.conversions))),
+      hasAdsPerformance: Boolean(fallbackSummary?.hasAdsPerformance || rows.some((row) => row.clicks !== undefined || row.impressions !== undefined || row.cost !== undefined || row.conversions !== undefined)),
+      lastUpdated,
+    },
+    topVolume: data.topVolume || [],
+    lowCpcGoodVolume: data.lowCpcGoodVolume || [],
+    lowCompetition: data.lowCompetition || [],
+    highCommercial: data.highCommercial || [],
+    shouldSeo: data.shouldSeo || [],
+    shouldAds: data.shouldAds || [],
+    shouldWatch: data.shouldWatch || [],
+    wasteKeywords: data.wasteKeywords || [],
+    lowCtrKeywords: data.lowCtrKeywords || [],
+    highCpcKeywords: data.highCpcKeywords || [],
+    goodConversionKeywords: data.goodConversionKeywords || [],
+    highImpressionLowClickKeywords: data.highImpressionLowClickKeywords || [],
+    adGroupsToOptimize: data.adGroupsToOptimize || [],
+    opportunities: data.opportunities || [],
+    matrix: data.matrix || [],
+    sources: normalizeSources(data.sources || wrapper.sources),
+    lastImportedAt: data.lastImportedAt || wrapper.lastImportedAt || lastUpdated,
+  };
+  return normalized;
+}
+
+export function mergeGoogleAdsImportData(
+  existing: GoogleAdsImportData | null | undefined,
+  incoming: GoogleAdsImportData | null | undefined,
+  mode: GoogleAdsImportMode,
+  meta: { fileName?: string; rowCount?: number; importedAt?: string },
+  searchConsoleData?: SearchConsoleV7Data | null,
+  keywords: SeoKeyword[] = [],
+  clusters: SeoCluster[] = [],
+): GoogleAdsImportMergeResult | null {
+  const incomingData = normalizeGoogleAdsImportData(incoming);
+  if (!incomingData?.rows.length) return null;
+  const existingData = normalizeGoogleAdsImportData(existing);
+  const importedAt = meta.importedAt || new Date().toISOString();
+  const merged = new Map<string, GoogleAdsKeywordImportRow>();
+
+  if (mode === 'merge' && existingData?.rows.length) {
+    existingData.rows.forEach((row) => {
+      const key = normalizeGoogleAdsKeyword(row.keyword);
+      if (key) merged.set(key, row);
+    });
+  }
+
+  let addedCount = 0;
+  let updatedCount = 0;
+  incomingData.rows.forEach((row, index) => {
+    const cleanRow = normalizeGoogleAdsRow(row, index);
+    if (!cleanRow) return;
+    const key = normalizeGoogleAdsKeyword(cleanRow.keyword);
+    if (!key) return;
+    if (merged.has(key)) updatedCount += 1;
+    else addedCount += 1;
+    merged.set(key, { ...merged.get(key), ...cleanRow });
+  });
+
+  const rows = Array.from(merged.values());
+  const analyzed = analyzeGoogleAdsRows(rows, searchConsoleData, keywords, clusters);
+  if (!analyzed) return null;
+  const source: GoogleAdsImportSource = {
+    fileName: meta.fileName,
+    importedAt,
+    rowCount: Number(meta.rowCount || incomingData.rows.length),
+    mode,
+    addedCount,
+    updatedCount,
+    totalCount: analyzed.summary.keywordCount,
+  };
+  const previousSources = mode === 'merge' ? existingData?.sources || [] : [];
+  const data: GoogleAdsImportData = {
+    ...analyzed,
+    sources: [source, ...previousSources].slice(0, 20),
+    lastImportedAt: importedAt,
+    lastUpdated: importedAt,
+    summary: { ...analyzed.summary, keywordCount: analyzed.rows.length, lastUpdated: importedAt },
+  };
+  return { data, source, addedCount, updatedCount, totalCount: data.summary.keywordCount };
 }

@@ -70,18 +70,19 @@ const bunkBedGroup = ['giuong-tang-sat', 'giuong-tang']
               limit={10}
               viewAllLink="/tu-van-phong"
             />
-             <ProductList
+            <ProductList
+              title="GIƯỜNG TẦNG SẮT"
+              products={bunkBedProducts} // Mảng sản phẩm giường tầng đã lấy từ Promise.all.
+              limit={10}
+              viewAllLink="/giuong-tang-sat"
+            />
+            <ProductList
               title="GHẾ VĂN PHÒNG"
               products={officeChairProducts}
               limit={10}
               viewAllLink="/ghe-van-phong"
             />
-            <ProductList
-  title="GIƯỜNG TẦNG SẮT"
-  products={bunkBedProducts} // Mảng sản phẩm giường tầng đã lấy từ Promise.all.
-  limit={10}
-  viewAllLink="/giuong-tang-sat"
-/>
+ 
             {/* <ProductList
               title="GIƯỜNG TẦNG SẮT"
               products={bunkBedGroup}
@@ -94,16 +95,12 @@ const bunkBedGroup = ['giuong-tang-sat', 'giuong-tang']
               limit={10}
               viewAllLink="/ke-trang-tri"
             />
-
-           
-
             <ProductList
               title="BÀN GHẾ CAFE"
               products={cafeProducts}
               limit={10}
               viewAllLink="/ban-ghe-cafe"
             />
-
             <ProductList
               title="SOFA PHÒNG KHÁCH"
               products={sofaProducts}
@@ -112,7 +109,6 @@ const bunkBedGroup = ['giuong-tang-sat', 'giuong-tang']
             />
           </div>
         </section>
-
         <article className={styles.aboutArticle}>
           <div className="container">
             <div className={styles.aboutContent}>

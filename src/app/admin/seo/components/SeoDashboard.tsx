@@ -8,6 +8,7 @@ import { buildContentOpportunities, getRoadmap30Days } from '../services/seoDash
 import { SeoV51FilterBar, type DashboardSeoFilters } from './SeoV5Modules';
 import { AiBlogRanking, AiProductRanking, AiProgressEngine, AiRecommendationHistory, OpportunityScorePanel, SeoHealthRadar, TodaySeoFocusV61, buildV6Analysis } from './SeoV6Modules';
 import SeoV9Modules from './SeoV9Modules';
+import SeoV10Workbench from './SeoV10Workbench';
 import { useSeoDashboard } from '../hooks/useSeoDashboard';
 import styles from '../seo-dashboard.module.css';
 import type { GoogleAdsImportData, IndexSummaryManual, SearchConsoleV7Data } from '../types/seo';
@@ -216,6 +217,7 @@ export default function SeoDashboard() {
         <a href="#tong-quan">Tổng quan</a>
         <a href="#hom-nay">Hôm nay</a>
         <a href="#action-plan">Kế hoạch SEO AI</a>
+        <a href="#seo-workbench">Bàn làm việc SEO</a>
         <a href="#san-pham">Sản phẩm</a>
         <a href="#bai-viet">Bài viết</a>
         <a href="#cum-seo">Cụm SEO</a>
@@ -253,6 +255,18 @@ export default function SeoDashboard() {
           indexSummary={indexSummary}
         />
       </section>
+
+      <section id="seo-workbench">
+        <SeoV10Workbench
+          products={dashboard.productSeoItems}
+          blogs={dashboard.blogSeoItems}
+          keywords={dashboard.seoKeywords}
+          clusters={dashboard.seoClusters}
+          searchConsole={searchConsoleV7}
+          googleAds={googleAdsV8}
+        />
+      </section>
+
       <section id="tong-quan" className={styles.metricGrid}>
         <MetricCard label="Tổng sản phẩm" value={formatNumber(overview?.products || 0)} />
         <MetricCard label="Tổng bài viết" value={formatNumber(overview?.blogPosts || 0)} />
@@ -308,3 +322,6 @@ export default function SeoDashboard() {
     </main>
   );
 }
+
+
+

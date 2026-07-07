@@ -121,12 +121,13 @@
   margin-bottom: 8px;
   line-height: 1.4;
   font-weight: 600;
-  height: 42px;
+  height: 60px;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
+  text-align: center;
 }
 
 .priceWrapper {
@@ -365,13 +366,13 @@
     line-height: 1.4;
     color: #333;
     
-    /* CÃ¡Â»â€˜ Ã„â€˜Ã¡Â»â€¹nh 2 dÃƒÂ²ng chÃ¡Â»Â¯ Ã„â€˜Ã¡Â»Æ’ cÃƒÂ¡c Card luÃƒÂ´n bÃ¡ÂºÂ±ng nhau */
+    /* Tăng lên thành 3 dòng chữ để hiển thị đầy đủ hơn */
     display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    height: 50px; 
+    height: 65px; 
     margin: 0;
   }
 
@@ -445,12 +446,40 @@
   .productCard .imgBox img {
     padding: 16px;
   }
-
-  .productName {
+.productName {
     color: #243447;
     font-size: 14px;
     font-weight: 500;
+    
+    /* 1. CĂN GIỮA TUYỆT ĐỐI */
+    text-align: center;
+    width: 100%;
+    padding: 0 6px;
+    
+    /* 2. DÙNG FLEXBOX ĐỂ CĂN CHỮ THEO CHIỀU DỌC (Hỗ trợ hiển thị nhiều dòng) */
+    display: flex;
+    align-items: center;      /* Căn giữa chữ theo chiều dọc */
+    justify-content: center;   /* Căn giữa chữ theo chiều ngang */
+    
+    /* 3. TĂNG CHIỀU CAO LÊN 60PX (Vừa đủ chỗ hiển thị cho 3 dòng chữ) */
+    height: 84px; 
+    line-height: 1.4;
+    
+    /* 4. LOẠI BỎ HOÀN TOÀN CÁC LỆNH CẮT CHỮ CŨ */
+    overflow: visible;
+    white-space: normal;
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    display: flex; /* Đảm bảo giữ chế độ flexbox */
+    
+    margin-top: 10px;
+    margin-bottom: 12px;
   }
+  /* .productName {
+    color: #243447;
+    font-size: 14px;
+    font-weight: 500;
+  } */
 
   .price {
     color: #e0001b;

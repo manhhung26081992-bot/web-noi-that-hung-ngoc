@@ -14,6 +14,8 @@ import type { GoogleAdsImportData, IndexSummaryManual, SearchConsoleV7Data } fro
 
 const SeoDashboardLowerModules = lazy(() => import('./SeoDashboardLowerModules'));
 const SeoV10Workbench = lazy(() => import('./SeoV10Workbench'));
+const SeoWorkLogV11 = lazy(() => import('./SeoWorkLogV11'));
+const SeoNextActionsV11 = lazy(() => import('./SeoNextActionsV11'));
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat('vi-VN').format(value || 0);
@@ -225,6 +227,8 @@ export default function SeoDashboard() {
       <nav className={styles.v61Tabs} aria-label="Điều hướng SEO Dashboard">
         <a href="#tong-quan">Tổng quan</a>
         <a href="#hom-nay">Hôm nay</a>
+          <a href="#seo-work-log-v11">Nhật ký SEO</a>
+          <a href="#seo-next-actions-v11">Bước tiếp theo</a>
         <a href="#action-plan">Kế hoạch SEO AI</a>
         <a href="#seo-workbench">Trợ lý SEO</a>
         <a href="#san-pham">Sản phẩm</a>
@@ -247,6 +251,28 @@ export default function SeoDashboard() {
         />
       </section>
 
+
+      <section id="seo-work-log-v11">
+        <Suspense fallback={<SkeletonGrid />}>
+          <SeoWorkLogV11 tasks={filteredTasks} noteContent={dashboard.note?.content || ''} />
+        </Suspense>
+      </section>
+
+      <section id="seo-next-actions-v11">
+        <Suspense fallback={<SkeletonGrid />}>
+          <SeoNextActionsV11
+            products={dashboard.productSeoItems as unknown as Record<string, unknown>[]}
+            blogs={dashboard.blogSeoItems as unknown as Record<string, unknown>[]}
+            keywords={dashboard.seoKeywords as unknown as Record<string, unknown>[]}
+            clusters={dashboard.seoClusters as unknown as Record<string, unknown>[]}
+            tasks={filteredTasks as unknown as Record<string, unknown>[]}
+            logs={dashboard.seoLogs as unknown as Record<string, unknown>[]}
+            searchConsole={searchConsoleV7}
+            googleAds={googleAdsV8}
+            indexSummary={indexSummary}
+          />
+        </Suspense>
+      </section>
 
       <section id="action-plan">
         <SeoV9Modules

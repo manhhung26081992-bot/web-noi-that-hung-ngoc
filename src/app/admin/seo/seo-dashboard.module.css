@@ -1220,3 +1220,272 @@
 
 .workbenchStartBox{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:14px;border:1px solid var(--seo-border);border-radius:14px;background:var(--seo-panel)}
 .workbenchStartBox p{margin:0;flex:1 1 280px}
+
+
+.v11Stack{display:grid;gap:16px}
+.v11Panel{display:grid;gap:12px;border:1px solid var(--seo-border);border-radius:14px;background:var(--seo-panel);padding:16px;min-width:0}
+.v11Panel h3{margin:0;color:var(--seo-text);font-size:18px;line-height:1.35}
+.v11FormGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.v11FormGrid label,.v11FilterBar label{display:grid;gap:6px;color:var(--seo-muted);font-size:13px;font-weight:700}
+.v11FormGrid input,.v11FormGrid select,.v11FormGrid textarea,.v11Panel textarea,.v11FilterBar input,.v11FilterBar select{width:100%;min-height:42px;border:1px solid var(--seo-border);border-radius:10px;background:var(--seo-panel);color:var(--seo-text);padding:10px 12px;font:inherit;outline:none}
+.v11FormGrid textarea,.v11Panel textarea{min-height:92px;resize:vertical}
+.v11FormGrid input:focus,.v11FormGrid select:focus,.v11FormGrid textarea:focus,.v11Panel textarea:focus,.v11FilterBar input:focus,.v11FilterBar select:focus{border-color:var(--seo-primary);box-shadow:0 0 0 3px rgba(14,165,233,.16)}
+.v11Wide{grid-column:1/-1}
+.v11Actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.v11MiniRow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid var(--seo-border);border-radius:10px;padding:10px;background:var(--seo-soft)}
+.v11FilterBar{display:grid;grid-template-columns:2fr repeat(4,minmax(130px,1fr));gap:10px;align-items:end}
+.v11LogList{display:grid;gap:12px}
+.v11LogCard{display:grid;grid-template-columns:1fr minmax(150px,240px);gap:14px;border:1px solid var(--seo-border);border-radius:14px;background:var(--seo-panel);padding:14px;min-width:0}
+.v11LogCard h3,.v11ActionCard h3{margin:4px 0;color:var(--seo-text);line-height:1.35;font-size:17px}
+.v11LogCard p,.v11ActionCard p{margin:0;color:var(--seo-muted);line-height:1.45;word-break:break-word}
+.v11LogCard small,.v11ActionCard small{color:var(--seo-muted);font-weight:700}
+.v11StatusBox{display:grid;gap:6px;align-content:start;border:1px solid var(--seo-border);border-radius:12px;background:var(--seo-soft);padding:10px}
+.v11StatusBox span,.v11CardTop span{display:inline-flex;width:max-content;max-width:100%;border-radius:999px;background:rgba(14,165,233,.14);color:var(--seo-primary);padding:5px 10px;font-weight:800}
+.v11ActionGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.v11ActionCard{display:grid;gap:10px;border:1px solid var(--seo-border);border-radius:14px;background:var(--seo-panel);padding:16px;min-width:0;box-shadow:0 8px 24px rgba(15,23,42,.05)}
+.v11ActionCard ul{margin:0;padding-left:18px;color:var(--seo-muted);line-height:1.45}
+.v11CardTop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.v11Empty{display:grid;gap:6px;border:1px dashed var(--seo-border);border-radius:14px;background:var(--seo-soft);padding:18px;color:var(--seo-muted)}
+.v11Empty strong{color:var(--seo-text)}
+
+@media (max-width:1100px){
+  .v11FormGrid,.v11FilterBar,.v11ActionGrid{grid-template-columns:1fr 1fr}
+}
+
+@media (max-width:720px){
+  .v11FormGrid,.v11FilterBar,.v11ActionGrid,.v11LogCard,.v11MiniRow{grid-template-columns:1fr}
+  .v11Actions button{width:100%}
+}
+
+.v11UrlText {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Mobile polish for SEO Workbench v10 and SEO v11 */
+.workbenchLayout,
+.workbenchControls,
+.workbenchResults,
+.workbenchSuggestion,
+.workbenchSuggestionEmpty,
+.workbenchPanelBox,
+.workbenchCopyBox,
+.workbenchKeywordSection,
+.workbenchStartBox,
+.v11Stack,
+.v11Panel,
+.v11LogList,
+.v11LogCard,
+.v11ActionGrid,
+.v11ActionCard,
+.v11StatusBox,
+.v11MiniRow {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.workbenchResultCard h4,
+.workbenchResultCard p,
+.workbenchMiniCard strong,
+.workbenchPanelBox p,
+.workbenchPanelBox li,
+.workbenchCopyBox pre,
+.v11LogCard h3,
+.v11LogCard p,
+.v11ActionCard h3,
+.v11ActionCard p,
+.v11ActionCard li,
+.v11Empty,
+.v11UrlText {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.workbenchKeywordSection {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.workbenchKeywordTable {
+  table-layout: auto;
+}
+
+.workbenchInlineActions a,
+.workbenchInlineActions button,
+.v11Actions button,
+.v11Actions a {
+  white-space: normal;
+}
+
+.v11CardTop {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .workbenchStartBox {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .workbenchStartBox button,
+  .workbenchResultCard button,
+  .workbenchSuggestionHeader a,
+  .workbenchCopyHeader button {
+    width: 100%;
+  }
+
+  .workbenchKeywordTable {
+    min-width: 820px;
+  }
+
+  .workbenchInlineActions {
+    min-width: 180px;
+  }
+
+  .v11Panel {
+    padding: 14px;
+  }
+
+  .v11CardTop {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .v11CardTop span,
+  .v11StatusBox span {
+    width: fit-content;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .workbenchLayout {
+    gap: 14px;
+  }
+
+  .workbenchControls,
+  .workbenchResults,
+  .workbenchSuggestion,
+  .workbenchSuggestionEmpty,
+  .workbenchPanelBox,
+  .workbenchCopyBox,
+  .workbenchKeywordSection,
+  .v11Panel,
+  .v11LogCard,
+  .v11ActionCard {
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  .workbenchControlGrid input,
+  .workbenchControlGrid select,
+  .workbenchKeywordTools input,
+  .workbenchKeywordTools select,
+  .workbenchUrlSelect,
+  .v11FormGrid input,
+  .v11FormGrid select,
+  .v11FormGrid textarea,
+  .v11Panel textarea,
+  .v11FilterBar input,
+  .v11FilterBar select {
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  .workbenchFilterList,
+  .v11Actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .workbenchFilterList button,
+  .v11Actions button,
+  .v11Actions a {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .workbenchSuggestionHeader,
+  .workbenchCopyHeader,
+  .workbenchSummaryLine {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .workbenchPagination {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    width: 100%;
+  }
+
+  .workbenchPagination button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .workbenchKeywordSection {
+    margin-left: -2px;
+    margin-right: -2px;
+  }
+
+  .workbenchKeywordTable {
+    min-width: 760px;
+  }
+
+  .workbenchKeywordTable th,
+  .workbenchKeywordTable td {
+    padding: 10px;
+  }
+
+  .workbenchInlineActions {
+    min-width: 160px;
+  }
+
+  .v11Stack {
+    gap: 12px;
+  }
+
+  .v11FormGrid,
+  .v11FilterBar,
+  .v11ActionGrid,
+  .v11LogCard,
+  .v11MiniRow {
+    grid-template-columns: 1fr;
+  }
+
+  .v11StatusBox {
+    grid-template-columns: 1fr;
+  }
+
+  .v11Panel h3 {
+    font-size: 16px;
+  }
+
+  .v11LogCard h3,
+  .v11ActionCard h3 {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .workbenchKeywordTable {
+    min-width: 700px;
+  }
+
+  .workbenchMiniCard,
+  .workbenchResultCard,
+  .workbenchPanelBox,
+  .v11Empty,
+  .v11StatusBox {
+    padding: 10px;
+  }
+
+  .workbenchCopyBox pre {
+    font-size: 12px;
+  }
+}

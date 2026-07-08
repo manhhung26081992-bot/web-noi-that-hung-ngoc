@@ -1,19 +1,19 @@
 ﻿'use client';
 
 import { lazy, Suspense, useMemo, useState } from 'react';
-import { MetricCard, SkeletonGrid } from './Ui';
+import { MetricCard, ModuleCard, SkeletonGrid } from './Ui';
 import { buildAiInsights, buildSeoCommands, buildTodaySummary } from './SeoV3Modules';
 import { buildAiDailyBrief, buildSeoScoreV41 } from './SeoV4Modules';
 import { buildContentOpportunities, getRoadmap30Days } from '../services/seoDashboardService';
 import { SeoV51FilterBar, type DashboardSeoFilters } from './SeoV5Modules';
 import { AiBlogRanking, AiProductRanking, AiProgressEngine, AiRecommendationHistory, OpportunityScorePanel, SeoHealthRadar, TodaySeoFocusV61, buildV6Analysis } from './SeoV6Modules';
 import SeoV9Modules from './SeoV9Modules';
-import SeoV10Workbench from './SeoV10Workbench';
 import { useSeoDashboard } from '../hooks/useSeoDashboard';
 import styles from '../seo-dashboard.module.css';
 import type { GoogleAdsImportData, IndexSummaryManual, SearchConsoleV7Data } from '../types/seo';
 
 const SeoDashboardLowerModules = lazy(() => import('./SeoDashboardLowerModules'));
+const SeoV10Workbench = lazy(() => import('./SeoV10Workbench'));
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat('vi-VN').format(value || 0);
@@ -55,6 +55,14 @@ export default function SeoDashboard() {
   const [searchConsoleV7, setSearchConsoleV7] = useState<SearchConsoleV7Data | null>(null);
   const [googleAdsV8, setGoogleAdsV8] = useState<GoogleAdsImportData | null>(null);
   const [indexSummary, setIndexSummary] = useState<IndexSummaryManual | null>(null);
+  const [workbenchEnabled, setWorkbenchEnabled] = useState(false);
+
+  function openWorkbench() {
+    setWorkbenchEnabled(true);
+    window.setTimeout(() => {
+      document.getElementById('seo-workbench')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+  }
 
   const filteredKeywords = useMemo(() => dashboard.seoKeywords.filter((item) => {
     if (!matchesSearch(filters.search, item.keyword, item.cluster, item.target_url, item.status, item.intent)) return false;
@@ -208,6 +216,7 @@ export default function SeoDashboard() {
         <div className={styles.heroActions}>
           <button className={`${styles.secondaryButton} ${styles.themeButton}`} onClick={() => setDarkMode((value) => !value)}>{darkMode ? 'Giao diện sáng' : 'Giao diện tối'}</button>
           <button className={`${styles.primaryButton} ${styles.refreshButton}`} onClick={actions.reload}>Làm mới</button>
+          <button className={`${styles.primaryButton} ${styles.refreshButton}`} type="button" onClick={openWorkbench}>Mở Trợ lý SEO v10</button>
         </div>
       </header>
 
@@ -217,7 +226,7 @@ export default function SeoDashboard() {
         <a href="#tong-quan">Tổng quan</a>
         <a href="#hom-nay">Hôm nay</a>
         <a href="#action-plan">Kế hoạch SEO AI</a>
-        <a href="#seo-workbench">Bàn làm việc SEO</a>
+        <a href="#seo-workbench">Trợ lý SEO</a>
         <a href="#san-pham">Sản phẩm</a>
         <a href="#bai-viet">Bài viết</a>
         <a href="#cum-seo">Cụm SEO</a>
@@ -257,14 +266,26 @@ export default function SeoDashboard() {
       </section>
 
       <section id="seo-workbench">
-        <SeoV10Workbench
-          products={dashboard.productSeoItems}
-          blogs={dashboard.blogSeoItems}
-          keywords={dashboard.seoKeywords}
-          clusters={dashboard.seoClusters}
-          searchConsole={searchConsoleV7}
-          googleAds={googleAdsV8}
-        />
+        {workbenchEnabled ? (
+          <Suspense fallback={<SkeletonGrid />}>
+            <SeoV10Workbench
+              products={dashboard.productSeoItems}
+              blogs={dashboard.blogSeoItems}
+              keywords={dashboard.seoKeywords}
+              clusters={dashboard.seoClusters}
+              searchConsole={searchConsoleV7}
+              googleAds={googleAdsV8}
+            />
+          </Suspense>
+        ) : (
+          <ModuleCard
+            title="Trợ lý SEO v10.0"
+            description="Phần này phân tích toàn bộ sản phẩm, bài viết, danh mục và keyword để chống trùng SEO, tạo title, meta, FAQ và gợi ý liên kết nội bộ. Mình để tải khi cần để trang /admin/seo mở nhanh hơn."
+            action={<button className={styles.primaryButton} type="button" onClick={openWorkbench}>Mở Trợ lý SEO v10</button>}
+          >
+            <p className={styles.muted}>Nếu bạn chỉ xem tổng quan, Search Console hoặc Google Ads thì chưa cần mở phần này. Khi cần tạo bài, kiểm tra keyword đã dùng hoặc copy nội dung SEO thì bấm nút mở.</p>
+          </ModuleCard>
+        )}
       </section>
 
       <section id="tong-quan" className={styles.metricGrid}>
@@ -322,6 +343,7 @@ export default function SeoDashboard() {
     </main>
   );
 }
+
 
 
 

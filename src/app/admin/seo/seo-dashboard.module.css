@@ -1055,3 +1055,168 @@
 .dark .workbenchCopyBox pre{background:#0f172a}
 @media (max-width:900px){.workbenchControlGrid,.workbenchResultGrid,.workbenchChecklist{grid-template-columns:1fr}.workbenchSuggestionHeader{display:grid}.workbenchPagination{justify-content:stretch}.workbenchPagination button{flex:1}.workbenchControls,.workbenchResults,.workbenchSuggestion,.workbenchSuggestionEmpty,.workbenchPanelBox,.workbenchCopyBox{padding:12px}.workbenchFilterList{display:grid;grid-template-columns:1fr 1fr}.workbenchFilterList button{border-radius:10px;white-space:normal}.workbenchSummaryLine{display:grid}}
 @media (max-width:520px){.workbenchFilterList{grid-template-columns:1fr}.workbenchCopyHeader{display:grid}.workbenchCopyHeader button{width:100%}}
+
+/* SEO Workbench v10 - keyword map & duplicate prevention */
+.workbenchKeywordSection {
+  border: 1px solid var(--seo-border, #dbe4f0);
+  border-radius: 16px;
+  background: var(--seo-card, #ffffff);
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.workbenchKeywordTools {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(180px, 260px) auto;
+  gap: 12px;
+  align-items: center;
+  margin: 14px 0;
+}
+
+.workbenchKeywordTools input,
+.workbenchKeywordTools select,
+.workbenchUrlSelect {
+  width: 100%;
+  border: 1px solid var(--seo-border, #dbe4f0);
+  border-radius: 10px;
+  background: var(--seo-input, #ffffff);
+  color: var(--seo-text, #0f172a);
+  padding: 10px 12px;
+  font-weight: 600;
+}
+
+.workbenchKeywordTools span {
+  color: var(--seo-muted, #64748b);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.workbenchKeywordTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1040px;
+}
+
+.workbenchKeywordTable th,
+.workbenchKeywordTable td {
+  border-bottom: 1px solid var(--seo-border, #dbe4f0);
+  padding: 12px;
+  text-align: left;
+  vertical-align: top;
+  color: var(--seo-text, #0f172a);
+}
+
+.workbenchKeywordTable th {
+  background: var(--seo-soft, #f8fafc);
+  font-size: 0.84rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.workbenchKeywordTable td strong,
+.workbenchKeywordTable td small {
+  display: block;
+}
+
+.workbenchKeywordTable td small {
+  color: var(--seo-muted, #64748b);
+  margin-top: 4px;
+}
+
+.workbenchInlineActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 220px;
+}
+
+.workbenchInlineActions a,
+.workbenchInlineActions button {
+  min-height: 34px;
+  padding: 7px 10px;
+  font-size: 0.86rem;
+}
+
+.workbenchWarningBox {
+  border: 1px solid #f59e0b;
+  border-left-width: 5px;
+  background: #fffbeb;
+  color: #78350f;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.workbenchWarningBox strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.workbenchWarningBox p {
+  margin: 0 0 8px;
+}
+
+.workbenchWarningBox a {
+  color: #92400e;
+  font-weight: 800;
+}
+
+:global(.dark) .workbenchKeywordSection,
+.dark .workbenchKeywordSection {
+  background: var(--seo-card, #172033);
+  border-color: var(--seo-border, #334155);
+}
+
+:global(.dark) .workbenchKeywordTools input,
+:global(.dark) .workbenchKeywordTools select,
+:global(.dark) .workbenchUrlSelect,
+.dark .workbenchKeywordTools input,
+.dark .workbenchKeywordTools select,
+.dark .workbenchUrlSelect {
+  background: #0f172a;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+:global(.dark) .workbenchKeywordTable th,
+.dark .workbenchKeywordTable th {
+  background: #0f172a;
+}
+
+:global(.dark) .workbenchKeywordTable th,
+:global(.dark) .workbenchKeywordTable td,
+.dark .workbenchKeywordTable th,
+.dark .workbenchKeywordTable td {
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+:global(.dark) .workbenchWarningBox,
+.dark .workbenchWarningBox {
+  background: rgba(120, 53, 15, 0.32);
+  border-color: #f59e0b;
+  color: #fde68a;
+}
+
+:global(.dark) .workbenchWarningBox a,
+.dark .workbenchWarningBox a {
+  color: #fbbf24;
+}
+
+@media (max-width: 768px) {
+  .workbenchKeywordSection {
+    padding: 14px;
+  }
+
+  .workbenchKeywordTools {
+    grid-template-columns: 1fr;
+  }
+
+  .workbenchKeywordTools span {
+    white-space: normal;
+  }
+}
+
+
+.workbenchStartBox{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:14px;border:1px solid var(--seo-border);border-radius:14px;background:var(--seo-panel)}
+.workbenchStartBox p{margin:0;flex:1 1 280px}

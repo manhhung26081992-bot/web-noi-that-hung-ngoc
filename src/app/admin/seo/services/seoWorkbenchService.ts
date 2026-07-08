@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   GoogleAdsImportData,
   ProductSeoItem,
   SearchConsoleQuery,
@@ -10,6 +10,8 @@
 
 export type WorkbenchTargetType = 'product' | 'blog' | 'category' | 'keyword';
 export type WorkbenchFilterKey = 'core' | 'searchConsole' | 'keywordPlanner' | 'missingFaq' | 'thinDescription' | 'missingInternalLink' | 'position10to30' | 'lowCtr' | 'highCpcSeoChance';
+export type UsedKeywordStatus = 'unused' | 'primary' | 'cannibalization' | 'update_old' | 'support_article';
+export type UsedKeywordFilterKey = 'all' | 'unused' | 'primary' | 'cannibalization' | 'update_old' | 'support_article' | 'core' | 'searchConsole' | 'keywordPlanner';
 
 export interface SeoWorkbenchItem {
   id: string;
@@ -49,8 +51,43 @@ export interface SeoInternalLinkSuggestion {
   reason: string;
 }
 
+export interface KeywordPrimaryMapEntry {
+  keyword: string;
+  primaryUrl: string;
+  urlType: WorkbenchTargetType;
+  note?: string;
+  updatedAt: string;
+}
+
+export interface UsedKeywordUrl {
+  url: string;
+  title: string;
+  type: WorkbenchTargetType;
+  score: number;
+  reason: string;
+}
+
+export interface UsedKeywordInsight {
+  keyword: string;
+  normalizedKeyword: string;
+  status: UsedKeywordStatus;
+  label: string;
+  primaryUrl?: string;
+  primaryUrlType?: WorkbenchTargetType;
+  urls: UsedKeywordUrl[];
+  competingCount: number;
+  recommendation: string;
+  anchorText: string;
+  taskText: string;
+  core: boolean;
+  source: string;
+  searchConsole?: { impressions: number; clicks: number; ctr: number; position: number };
+  ads?: { volume: number; cpc?: number; competition?: string };
+}
+
 export interface SeoWorkbenchSuggestion {
   item: SeoWorkbenchItem;
+  keywordInsight?: UsedKeywordInsight;
   primaryKeyword: string;
   secondaryKeywords: string[];
   title: string;
@@ -100,6 +137,10 @@ const SECONDARY_GROUPS = [
   { name: 'Tủ locker', url: '/tu-locker/', words: ['tu locker', 'tu sat locker'] },
   { name: 'Tủ văn phòng', url: '/tu-van-phong/', words: ['tu van phong', 'tu ho so', 'tu tai lieu'] },
 ];
+
+export function normalizeKeyword(value: unknown) {
+  return normalizeText(value);
+}
 
 function normalizeText(value: unknown) {
   return String(value ?? '')
@@ -382,6 +423,335 @@ export function filterSeoWorkbenchItems(items: SeoWorkbenchItem[], options: { ty
   return { filtered, pageItems: filtered.slice((page - 1) * options.pageSize, page * options.pageSize), totalPages, page };
 }
 
+const STOP_WORDS = new Set(['gia', 're', 'tai', 'ha', 'noi', 'that', 'hung', 'ngoc', 'cao', 'cap', 'dep', 'mau', 'cho', 'cua', 'va', 'co', 'khong', 'nen', 'chon']);
+const BROAD_CATEGORY_KEYWORDS = ['giuong sat', 'giuong tang sat', 'ban lam viec', 'ban van phong', 'ban ghe hoc sinh', 'truong hoc'];
+
+function readText(record: unknown, key: string) {
+  const value = (record as Record<string, unknown> | null)?.[key];
+  if (Array.isArray(value)) return value.join(' ');
+  if (typeof value === 'object' && value !== null) return JSON.stringify(value);
+  return String(value ?? '');
+}
+
+function cleanKeywordDisplay(value: unknown) {
+  return String(value ?? '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[-_/]+/g, ' ')
+    .replace(/\bHN\s*\d+\b/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function keywordCandidatePriority(keyword: string) {
+  const normalized = normalizeKeyword(keyword);
+  let score = businessScore(keyword);
+  if (CORE_GROUPS.some((group) => group.name.toLowerCase() === keyword || group.words.some((word) => normalized.includes(word)))) score += 45;
+  if (SECONDARY_GROUPS.some((group) => group.name.toLowerCase() === keyword || group.words.some((word) => normalized.includes(word)))) score += 18;
+  if (BROAD_CATEGORY_KEYWORDS.some((item) => normalized.includes(item) || item.includes(normalized))) score += 25;
+  const wordCount = normalized.split(' ').filter(Boolean).length;
+  if (wordCount >= 2 && wordCount <= 5) score += 12;
+  if (/hns*d+/i.test(String(keyword))) score += 8;
+  return score;
+}
+
+function addCandidate(target: Map<string, string>, keyword: unknown) {
+  const display = cleanKeywordDisplay(keyword);
+  const normalized = normalizeKeyword(display);
+  if (!normalized || normalized.length < 4) return;
+  const words = normalized.split(' ').filter(Boolean);
+  if (words.length === 1 && !['sofa'].includes(normalized)) return;
+  if (words.every((word) => STOP_WORDS.has(word))) return;
+  if (!target.has(normalized)) target.set(normalized, display || normalized);
+}
+
+export function extractKeywordsFromTitle(title: string) {
+  const clean = cleanKeywordDisplay(title);
+  const normalized = normalizeKeyword(clean);
+  const words = normalized.split(' ').filter((word) => word && !STOP_WORDS.has(word) && !/^hn\d+$/i.test(word));
+  const phrases = new Set<string>();
+  if (words.length >= 2) phrases.add(words.slice(0, Math.min(5, words.length)).join(' '));
+  for (const group of [...CORE_GROUPS, ...SECONDARY_GROUPS]) {
+    if (group.words.some((word) => normalized.includes(word))) phrases.add(group.name.toLowerCase());
+  }
+  for (let size = 2; size <= Math.min(4, words.length); size += 1) {
+    for (let index = 0; index <= words.length - size; index += 1) {
+      const phrase = words.slice(index, index + size).join(' ');
+      if (phrase.length >= 8) phrases.add(phrase);
+    }
+  }
+  return Array.from(phrases).slice(0, 8);
+}
+
+export function extractKeywordsFromSlug(slug: string) {
+  const clean = cleanKeywordDisplay(slug.replace(/-/g, ' '));
+  return extractKeywordsFromTitle(clean);
+}
+
+function keywordOverlap(keyword: string, text: string) {
+  const key = normalizeKeyword(keyword);
+  const haystack = normalizeKeyword(text);
+  if (!key || !haystack) return 0;
+  if (haystack.includes(key)) return 1;
+  const words = key.split(' ').filter((word) => word.length > 2 && !STOP_WORDS.has(word));
+  if (!words.length) return 0;
+  const matched = words.filter((word) => haystack.includes(word)).length;
+  return matched / words.length;
+}
+
+function isQuestionKeyword(keyword: string) {
+  const normalized = normalizeKeyword(keyword);
+  return ['cach ', 'tai sao', 'co nen', 'nen ', 'kinh nghiem', 'bao nhieu', 'chon ', 'so sanh', 'loai nao'].some((word) => normalized.includes(word));
+}
+
+function isSpecificKeyword(keyword: string) {
+  const raw = String(keyword ?? '');
+  const normalized = normalizeKeyword(raw);
+  return /hn\s*\d+/i.test(raw) || /\d/.test(normalized) || normalized.split(' ').length >= 5;
+}
+
+function isBroadCategoryKeyword(keyword: string) {
+  const normalized = normalizeKeyword(keyword);
+  return BROAD_CATEGORY_KEYWORDS.some((item) => normalized.includes(item) || item.includes(normalized));
+}
+
+function statusLabel(status: UsedKeywordStatus) {
+  if (status === 'unused') return 'Chưa dùng';
+  if (status === 'primary') return 'Đã có URL chính';
+  if (status === 'cannibalization') return 'Có nguy cơ trùng từ khóa';
+  if (status === 'update_old') return 'Nên cập nhật bài cũ';
+  return 'Nên tạo bài hỗ trợ';
+}
+
+function buildUrlIndex(input: SeoWorkbenchBuildInput): UsedKeywordUrl[] {
+  const urls: UsedKeywordUrl[] = [];
+  input.products.forEach((product) => {
+    const url = productUrl(product.slug);
+    urls.push({
+      url,
+      title: product.name || product.slug || 'Sản phẩm',
+      type: 'product',
+      score: scoreItem([product.name, product.category].join(' '), product.issues || []),
+      reason: [product.name, product.slug, product.category, readText(product, 'description'), readText(product, 'detailDescription'), readText(product, 'seo_content')].join(' '),
+    });
+  });
+  input.blogs.forEach((blog) => {
+    const url = blogUrl(blog.slug);
+    urls.push({
+      url,
+      title: blog.title || blog.slug || 'Bài viết',
+      type: 'blog',
+      score: scoreItem([blog.title, blog.slug].join(' '), blog.issues || []),
+      reason: [blog.title, blog.slug, blog.excerpt, readText(blog, 'content'), readText(blog, 'seo_content')].join(' '),
+    });
+  });
+  input.clusters.forEach((cluster) => {
+    const url = cluster.main_url || detectGroup(cluster.name).url;
+    if (!url || url === '/') return;
+    urls.push({
+      url,
+      title: cluster.name || url,
+      type: 'category',
+      score: businessScore(cluster.name || url) + Math.min(20, (cluster.product_count || 0) + (cluster.post_count || 0)),
+      reason: [cluster.name, cluster.main_url, cluster.note].join(' '),
+    });
+  });
+  input.keywords.forEach((keyword) => {
+    if (!keyword.target_url) return;
+    urls.push({
+      url: keyword.target_url,
+      title: keyword.keyword || keyword.target_url,
+      type: 'keyword',
+      score: toNumber(keyword.priority),
+      reason: [keyword.keyword, keyword.cluster, keyword.target_url, keyword.note].join(' '),
+    });
+  });
+  const unique = new Map<string, UsedKeywordUrl>();
+  urls.forEach((url) => {
+    const key = `${url.type}:${url.url}`;
+    const current = unique.get(key);
+    if (!current || url.score > current.score) unique.set(key, url);
+  });
+  return Array.from(unique.values());
+}
+
+function addUrlKeyword(map: Map<string, UsedKeywordUrl[]>, keyword: string, url: UsedKeywordUrl) {
+  const normalized = normalizeKeyword(keyword);
+  if (!normalized) return;
+  const current = map.get(normalized) || [];
+  if (!current.some((item) => item.url === url.url && item.type === url.type)) current.push(url);
+  map.set(normalized, current);
+}
+
+export function detectUsedKeywordsFromBlogPosts(blogs: SeoBlogQualityItem[]) {
+  const map = new Map<string, UsedKeywordUrl[]>();
+  blogs.forEach((blog) => {
+    const url: UsedKeywordUrl = {
+      url: blogUrl(blog.slug),
+      title: blog.title || blog.slug || 'Bài viết',
+      type: 'blog',
+      score: scoreItem([blog.title, blog.slug].join(' '), blog.issues || []),
+      reason: [blog.title, blog.slug, blog.excerpt, readText(blog, 'content')].join(' '),
+    };
+    [...extractKeywordsFromTitle(blog.title || ''), ...extractKeywordsFromSlug(blog.slug || '')].forEach((keyword) => addUrlKeyword(map, keyword, url));
+  });
+  return map;
+}
+
+export function detectUsedKeywordsFromProducts(products: ProductSeoItem[]) {
+  const map = new Map<string, UsedKeywordUrl[]>();
+  products.forEach((product) => {
+    const url: UsedKeywordUrl = {
+      url: productUrl(product.slug),
+      title: product.name || product.slug || 'Sản phẩm',
+      type: 'product',
+      score: scoreItem([product.name, product.category].join(' '), product.issues || []),
+      reason: [product.name, product.slug, product.category, readText(product, 'description')].join(' '),
+    };
+    [...extractKeywordsFromTitle(product.name || ''), ...extractKeywordsFromSlug(product.slug || ''), productMainKeyword(product)].forEach((keyword) => addUrlKeyword(map, keyword, url));
+  });
+  return map;
+}
+
+export function detectKeywordCannibalization(keyword: string, urls: UsedKeywordUrl[]) {
+  if (urls.length < 2) return false;
+  const realUrls = new Set(urls.map((url) => url.url));
+  if (realUrls.size < 2) return false;
+  if (isSpecificKeyword(keyword) && !isBroadCategoryKeyword(keyword)) return urls.filter((url) => url.type === 'product').length > 1;
+  return normalizeKeyword(keyword).split(' ').length >= 2;
+}
+
+export function findPrimaryUrlForKeyword(keyword: string, urls: UsedKeywordUrl[], saved?: KeywordPrimaryMapEntry) {
+  if (saved?.primaryUrl) {
+    return urls.find((url) => url.url === saved.primaryUrl) || { url: saved.primaryUrl, title: saved.keyword, type: saved.urlType, score: 100, reason: saved.note || 'URL chính do bạn chọn.' };
+  }
+  const group = detectGroup(keyword);
+  const category = urls.find((url) => url.type === 'category' && (url.url === group.url || keywordOverlap(keyword, url.title) >= 0.7));
+  if (isBroadCategoryKeyword(keyword) && category) return category;
+  if (isSpecificKeyword(keyword)) {
+    const product = urls.find((url) => url.type === 'product') || urls.find((url) => url.type === 'keyword' && url.url.includes('/san-pham/'));
+    if (product) return product;
+  }
+  if (isQuestionKeyword(keyword)) {
+    const blog = urls.find((url) => url.type === 'blog');
+    if (blog) return blog;
+  }
+  if (category) return category;
+  return [...urls].sort((a, b) => b.score - a.score)[0];
+}
+
+function recommendationForKeyword(keyword: string, status: UsedKeywordStatus, primary?: UsedKeywordUrl, urls: UsedKeywordUrl[] = []) {
+  if (status === 'unused') return 'Chưa có URL rõ ràng. Nên tạo bài hỗ trợ hoặc landing page nếu keyword thuộc nhóm hàng chủ đạo.';
+  if (status === 'cannibalization') return `Có ${urls.length} URL cùng bắt keyword này. Nên chọn một URL chính, các URL còn lại trỏ internal link về URL chính.`;
+  if (status === 'update_old') return `Không nên viết bài mới trùng. Nên cập nhật lại ${primary?.title || 'URL hiện có'}: bổ sung FAQ, ảnh thật, title/meta và internal link.`;
+  if (status === 'support_article') return `Đã có URL chính ${primary?.url || ''}. Nên viết bài hỗ trợ long-tail và link về URL chính.`;
+  return `Đã có URL chính. Tiếp tục bổ sung internal link, FAQ và nội dung thực tế cho ${primary?.title || keyword}.`;
+}
+
+function taskForKeyword(keyword: string, status: UsedKeywordStatus, primary?: UsedKeywordUrl) {
+  if (status === 'unused') return `Kiểm tra keyword "${keyword}" và tạo nội dung hỗ trợ nếu có sản phẩm/danh mục phù hợp.`;
+  if (status === 'cannibalization') return `Chọn URL chính cho "${keyword}" và chỉnh các trang trùng để trỏ về URL chính.`;
+  if (status === 'update_old') return `Cập nhật URL cũ cho "${keyword}": ${primary?.url || 'URL hiện có'}.`;
+  if (status === 'support_article') return `Viết bài hỗ trợ cho "${keyword}" và đặt link về ${primary?.url || 'URL chính'}.`;
+  return `Đẩy SEO cho "${keyword}" bằng internal link về ${primary?.url || 'URL chính'}.`;
+}
+
+export function buildUsedKeywordInsights(input: SeoWorkbenchBuildInput, savedMap: Record<string, KeywordPrimaryMapEntry> = {}): UsedKeywordInsight[] {
+  const candidates = new Map<string, string>();
+  const urls = buildUrlIndex(input);
+
+  CORE_GROUPS.forEach((group) => {
+    addCandidate(candidates, group.name);
+    group.words.forEach((word) => addCandidate(candidates, word));
+  });
+  SECONDARY_GROUPS.forEach((group) => {
+    addCandidate(candidates, group.name);
+    group.words.forEach((word) => addCandidate(candidates, word));
+  });
+  input.products.forEach((product) => {
+    addCandidate(candidates, productMainKeyword(product));
+    extractKeywordsFromTitle(product.name || '').forEach((keyword) => addCandidate(candidates, keyword));
+    extractKeywordsFromSlug(product.slug || '').forEach((keyword) => addCandidate(candidates, keyword));
+  });
+  input.blogs.forEach((blog) => {
+    extractKeywordsFromTitle(blog.title || '').forEach((keyword) => addCandidate(candidates, keyword));
+    extractKeywordsFromSlug(blog.slug || '').forEach((keyword) => addCandidate(candidates, keyword));
+  });
+  input.keywords.forEach((keyword) => addCandidate(candidates, keyword.keyword));
+  input.clusters.forEach((cluster) => addCandidate(candidates, cluster.name));
+  (input.searchConsole?.queries || []).forEach((query) => addCandidate(candidates, query.query));
+  (input.googleAds?.rows || []).forEach((row) => addCandidate(candidates, row.keyword));
+
+  const selectedCandidates = Array.from(candidates.entries())
+    .sort((a, b) => keywordCandidatePriority(b[1]) - keywordCandidatePriority(a[1]) || a[0].localeCompare(b[0]))
+    .slice(0, 180);
+
+  const insights = selectedCandidates.map(([normalizedKeyword, keyword]) => {
+    const relatedUrls = urls
+      .filter((url) => keywordOverlap(keyword, `${url.title} ${url.reason} ${url.url}`) >= 0.55)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8);
+    const saved = savedMap[normalizedKeyword] || savedMap[keyword];
+    const primary = findPrimaryUrlForKeyword(keyword, relatedUrls, saved);
+    const sc = matchSearchConsole(keyword, input.searchConsole);
+    const ads = matchAds(keyword, input.googleAds);
+    const isCore = businessScore(keyword) >= 35;
+    const hasCannibalization = detectKeywordCannibalization(keyword, relatedUrls);
+    let status: UsedKeywordStatus = 'unused';
+    if (hasCannibalization) status = 'cannibalization';
+    else if (primary && (primary.type === 'blog' || primary.type === 'product') && (sc?.position || 0) > 10) status = 'update_old';
+    else if (primary && isBroadCategoryKeyword(keyword) && (ads?.volume || sc?.impressions || 0) > 0) status = 'support_article';
+    else if (primary) status = 'primary';
+
+    return {
+      keyword,
+      normalizedKeyword,
+      status,
+      label: statusLabel(status),
+      primaryUrl: primary?.url,
+      primaryUrlType: primary?.type,
+      urls: relatedUrls,
+      competingCount: relatedUrls.length,
+      recommendation: recommendationForKeyword(keyword, status, primary, relatedUrls),
+      anchorText: keyword,
+      taskText: taskForKeyword(keyword, status, primary),
+      core: isCore,
+      source: [sc ? 'Search Console' : '', ads ? 'Keyword Planner' : '', primary ? 'Supabase' : ''].filter(Boolean).join(' + ') || 'Supabase',
+      searchConsole: sc,
+      ads,
+    };
+  });
+
+  return insights
+    .sort((a, b) => {
+      const scoreA = businessScore(a.keyword) + (a.status === 'cannibalization' ? 30 : 0) + (a.status === 'unused' ? 20 : 0) + (a.searchConsole?.impressions || 0) / 100 + (a.ads?.volume || 0) / 100;
+      const scoreB = businessScore(b.keyword) + (b.status === 'cannibalization' ? 30 : 0) + (b.status === 'unused' ? 20 : 0) + (b.searchConsole?.impressions || 0) / 100 + (b.ads?.volume || 0) / 100;
+      return scoreB - scoreA;
+    })
+    .slice(0, 180);
+}
+
+export function filterUsedKeywordInsights(insights: UsedKeywordInsight[], options: { filter: UsedKeywordFilterKey; search: string; page: number; pageSize: number }) {
+  const search = normalizeKeyword(options.search);
+  const filtered = insights.filter((insight) => {
+    const text = normalizeKeyword(`${insight.keyword} ${insight.primaryUrl || ''} ${insight.recommendation} ${insight.urls.map((url) => url.title).join(' ')}`);
+    if (search && !text.includes(search)) return false;
+    if (options.filter === 'all') return true;
+    if (options.filter === 'core') return insight.core;
+    if (options.filter === 'searchConsole') return Boolean(insight.searchConsole);
+    if (options.filter === 'keywordPlanner') return Boolean(insight.ads);
+    return insight.status === options.filter;
+  });
+  const totalPages = Math.max(1, Math.ceil(filtered.length / options.pageSize));
+  const page = Math.min(Math.max(1, options.page), totalPages);
+  return {
+    total: filtered.length,
+    page,
+    totalPages,
+    items: filtered.slice((page - 1) * options.pageSize, page * options.pageSize),
+  };
+}
+
 function titleFor(item: SeoWorkbenchItem) {
   const base = item.title.replace(/\s+/g, ' ').trim();
   const group = detectGroup(`${item.title} ${item.cluster} ${item.mainKeyword}`);
@@ -466,7 +836,7 @@ function contentHtmlFor(item: SeoWorkbenchItem, faqs: SeoFaqSuggestion[], links:
   return `<h2>${title}</h2>\n<p>${capitalizeFirst(keyword)} là lựa chọn phù hợp cho khách hàng cần sản phẩm bền, dễ sử dụng và có mức giá sát nhu cầu thực tế. Nội Thất Hùng Ngọc hỗ trợ tư vấn mẫu, kiểm tra hàng và báo giá theo số lượng.</p>\n<h3>Điểm nên chú ý khi chọn ${keyword}</h3>\n<ul>\n  <li>Kiểm tra kích thước thực tế của không gian sử dụng.</li>\n  <li>Ưu tiên chất liệu bền, dễ vệ sinh và phù hợp tần suất sử dụng.</li>\n  <li>Nên hỏi trước tình trạng hàng, bảo hành và phí vận chuyển.</li>\n</ul>\n<h3>Liên kết nội bộ nên thêm</h3>\n<ul>\n${linkHtml}\n</ul>\n<h2>Câu hỏi thường gặp</h2>\n${faqHtml}\n<p>Khách hàng cần báo giá hoặc tư vấn nhanh có thể liên hệ Nội Thất Hùng Ngọc để được kiểm tra mẫu phù hợp trước khi đặt hàng.</p>`;
 }
 
-export function buildSeoWorkbenchSuggestion(item: SeoWorkbenchItem): SeoWorkbenchSuggestion {
+export function buildSeoWorkbenchSuggestion(item: SeoWorkbenchItem, keywordInsight?: UsedKeywordInsight): SeoWorkbenchSuggestion {
   const faqs = faqFor(item);
   const internalLinks = internalLinksFor(item);
   const title = titleFor(item);
@@ -475,6 +845,7 @@ export function buildSeoWorkbenchSuggestion(item: SeoWorkbenchItem): SeoWorkbenc
   const secondaryKeywords = mergeKeywords(item.secondaryKeywords, [item.cluster, ...internalLinks.map((link) => link.anchor)]).slice(0, 6);
   return {
     item,
+    keywordInsight,
     primaryKeyword,
     secondaryKeywords,
     title,
@@ -486,6 +857,7 @@ export function buildSeoWorkbenchSuggestion(item: SeoWorkbenchItem): SeoWorkbenc
     shortDescription: limitText(`${capitalizeFirst(primaryKeyword)} phù hợp nhu cầu sử dụng thực tế, ưu tiên độ bền, giá xưởng và hỗ trợ giao hàng tại Hà Nội.`, 180),
     contentHtml: contentHtmlFor(item, faqs, internalLinks),
     checklist: [
+      ...(keywordInsight && keywordInsight.status !== 'unused' ? ['Đã kiểm tra tránh viết trùng keyword', 'Đã xác định URL chính cần đẩy SEO'] : []),
       'Đã có title SEO tốt',
       'Đã có meta description',
       'Đã có H1/H2 rõ',
@@ -503,3 +875,4 @@ export function buildSeoWorkbenchSuggestion(item: SeoWorkbenchItem): SeoWorkbenc
 export function seoWorkbenchChecklistKey(item: SeoWorkbenchItem) {
   return `${item.type}:${item.slug || item.url || item.id}`;
 }
+

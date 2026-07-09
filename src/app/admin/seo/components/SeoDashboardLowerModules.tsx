@@ -7,6 +7,7 @@ import TodayTaskList from './TodayTaskList';
 import SearchConsoleV7Center from './SearchConsoleV7Center';
 import GoogleAdsV8ImportCenter from './GoogleAdsV8ImportCenter';
 import IndexSummaryPanel from './IndexSummaryPanel';
+import SeoDashboardSyncV112 from './SeoDashboardSyncV112';
 import { Badge, EmptyState, MetricCard, ModuleCard } from './Ui';
 import { AiInsightPanel, LocalSeoPanel, TodaySummaryPanel } from './SeoV3Modules';
 import {
@@ -108,6 +109,7 @@ function SeoDashboardLowerModules({
         </section>
         <section className={styles.stack}>
           <DashboardAnalytics overview={overview} health={health} clusters={dashboard.seoClusters} keywords={dashboard.seoKeywords} tasks={dashboard.tasks} logs={dashboard.seoLogs} doNotTouch={dashboard.doNotTouch} searchConsoleV7={searchConsoleV7} indexSummary={indexSummary} />
+          <SeoDashboardSyncV112 />
         </section>
       </AccordionSection>
 

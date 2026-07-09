@@ -10,10 +10,12 @@ import {
   loadSeoDashboardFromSupabase,
   migrateLocalSeoDataToSupabase,
   parseBackupJson,
+  dispatchSeoDashboardRestoredEvent,
   restoreSupabaseDataToLocalStorage,
   saveOneSeoKeyToSupabase,
   saveSeoDashboardToSupabase,
   type SeoDashboardStoreItem,
+  type SeoDashboardSyncResult,
 } from '../lib/seoDashboardSupabaseSync';
 import styles from '../seo-dashboard.module.css';
 
@@ -26,14 +28,14 @@ const UI = {
   error: 'Lỗi đồng bộ',
   local: 'Đang dùng dữ liệu localStorage',
   checking: 'Đang kiểm tra dữ liệu đồng bộ...',
-  loadedFromSupabase: 'Đã tải {count} nhóm dữ liệu từ Supabase về localStorage.',
+  loadedFromSupabase: 'Đã tải {count} nhóm dữ liệu từ Supabase và cập nhật dashboard. Không cần tải lại trang.',
   supabaseHasData: 'Supabase đã có dữ liệu SEO Dashboard. Bạn có thể dùng Supabase hoặc đẩy dữ liệu máy này lên nếu cần.',
   localOnlyFound: 'Supabase chưa có dữ liệu. Máy này đang có dữ liệu localStorage, bạn có thể đồng bộ lên Supabase.',
   noSourceData: 'Chưa phát hiện dữ liệu SEO Dashboard trong Supabase hoặc localStorage.',
   checkFailed: 'Không kiểm tra được dữ liệu đồng bộ.',
-  syncedCount: 'Đã đồng bộ {count} nhóm dữ liệu từ máy này lên Supabase.',
+  syncedCount: 'Đồng bộ xong: {success} key thành công, {failed} key lỗi, {chunked} key chia nhỏ.',
   syncFailed: 'Không đồng bộ được Supabase, dữ liệu tạm lưu trên trình duyệt này.',
-  restored: 'Đã dùng dữ liệu Supabase và lưu {count} nhóm vào localStorage để làm cache.',
+  restored: 'Đã tải {count} nhóm dữ liệu từ Supabase và cập nhật dashboard. Không cần tải lại trang.',
   restoreFailed: 'Không tải được dữ liệu từ Supabase.',
   keepLocal: 'Đang giữ dữ liệu localStorage tạm thời. Khi muốn dùng nhiều máy, hãy bấm Đồng bộ lên Supabase.',
   importConfirm: 'Bạn có chắc muốn nhập JSON dự phòng? Dữ liệu trong file sẽ ghi vào localStorage và đồng bộ lên Supabase.',
@@ -41,11 +43,12 @@ const UI = {
   importedJson: 'Đã nhập {count} nhóm dữ liệu từ JSON dự phòng và đồng bộ lên Supabase.',
   importFailed: 'Không nhập được JSON dự phòng.',
   autoSynced: 'Đã tự đồng bộ nhóm dữ liệu {key} lên Supabase.',
-  title: 'Đồng bộ dữ liệu SEO v11.2',
-  description: 'Dữ liệu SEO v11.2 được lưu trên Supabase để có thể làm việc ở nhiều máy. localStorage chỉ dùng làm bản dự phòng trên trình duyệt.',
+  title: 'Đồng bộ dữ liệu SEO v11.2.2',
+  description: 'Dữ liệu SEO v11.2.2 được lưu trên Supabase để có thể làm việc ở nhiều máy. localStorage chỉ dùng làm bản dự phòng trên trình duyệt.',
   status: 'Trạng thái',
   localKeys: 'Key localStorage phát hiện',
   supabaseKeys: 'Key đã có trên Supabase',
+  chunkedKeys: 'Key chia nhỏ',
   lastUpdated: 'Cập nhật gần nhất',
   conflictTitle: 'Phát hiện cả dữ liệu Supabase và dữ liệu trên máy này.',
   conflictDesc: 'Để tránh ghi đè nhầm, hãy chọn cách dùng dữ liệu bên dưới.',
@@ -61,6 +64,13 @@ const UI = {
 
 function withCount(template: string, count: number) {
   return template.replace('{count}', String(count));
+}
+
+function formatResultMessage(result: SeoDashboardSyncResult) {
+  return UI.syncedCount
+    .replace('{success}', String(result.successKeys.length))
+    .replace('{failed}', String(result.failedKeys.length))
+    .replace('{chunked}', String(result.chunkedKeys.length));
 }
 
 function formatDate(value?: string) {
@@ -89,12 +99,14 @@ export default function SeoDashboardSyncV112() {
   const [localKeys, setLocalKeys] = useState<string[]>([]);
   const [supabaseItems, setSupabaseItems] = useState<SeoDashboardStoreItem[]>([]);
   const [lastSyncedAt, setLastSyncedAt] = useState<string>('');
+  const [lastResult, setLastResult] = useState<SeoDashboardSyncResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const syncTimers = useRef<Map<string, number>>(new Map());
 
   const localSnapshot = useMemo(() => getLocalSeoDashboardSnapshot(localKeys), [localKeys]);
   const localDataCount = localSnapshot.length;
   const supabaseDataCount = supabaseItems.length;
+  const supabaseChunkedCount = supabaseItems.filter((item) => item.chunked).length;
   const hasLocalData = localDataCount > 0;
   const hasSupabaseData = supabaseDataCount > 0;
   const hasConflict = hasLocalData && hasSupabaseData;
@@ -113,9 +125,10 @@ export default function SeoDashboardSyncV112() {
       setLastSyncedAt(newest);
 
       if (items.length && options?.restore) {
-        const count = restoreSupabaseDataToLocalStorage(items);
+        const restoreResult = restoreSupabaseDataToLocalStorage(items);
         setLocalKeys(discoverLocalSeoKeys());
-        setMessage(withCount(UI.loadedFromSupabase, count));
+        setMessage(withCount(UI.loadedFromSupabase, restoreResult.count));
+        dispatchSeoDashboardRestoredEvent(restoreResult.restoredKeys);
       } else if (items.length) {
         setMessage(UI.supabaseHasData);
       } else if (getLocalSeoDashboardSnapshot().length) {
@@ -134,11 +147,13 @@ export default function SeoDashboardSyncV112() {
 
   async function syncLocalToSupabase() {
     setStatus('syncing');
+    setLastResult(null);
     try {
       const result = await migrateLocalSeoDataToSupabase();
+      setLastResult(result);
       await refreshState();
-      setMessage(withCount(UI.syncedCount, result.count));
-      setStatus('synced');
+      setMessage(formatResultMessage(result));
+      setStatus(result.failedKeys.length ? 'error' : 'synced');
     } catch (error) {
       setStatus('error');
       setMessage(error instanceof Error ? error.message : UI.syncFailed);
@@ -149,11 +164,12 @@ export default function SeoDashboardSyncV112() {
     setStatus('syncing');
     try {
       const items = await loadSeoDashboardFromSupabase();
-      const count = restoreSupabaseDataToLocalStorage(items);
+      const restoreResult = restoreSupabaseDataToLocalStorage(items);
       setSupabaseItems(items);
       setLocalKeys(discoverLocalSeoKeys());
       setLastSyncedAt(new Date().toISOString());
-      setMessage(withCount(UI.restored, count));
+      setMessage(withCount(UI.restored, restoreResult.count));
+      dispatchSeoDashboardRestoredEvent(restoreResult.restoredKeys);
       setStatus('synced');
     } catch (error) {
       setStatus('error');
@@ -184,15 +200,18 @@ export default function SeoDashboardSyncV112() {
     if (!confirmed) return;
 
     setStatus('syncing');
+    setLastResult(null);
     try {
       const text = await file.text();
       const items = parseBackupJson(text);
       if (!items.length) throw new Error(UI.invalidJson);
-      const count = restoreSupabaseDataToLocalStorage(items);
-      await saveSeoDashboardToSupabase(items);
+      const restoreResult = restoreSupabaseDataToLocalStorage(items);
+      const result = await saveSeoDashboardToSupabase(items);
+      setLastResult(result);
       await refreshState();
-      setMessage(withCount(UI.importedJson, count));
-      setStatus('synced');
+      setMessage(withCount(UI.importedJson, restoreResult.count) + ' ' + formatResultMessage(result));
+      dispatchSeoDashboardRestoredEvent(restoreResult.restoredKeys);
+      setStatus(result.failedKeys.length ? 'error' : 'synced');
     } catch (error) {
       setStatus('error');
       setMessage(error instanceof Error ? error.message : UI.importFailed);
@@ -213,15 +232,16 @@ export default function SeoDashboardSyncV112() {
       if (currentTimer) window.clearTimeout(currentTimer);
       const timer = window.setTimeout(() => {
         saveOneSeoKeyToSupabase(key)
-          .then(() => {
-            setStatus('synced');
+          .then((result) => {
+            setLastResult(result);
+            setStatus(result.failedKeys.length ? 'error' : 'synced');
             setLastSyncedAt(new Date().toISOString());
             setLocalKeys(discoverLocalSeoKeys());
-            setMessage(UI.autoSynced.replace('{key}', key));
+            setMessage(result.failedKeys.length ? UI.syncFailed : UI.autoSynced.replace('{key}', key));
           })
-          .catch(() => {
+          .catch((error) => {
             setStatus('error');
-            setMessage(UI.syncFailed);
+            setMessage(error instanceof Error ? error.message : UI.syncFailed);
           })
           .finally(() => syncTimers.current.delete(key));
       }, 900);
@@ -256,12 +276,35 @@ export default function SeoDashboardSyncV112() {
         <MetricCard label={UI.status} value={getStatusText(status)} />
         <MetricCard label={UI.localKeys} value={String(localKeys.length)} />
         <MetricCard label={UI.supabaseKeys} value={String(supabaseDataCount)} />
+        <MetricCard label={UI.chunkedKeys} value={String(supabaseChunkedCount)} />
       </div>
 
       <div className={styles.scV7Status}>
         <strong>{UI.lastUpdated}: {formatDate(lastSyncedAt)}</strong>
         <span>{message}</span>
       </div>
+
+      {lastResult ? (
+        <div className={styles.alertSoft}>
+          <strong>Kết quả đồng bộ gần nhất</strong>
+          <p>
+            Thành công: {lastResult.successKeys.length} · Lỗi: {lastResult.failedKeys.length} ·
+            Bỏ qua: {lastResult.skippedKeys.length} · Chia nhỏ: {lastResult.chunkedKeys.length}
+          </p>
+          {lastResult.chunkedKeys.length ? (
+            <p>Dữ liệu quá lớn, hệ thống đã chuyển sang đồng bộ từng phần: {lastResult.chunkedKeys.slice(0, 6).join(', ')}</p>
+          ) : null}
+          {lastResult.failedKeys.length ? (
+            <ul>
+              {lastResult.failedKeys.slice(0, 6).map((item) => (
+                <li key={item.storeKey}>
+                  Không đồng bộ được key: {item.storeKey}. Dữ liệu vẫn còn trong localStorage. Lý do: {item.message}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
 
       {hasConflict ? (
         <div className={styles.alertSoft}>

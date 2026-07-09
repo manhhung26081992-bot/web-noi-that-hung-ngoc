@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { memo } from 'react';
 import EditablePriorityList from './EditablePriorityList';
@@ -55,6 +55,7 @@ type Props = {
   onGoogleAdsV8Data: (data: GoogleAdsImportData | null) => void;
   indexSummary: IndexSummaryManual | null;
   onIndexSummaryData: (data: IndexSummaryManual | null) => void;
+  restoreVersion?: number;
 };
 
 function formatNumber(value: number) {
@@ -99,16 +100,17 @@ function SeoDashboardLowerModules({
   onGoogleAdsV8Data,
   indexSummary,
   onIndexSummaryData,
+  restoreVersion = 0,
 }: Props) {
   return (
     <div className={styles.v61Deferred}>
       <AccordionSection id="search-console" title="Import Google thủ công và dữ liệu tổng quan" description="Search Console và Google Ads dùng dữ liệu import thủ công, không dùng API." defaultOpen>
         <section className={styles.gridTwo}>
-          <SearchConsoleV7Center keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} onData={onSearchConsoleV7Data} />
-          <GoogleAdsV8ImportCenter keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} searchConsoleData={searchConsoleV7} onData={onGoogleAdsV8Data} />
+          <SearchConsoleV7Center key={'search-console-' + restoreVersion} keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} onData={onSearchConsoleV7Data} />
+          <GoogleAdsV8ImportCenter key={'google-ads-' + restoreVersion} keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} searchConsoleData={searchConsoleV7} onData={onGoogleAdsV8Data} />
         </section>
         <section className={styles.stack}>
-          <DashboardAnalytics overview={overview} health={health} clusters={dashboard.seoClusters} keywords={dashboard.seoKeywords} tasks={dashboard.tasks} logs={dashboard.seoLogs} doNotTouch={dashboard.doNotTouch} searchConsoleV7={searchConsoleV7} indexSummary={indexSummary} />
+          <DashboardAnalytics key={'analytics-' + restoreVersion} overview={overview} health={health} clusters={dashboard.seoClusters} keywords={dashboard.seoKeywords} tasks={dashboard.tasks} logs={dashboard.seoLogs} doNotTouch={dashboard.doNotTouch} searchConsoleV7={searchConsoleV7} indexSummary={indexSummary} />
           <SeoDashboardSyncV112 />
         </section>
       </AccordionSection>
@@ -179,7 +181,7 @@ function SeoDashboardLowerModules({
           <LocalSeoPanel items={dashboard.localSeo} saving={saving} actions={actions} />
         </section>
         <section className={styles.gridTwo}>
-          <IndexSummaryPanel onData={onIndexSummaryData} />
+          <IndexSummaryPanel key={'index-summary-' + restoreVersion} onData={onIndexSummaryData} />
         </section>
 
 

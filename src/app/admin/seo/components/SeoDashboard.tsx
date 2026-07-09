@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { MetricCard, ModuleCard, SkeletonGrid } from './Ui';
 import { buildAiInsights, buildSeoCommands, buildTodaySummary } from './SeoV3Modules';
 import { buildAiDailyBrief, buildSeoScoreV41 } from './SeoV4Modules';
@@ -10,6 +10,7 @@ import { AiBlogRanking, AiProductRanking, AiProgressEngine, AiRecommendationHist
 import SeoV9Modules from './SeoV9Modules';
 import { useSeoDashboard } from '../hooks/useSeoDashboard';
 import styles from '../seo-dashboard.module.css';
+import { SEO_DASHBOARD_RESTORED_EVENT } from '../lib/seoDashboardSupabaseSync';
 import type { GoogleAdsImportData, IndexSummaryManual, SearchConsoleV7Data } from '../types/seo';
 
 const SeoDashboardLowerModules = lazy(() => import('./SeoDashboardLowerModules'));
@@ -58,6 +59,16 @@ export default function SeoDashboard() {
   const [googleAdsV8, setGoogleAdsV8] = useState<GoogleAdsImportData | null>(null);
   const [indexSummary, setIndexSummary] = useState<IndexSummaryManual | null>(null);
   const [workbenchEnabled, setWorkbenchEnabled] = useState(false);
+  const [restoreVersion, setRestoreVersion] = useState(0);
+
+  useEffect(() => {
+    const handleRestore = () => {
+      setRestoreVersion((value) => value + 1);
+    };
+
+    window.addEventListener(SEO_DASHBOARD_RESTORED_EVENT, handleRestore);
+    return () => window.removeEventListener(SEO_DASHBOARD_RESTORED_EVENT, handleRestore);
+  }, []);
 
   function openWorkbench() {
     setWorkbenchEnabled(true);
@@ -254,13 +265,14 @@ export default function SeoDashboard() {
 
       <section id="seo-work-log-v11">
         <Suspense fallback={<SkeletonGrid />}>
-          <SeoWorkLogV11 tasks={filteredTasks} noteContent={dashboard.note?.content || ''} />
+          <SeoWorkLogV11 key={`work-log-${restoreVersion}`} tasks={filteredTasks} noteContent={dashboard.note?.content || ''} />
         </Suspense>
       </section>
 
       <section id="seo-next-actions-v11">
         <Suspense fallback={<SkeletonGrid />}>
           <SeoNextActionsV11
+            key={`next-actions-${restoreVersion}`}
             products={dashboard.productSeoItems as unknown as Record<string, unknown>[]}
             blogs={dashboard.blogSeoItems as unknown as Record<string, unknown>[]}
             keywords={dashboard.seoKeywords as unknown as Record<string, unknown>[]}
@@ -276,6 +288,7 @@ export default function SeoDashboard() {
 
       <section id="action-plan">
         <SeoV9Modules
+          key={`v9-${restoreVersion}`}
           overview={overview}
           products={filteredProducts}
           blogs={filteredBlogs}
@@ -295,6 +308,7 @@ export default function SeoDashboard() {
         {workbenchEnabled ? (
           <Suspense fallback={<SkeletonGrid />}>
             <SeoV10Workbench
+              key={`workbench-${restoreVersion}`}
               products={dashboard.productSeoItems}
               blogs={dashboard.blogSeoItems}
               keywords={dashboard.seoKeywords}
@@ -344,6 +358,7 @@ export default function SeoDashboard() {
 
       <Suspense fallback={<SkeletonGrid />}>
         <SeoDashboardLowerModules
+          restoreVersion={restoreVersion}
           dashboard={dashboard}
           saving={saving}
           actions={actions}
@@ -369,7 +384,4 @@ export default function SeoDashboard() {
     </main>
   );
 }
-
-
-
 

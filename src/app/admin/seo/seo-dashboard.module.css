@@ -1489,3 +1489,217 @@
     font-size: 12px;
   }
 }
+
+
+.gscManualSummaryBox {
+  display: grid;
+  gap: 14px;
+  border: 1px solid var(--seo-border, #dbe4f0);
+  border-radius: 14px;
+  background: var(--seo-card, #ffffff);
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.gscManualSummaryHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.gscManualSummaryHeader h3 {
+  margin: 0;
+  color: var(--seo-text, #0f172a);
+  font-size: 18px;
+}
+
+.gscManualSummaryHeader p {
+  margin: 5px 0 0;
+  color: var(--seo-muted, #64748b);
+  line-height: 1.5;
+}
+
+.gscManualFormGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.gscManualFormGrid label {
+  display: grid;
+  gap: 6px;
+  color: var(--seo-muted, #64748b);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.gscManualFormGrid input,
+.gscManualFormGrid textarea {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--seo-border, #dbe4f0);
+  border-radius: 10px;
+  background: var(--seo-card, #ffffff);
+  color: var(--seo-text, #0f172a);
+  padding: 9px 11px;
+  font: inherit;
+}
+
+.gscManualFormGrid textarea {
+  min-height: 76px;
+  resize: vertical;
+}
+
+.gscManualNote {
+  grid-column: 1 / -1;
+}
+
+.gscSummaryCompareGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.gscSummaryCard {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--seo-border, #dbe4f0);
+  border-radius: 12px;
+  background: var(--seo-soft, #f8fafc);
+  padding: 14px;
+}
+
+.gscSummaryCard strong {
+  color: var(--seo-primary, #0369a1);
+}
+
+.gscSummaryCard ul {
+  display: grid;
+  gap: 7px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gscSummaryCard li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--seo-muted, #64748b);
+}
+
+.gscSummaryCard b {
+  color: var(--seo-text, #0f172a);
+  text-align: right;
+}
+
+.gscSummaryCard p {
+  margin: 0;
+  color: var(--seo-muted, #64748b);
+  line-height: 1.5;
+}
+
+.gscDiffBox {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  background: #fffbeb;
+  padding: 14px;
+}
+
+.gscDiffBox strong,
+.gscDiffBox p,
+.gscDiffBox small {
+  grid-column: 1 / -1;
+}
+
+.gscDiffBox strong {
+  color: #92400e;
+}
+
+.gscDiffBox div {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(146, 64, 14, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.75);
+  padding: 10px;
+}
+
+.gscDiffBox span {
+  color: #92400e;
+  font-size: 13px;
+}
+
+.gscDiffBox b {
+  color: #78350f;
+}
+
+.gscDiffBox p,
+.gscDiffBox small {
+  margin: 0;
+  color: #92400e;
+  line-height: 1.45;
+}
+
+.dark .gscManualSummaryBox,
+.dark .gscManualFormGrid input,
+.dark .gscManualFormGrid textarea {
+  background: var(--seo-card, #172033);
+}
+
+.dark .gscSummaryCard {
+  background: rgba(15, 23, 42, 0.3);
+}
+
+.dark .gscDiffBox {
+  border-color: #92400e;
+  background: rgba(120, 53, 15, 0.22);
+}
+
+.dark .gscDiffBox div {
+  border-color: #92400e;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.dark .gscDiffBox strong,
+.dark .gscDiffBox p,
+.dark .gscDiffBox small,
+.dark .gscDiffBox span {
+  color: #fde68a;
+}
+
+.dark .gscDiffBox b {
+  color: #fff7ed;
+}
+
+@media (max-width: 900px) {
+  .gscManualFormGrid,
+  .gscSummaryCompareGrid,
+  .gscDiffBox {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .gscManualSummaryHeader {
+    display: grid;
+  }
+
+  .gscManualFormGrid,
+  .gscSummaryCompareGrid,
+  .gscDiffBox {
+    grid-template-columns: 1fr;
+  }
+
+  .gscSummaryCard li {
+    display: grid;
+  }
+
+  .gscSummaryCard b {
+    text-align: left;
+  }
+}

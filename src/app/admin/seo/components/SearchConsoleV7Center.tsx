@@ -49,8 +49,38 @@ type SearchConsoleImportStore = {
   lastUpdated?: string;
 };
 
+type GscManualSummary = {
+  range: string;
+  clicks: number | null;
+  impressions: number | null;
+  ctr: number | null;
+  position: number | null;
+  checkedAt: string;
+  note: string;
+  updatedAt: string;
+};
+
+type GscManualSummaryDraft = {
+  range: string;
+  clicks: string;
+  impressions: string;
+  ctr: string;
+  position: string;
+  checkedAt: string;
+  note: string;
+};
+
+type GscSummaryNumbers = {
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+  source: 'pages' | 'queries' | 'none';
+};
+
 const STORAGE_KEY = 'noithathungngoc-search-console-import-v1';
 const LEGACY_STORAGE_KEY = 'noithathungoc-search-console-import-v1';
+const GSC_MANUAL_SUMMARY_KEY = 'noithathungngoc-gsc-manual-summary-v11';
 
 const tabs: Array<{ id: SearchConsoleRequestType; label: string }> = [
   { id: 'overview', label: 'Tổng quan' },
@@ -75,6 +105,85 @@ function formatNumber(value: number | null | undefined) {
 
 function formatCtr(value: number | null | undefined) {
   return Number(value || 0).toFixed(2) + '%';
+}
+
+function formatPosition(value: number | null | undefined) {
+  if (value == null || !Number.isFinite(Number(value)) || Number(value) === 0) return '-';
+  return Number(value).toFixed(1);
+}
+
+function formatSignedNumber(value: number) {
+  const prefix = value > 0 ? '+' : '';
+  return prefix + formatNumber(value);
+}
+
+function formatSignedDecimal(value: number, digits = 2) {
+  const prefix = value > 0 ? '+' : '';
+  return prefix + Number(value || 0).toFixed(digits);
+}
+
+function todayDateInput() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function defaultManualDraft(): GscManualSummaryDraft {
+  return {
+    range: '28 ngày',
+    clicks: '',
+    impressions: '',
+    ctr: '',
+    position: '',
+    checkedAt: todayDateInput(),
+    note: '',
+  };
+}
+
+function parseManualInteger(value: string) {
+  const clean = String(value || '').replace(/[^\d-]/g, '');
+  if (!clean) return null;
+  const number = Number(clean);
+  return Number.isFinite(number) ? number : null;
+}
+
+function parseManualDecimal(value: string) {
+  const clean = String(value || '')
+    .replace('%', '')
+    .replace(/\s+/g, '')
+    .replace(',', '.')
+    .replace(/[^\d.-]/g, '');
+  if (!clean) return null;
+  const number = Number(clean);
+  return Number.isFinite(number) ? number : null;
+}
+
+function manualSummaryToDraft(summary: GscManualSummary | null): GscManualSummaryDraft {
+  if (!summary) return defaultManualDraft();
+  return {
+    range: summary.range || '28 ngày',
+    clicks: summary.clicks == null ? '' : String(summary.clicks),
+    impressions: summary.impressions == null ? '' : String(summary.impressions),
+    ctr: summary.ctr == null ? '' : String(summary.ctr),
+    position: summary.position == null ? '' : String(summary.position),
+    checkedAt: summary.checkedAt || todayDateInput(),
+    note: summary.note || '',
+  };
+}
+
+function buildCsvSummary(data: SearchConsoleV7Data | null): GscSummaryNumbers {
+  if (!data) return { clicks: 0, impressions: 0, ctr: 0, position: 0, source: 'none' };
+  const sourceRows = data.pages.length ? data.pages : data.queries;
+  const source = data.pages.length ? 'pages' : data.queries.length ? 'queries' : 'none';
+  const clicks = sourceRows.reduce((sum, row) => sum + row.clicks, 0);
+  const impressions = sourceRows.reduce((sum, row) => sum + row.impressions, 0);
+  const weightedPosition = sourceRows.reduce((sum, row) => sum + row.position * Math.max(row.impressions, 1), 0);
+  const positionBase = sourceRows.reduce((sum, row) => sum + Math.max(row.impressions, 1), 0);
+  return {
+    clicks,
+    impressions,
+    ctr: impressions ? (clicks / impressions) * 100 : 0,
+    position: positionBase ? weightedPosition / positionBase : 0,
+    source,
+  };
 }
 
 function stripAccent(value: string) {
@@ -461,6 +570,21 @@ function SearchConsoleV7Center({ keywords, clusters, onData }: Props) {
   const [rawTextByType, setRawTextByType] = useState<Partial<Record<SearchConsoleImportKind, string>>>({});
   const [fileNames, setFileNames] = useState<Partial<Record<SearchConsoleImportKind, string>>>({});
   const [rowCounts, setRowCounts] = useState<Partial<Record<SearchConsoleImportKind, number>>>({});
+  const [manualSummary, setManualSummary] = useState<GscManualSummary | null>(null);
+  const [manualDraft, setManualDraft] = useState<GscManualSummaryDraft>(() => defaultManualDraft());
+
+  useEffect(() => {
+    try {
+      const savedManual = localStorage.getItem(GSC_MANUAL_SUMMARY_KEY);
+      if (savedManual) {
+        const parsedManual = JSON.parse(savedManual) as GscManualSummary;
+        setManualSummary(parsedManual);
+        setManualDraft(manualSummaryToDraft(parsedManual));
+      }
+    } catch {
+      localStorage.removeItem(GSC_MANUAL_SUMMARY_KEY);
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -491,6 +615,42 @@ function SearchConsoleV7Center({ keywords, clusters, onData }: Props) {
   const uniqueQueries = useMemo(() => new Set(data?.queries.map((row) => normalize(row.query)).filter(Boolean)).size, [data]);
   const uniquePages = useMemo(() => new Set(data?.pages.map((row) => normalize(row.page)).filter(Boolean)).size, [data]);
   const importSummaryText = data ? 'Query import: ' + uniqueQueries + ' - Page import: ' + uniquePages : '';
+  const csvSummary = useMemo(() => buildCsvSummary(data), [data]);
+  const manualDiff = useMemo(() => {
+    if (!manualSummary) return null;
+    return {
+      clicks: (manualSummary.clicks ?? 0) - csvSummary.clicks,
+      impressions: (manualSummary.impressions ?? 0) - csvSummary.impressions,
+      ctr: (manualSummary.ctr ?? 0) - csvSummary.ctr,
+      position: (manualSummary.position ?? 0) - csvSummary.position,
+    };
+  }, [manualSummary, csvSummary]);
+
+  const updateManualDraft = (field: keyof GscManualSummaryDraft, value: string) => {
+    setManualDraft((current) => ({ ...current, [field]: value }));
+  };
+
+  const saveManualSummary = () => {
+    const summary: GscManualSummary = {
+      range: manualDraft.range.trim() || '28 ngày',
+      clicks: parseManualInteger(manualDraft.clicks),
+      impressions: parseManualInteger(manualDraft.impressions),
+      ctr: parseManualDecimal(manualDraft.ctr),
+      position: parseManualDecimal(manualDraft.position),
+      checkedAt: manualDraft.checkedAt || todayDateInput(),
+      note: manualDraft.note.trim(),
+      updatedAt: new Date().toISOString(),
+    };
+    setManualSummary(summary);
+    setManualDraft(manualSummaryToDraft(summary));
+    localStorage.setItem(GSC_MANUAL_SUMMARY_KEY, JSON.stringify(summary));
+  };
+
+  const clearManualSummary = () => {
+    setManualSummary(null);
+    setManualDraft(defaultManualDraft());
+    localStorage.removeItem(GSC_MANUAL_SUMMARY_KEY);
+  };
 
   const saveImport = (nextData: SearchConsoleV7Data, nextRawText: string, nextFileName: string, nextRowCount: number, kind: SearchConsoleImportKind) => {
     const nextStore = updateImportStore({ rawTextByType, fileNames, rowCounts }, kind, nextRawText, nextFileName, nextRowCount);
@@ -605,6 +765,94 @@ function SearchConsoleV7Center({ keywords, clusters, onData }: Props) {
           </div>
         </div>
 
+        <section className={styles.gscManualSummaryBox}>
+          <div className={styles.gscManualSummaryHeader}>
+            <div>
+              <h3>Tổng Search Console nhập tay</h3>
+              <p>Nhập số tổng quan bạn nhìn thấy trực tiếp trong Google Search Console để so sánh với dữ liệu CSV export.</p>
+            </div>
+            <Badge status={manualSummary ? 'connected' : 'pending'}>
+              {manualSummary ? 'Đã lưu tổng GSC nhập tay' : 'Chưa nhập tổng GSC thật'}
+            </Badge>
+          </div>
+
+          <div className={styles.gscManualFormGrid}>
+            <label>
+              Khoảng thời gian
+              <input value={manualDraft.range} onChange={(event) => updateManualDraft('range', event.target.value)} placeholder="28 ngày" />
+            </label>
+            <label>
+              Tổng lượt nhấp
+              <input value={manualDraft.clicks} onChange={(event) => updateManualDraft('clicks', event.target.value)} placeholder="20" inputMode="numeric" />
+            </label>
+            <label>
+              Tổng lượt hiển thị
+              <input value={manualDraft.impressions} onChange={(event) => updateManualDraft('impressions', event.target.value)} placeholder="2530" inputMode="numeric" />
+            </label>
+            <label>
+              CTR trung bình
+              <input value={manualDraft.ctr} onChange={(event) => updateManualDraft('ctr', event.target.value)} placeholder="0.8" inputMode="decimal" />
+            </label>
+            <label>
+              Vị trí trung bình
+              <input value={manualDraft.position} onChange={(event) => updateManualDraft('position', event.target.value)} placeholder="51.6" inputMode="decimal" />
+            </label>
+            <label>
+              Ngày cập nhật
+              <input type="date" value={manualDraft.checkedAt} onChange={(event) => updateManualDraft('checkedAt', event.target.value)} />
+            </label>
+            <label className={styles.gscManualNote}>
+              Ghi chú
+              <textarea value={manualDraft.note} onChange={(event) => updateManualDraft('note', event.target.value)} placeholder="Ví dụ: Số liệu lấy trực tiếp từ tab Hiệu suất trong Search Console." />
+            </label>
+          </div>
+
+          <div className={styles.scImportActions}>
+            <button className={styles.primaryButton} onClick={saveManualSummary}>Lưu tổng GSC</button>
+            <button className={styles.secondaryButton} onClick={clearManualSummary}>Xóa tổng GSC nhập tay</button>
+          </div>
+
+          <div className={styles.gscSummaryCompareGrid}>
+            <article className={styles.gscSummaryCard}>
+              <strong>Số liệu từ CSV import</strong>
+              <ul>
+                <li><span>Nguồn tổng quan</span><b>{csvSummary.source === 'pages' ? 'Pages.csv' : csvSummary.source === 'queries' ? 'Queries.csv' : 'Chưa có dữ liệu'}</b></li>
+                <li><span>Tổng lượt nhấp</span><b>{formatNumber(csvSummary.clicks)}</b></li>
+                <li><span>Tổng lượt hiển thị</span><b>{formatNumber(csvSummary.impressions)}</b></li>
+                <li><span>CTR trung bình</span><b>{formatCtr(csvSummary.ctr)}</b></li>
+                <li><span>Vị trí trung bình</span><b>{formatPosition(csvSummary.position)}</b></li>
+              </ul>
+            </article>
+            <article className={styles.gscSummaryCard}>
+              <strong>Số liệu GSC nhập tay</strong>
+              {manualSummary ? (
+                <ul>
+                  <li><span>Khoảng thời gian</span><b>{manualSummary.range}</b></li>
+                  <li><span>Tổng lượt nhấp</span><b>{manualSummary.clicks == null ? '-' : formatNumber(manualSummary.clicks)}</b></li>
+                  <li><span>Tổng lượt hiển thị</span><b>{manualSummary.impressions == null ? '-' : formatNumber(manualSummary.impressions)}</b></li>
+                  <li><span>CTR trung bình</span><b>{manualSummary.ctr == null ? '-' : formatCtr(manualSummary.ctr)}</b></li>
+                  <li><span>Vị trí trung bình</span><b>{formatPosition(manualSummary.position)}</b></li>
+                  <li><span>Ngày cập nhật</span><b>{manualSummary.checkedAt}</b></li>
+                </ul>
+              ) : (
+                <p>Chưa nhập tổng Search Console thật. Dashboard đang dùng số liệu từ CSV import.</p>
+              )}
+            </article>
+          </div>
+
+          {manualDiff ? (
+            <div className={styles.gscDiffBox}>
+              <strong>So sánh nhanh</strong>
+              <div><span>Chênh lệch click</span><b>{formatSignedNumber(manualDiff.clicks)}</b></div>
+              <div><span>Chênh lệch impression</span><b>{formatSignedNumber(manualDiff.impressions)}</b></div>
+              <div><span>Chênh lệch CTR</span><b>{formatSignedDecimal(manualDiff.ctr, 2)}%</b></div>
+              <div><span>Chênh lệch position</span><b>{formatSignedDecimal(manualDiff.position, 1)}</b></div>
+              <p>Dữ liệu CSV import có thể lệch nhẹ so với Google Search Console thật do thời điểm export, dữ liệu ẩn hoặc giới hạn bảng. AI SEO vẫn dùng CSV để phân tích keyword/URL chi tiết.</p>
+              <small>Số GSC nhập tay chỉ dùng để đối chiếu tổng quan, không thay thế dữ liệu keyword/URL chi tiết.</small>
+            </div>
+          ) : null}
+        </section>
+
         {data ? (
           <>
             <div className={styles.scV7Tabs}>
@@ -615,7 +863,7 @@ function SearchConsoleV7Center({ keywords, clusters, onData }: Props) {
               <MetricCard label="Tổng lượt nhấp" value={formatNumber(data.overview.clicks)} />
               <MetricCard label="Tổng lượt hiển thị" value={formatNumber(data.overview.impressions)} />
               <MetricCard label="CTR trung bình" value={formatCtr(data.overview.ctr)} />
-              <MetricCard label="Vị trí trung bình" value={data.overview.position || '-'} />
+              <MetricCard label="Vị trí trung bình" value={formatPosition(data.overview.position)} />
               <MetricCard label="Tổng từ khóa" value={formatNumber(uniqueQueries)} />
               <MetricCard label="Tổng trang" value={formatNumber(uniquePages)} />
             </div>

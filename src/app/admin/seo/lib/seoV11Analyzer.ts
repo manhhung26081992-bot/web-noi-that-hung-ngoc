@@ -193,7 +193,9 @@ export function buildSeoNextActionsV11(input: SeoV11AnalyzerInput): SeoNextActio
       addUnique(actions, {
         score: 60 + groupBonus(group) + (position <= 20 ? 12 : 4),
         title: positionActionTitle(position, keyword, url),
-        reason: 'Từ khóa đang ở vùng có thể đẩy thêm bằng nội dung phụ và liên kết nội bộ.',
+        reason: keyword
+          ? 'Từ khóa đang ở vùng có thể đẩy thêm bằng nội dung phụ và liên kết nội bộ.'
+          : 'URL đang ở vùng có thể đẩy thêm bằng nội dung phụ và liên kết nội bộ.',
         targetGroup: group,
         url,
         keyword,

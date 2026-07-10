@@ -191,7 +191,7 @@ function KeywordUsedTable({
           <h3>Từ khóa đã dùng & chống trùng SEO</h3>
           <p>Kiểm tra keyword đã có URL chính chưa, có bị nhiều URL cùng bắt từ khóa không, và nên cập nhật bài cũ hay viết bài hỗ trợ.</p>
         </div>
-        <Badge status="pending">Lưu URL chính bằng localStorage</Badge>
+        <Badge status="pending">Lưu URL chính, đồng bộ Supabase store</Badge>
       </div>
 
       <div className={styles.workbenchKeywordTools}>
@@ -339,7 +339,7 @@ function SuggestionPanel({ suggestion, checked, onToggle }: { suggestion: SeoWor
             </label>
           ))}
         </div>
-        <p className={styles.muted}>Checklist được lưu trên trình duyệt bằng localStorage, không ghi vào Supabase.</p>
+        <p className={styles.muted}>Checklist lưu tạm trên trình duyệt và được đồng bộ vào seo_dashboard_store.</p>
       </div>
     </section>
   );

@@ -112,7 +112,36 @@ function SeoDashboardLowerModules({
         </section>
         <section className={styles.stack}>
           <DashboardAnalytics key={'analytics-' + restoreVersion} overview={overview} health={health} clusters={dashboard.seoClusters} keywords={dashboard.seoKeywords} tasks={dashboard.tasks} logs={dashboard.seoLogs} doNotTouch={dashboard.doNotTouch} searchConsoleV7={searchConsoleV7} indexSummary={indexSummary} />
-          <SeoDashboardSyncV112 />
+          <SeoDashboardSyncV112
+            seoTableSources={[
+              { name: 'seo_logs', count: dashboard.seoLogs.length, note: 'Nhật ký SEO Supabase.' },
+              { name: 'seo_notes', count: dashboard.note ? 1 : 0, note: 'Ghi chú SEO hiện hành.' },
+              { name: 'seo_tasks', count: dashboard.tasks.length, note: 'Today Task và việc cần làm.' },
+              { name: 'seo_priorities', count: dashboard.priorities.length, note: 'Danh sách ưu tiên SEO.' },
+              { name: 'seo_keywords', count: dashboard.seoKeywords.length, note: 'Keyword Map lưu trong Supabase.' },
+              { name: 'seo_index_status', count: dashboard.indexStatus.length, note: 'Trạng thái index theo URL.' },
+              { name: 'seo_goals', count: dashboard.seoGoals.length, note: 'Mục tiêu SEO.' },
+              { name: 'seo_progress', count: dashboard.seoProgress.length, note: 'Tiến độ SEO.' },
+              { name: 'seo_clusters', count: dashboard.seoClusters.length, note: 'Cụm SEO và URL chính.' },
+              { name: 'seo_competitors', count: dashboard.seoCompetitors.length, note: 'Đối thủ SEO.' },
+              { name: 'seo_local_seo', count: dashboard.localSeo.length, note: 'Local SEO.' },
+              { name: 'seo_do_not_touch', count: dashboard.doNotTouch.length, note: 'Danh sách không sửa.' },
+            ]}
+            aiDataSources={[
+              'products',
+              'blog_posts',
+              'categories',
+              'seo_keywords',
+              'seo_clusters',
+              'seo_logs',
+              'Search Console import',
+              'Google Ads import',
+              'Index Summary',
+              'SEO Workbench',
+              'Keyword Map',
+              'AI Recommendation History',
+            ]}
+          />
         </section>
       </AccordionSection>
 

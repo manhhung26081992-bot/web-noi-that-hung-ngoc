@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
         return {
           store_key: String(item.storeKey).trim(),
           payload,
-          version: 'v11.2.1',
+          version: 'v11.2.3',
           updated_at: new Date().toISOString(),
         };
       });

@@ -1,4 +1,4 @@
-export const SEO_DASHBOARD_SYNC_VERSION = 'v11.2.2';
+export const SEO_DASHBOARD_SYNC_VERSION = 'v11.2.3';
 export const SEO_DASHBOARD_RESTORED_EVENT = 'noithathungngoc:seo-dashboard-restored';
 
 export type SeoDashboardRestoredEventDetail = {
@@ -15,6 +15,7 @@ export type SeoDashboardRestoreResult = {
 
 export const SEO_DASHBOARD_SYNC_KEYS = [
   'noithathungngoc-search-console-import-v1',
+  'noithathungoc-search-console-import-v1',
   'noithathungngoc-google-ads-import-v1',
   'noithathungngoc-index-summary-v1',
   'noithathungngoc-seo-work-log-v11',
@@ -22,6 +23,9 @@ export const SEO_DASHBOARD_SYNC_KEYS = [
   'noithathungngoc-seo-v11-settings',
   'noithathungngoc-gsc-manual-summary-v11',
   'noithathungngoc-seo-work-log-v1',
+  'noithathungngoc-seo-workbench-checklist-v1',
+  'noithathungngoc-seo-keyword-map-v1',
+  'hn_ai_recommendation_history',
 ];
 
 const CHUNK_MARKER = '__chunk__';
@@ -107,7 +111,7 @@ export function getOriginalStoreKey(key: string) {
 }
 
 export function isSeoDashboardStorageKey(key: string) {
-  return !isChunkStoreKey(key) && (key.startsWith('noithathungngoc-') || SEO_DASHBOARD_SYNC_KEYS.includes(key));
+  return !isChunkStoreKey(key) && (SEO_DASHBOARD_SYNC_KEYS.includes(key) || key.startsWith('noithathungngoc-'));
 }
 
 export function discoverLocalSeoKeys() {

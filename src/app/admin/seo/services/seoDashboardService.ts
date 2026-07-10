@@ -322,7 +322,7 @@ export async function getBlogSeoItems(): Promise<SeoBlogQualityItem[]> {
     };
     const issues = Object.entries(checks).filter(([, ok]) => !ok).map(([key]) => issueMap[key as keyof typeof checks]);
     const score = Math.round(Object.values(checks).filter(Boolean).length / Object.keys(checks).length * 100);
-    return { id: row.id as string | number || slug || title, title, slug, excerpt, image, created_at: textField(row, ['created_at']), updated_at: textField(row, ['updated_at']), score, checks, issues, action: issues.length ? 'Ưu tiên: ' + issues.slice(0, 3).join(', ') + '.' : 'Bài viết ổn, theo dõi Search Console.' };
+    return { id: row.id as string | number || slug || title, title, slug, excerpt, content, image, created_at: textField(row, ['created_at']), updated_at: textField(row, ['updated_at']), score, checks, issues, action: issues.length ? 'Ưu tiên: ' + issues.slice(0, 3).join(', ') + '.' : 'Bài viết ổn, theo dõi Search Console.' };
   }).sort((a, b) => a.score - b.score || b.issues.length - a.issues.length);
 }
 

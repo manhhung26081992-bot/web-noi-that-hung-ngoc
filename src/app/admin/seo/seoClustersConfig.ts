@@ -1,0 +1,330 @@
+export type SeoClusterPriority = 1 | 2 | 3 | 4;
+
+export type SeoClusterConfig = {
+  id: string;
+  name: string;
+  priority: SeoClusterPriority;
+  mainUrl: string;
+  fallbackMainUrl?: string;
+  matchKeywords: string[];
+  trackedKeywords: string[];
+  safeAnchors: string[];
+};
+
+export type SeoClusterGroupConfig = {
+  groupId: string;
+  groupName: string;
+  clusters: SeoClusterConfig[];
+};
+
+export const SEO_CLUSTER_GROUPS: SeoClusterGroupConfig[] = [
+  {
+    groupId: 'tu-van-phong',
+    groupName: 'Tủ văn phòng',
+    clusters: [
+      {
+        id: 'tu-locker',
+        name: 'Tủ Locker',
+        priority: 4,
+        mainUrl: '/tu-locker/',
+        matchKeywords: ['tủ locker', 'tu locker', 'locker'],
+        trackedKeywords: ['tủ locker', 'tủ locker văn phòng'],
+        safeAnchors: ['các mẫu tủ locker tại Nội Thất Hùng Ngọc', 'danh mục tủ locker văn phòng', 'mẫu tủ locker cho trường học và nhà máy'],
+      },
+      {
+        id: 'tu-tai-lieu-go',
+        name: 'Tủ tài liệu gỗ',
+        priority: 4,
+        mainUrl: '/tu-tai-lieu-go/',
+        matchKeywords: ['tủ tài liệu gỗ', 'tu tai lieu go', 'tủ gỗ văn phòng', 'tu go van phong'],
+        trackedKeywords: ['tủ tài liệu gỗ', 'tủ gỗ văn phòng'],
+        safeAnchors: ['các mẫu tủ tài liệu gỗ tại Nội Thất Hùng Ngọc', 'mẫu tủ gỗ văn phòng dễ phối bàn làm việc'],
+      },
+      {
+        id: 'tu-tai-lieu-sat',
+        name: 'Tủ tài liệu sắt',
+        priority: 4,
+        mainUrl: '/tu-tai-lieu-sat/',
+        matchKeywords: ['tủ tài liệu sắt', 'tu tai lieu sat', 'tủ sắt văn phòng'],
+        trackedKeywords: ['tủ tài liệu sắt', 'tủ sắt văn phòng'],
+        safeAnchors: ['các mẫu tủ tài liệu sắt tại Nội Thất Hùng Ngọc', 'mẫu tủ sắt lưu hồ sơ văn phòng'],
+      },
+      {
+        id: 'hoc-tu-tu-phu',
+        name: 'Hộc tủ - Tủ phụ',
+        priority: 4,
+        mainUrl: '/hoc-tu-tu-phu/',
+        matchKeywords: ['hộc tủ', 'tủ phụ', 'hoc tu', 'tu phu'],
+        trackedKeywords: ['hộc tủ', 'tủ phụ bàn làm việc'],
+        safeAnchors: ['các mẫu hộc tủ và tủ phụ tại Nội Thất Hùng Ngọc', 'mẫu hộc tủ gọn cho bàn làm việc'],
+      },
+    ],
+  },
+  {
+    groupId: 'ghe-van-phong',
+    groupName: 'Ghế văn phòng',
+    clusters: [
+      {
+        id: 'ghe-xoay-van-phong',
+        name: 'Ghế xoay văn phòng',
+        priority: 3,
+        mainUrl: '/ghe-xoay/',
+        matchKeywords: ['ghế xoay', 'ghế xoay văn phòng', 'ghe xoay'],
+        trackedKeywords: ['ghế xoay văn phòng', 'ghế xoay văn phòng giá rẻ'],
+        safeAnchors: ['các mẫu ghế xoay văn phòng tại Nội Thất Hùng Ngọc', 'mẫu ghế xoay phù hợp bàn làm việc'],
+      },
+      {
+        id: 'ghe-chan-quy',
+        name: 'Ghế chân quỳ',
+        priority: 3,
+        mainUrl: '/ghe-chan-quy/',
+        matchKeywords: ['ghế chân quỳ', 'ghe chan quy', 'ghế họp chân quỳ'],
+        trackedKeywords: ['ghế chân quỳ giá rẻ tại Hà Nội', 'ghế chân quỳ văn phòng'],
+        safeAnchors: ['các mẫu ghế chân quỳ tại Nội Thất Hùng Ngọc', 'mẫu ghế chân quỳ văn phòng', 'ghế chân quỳ phù hợp phòng họp'],
+      },
+      {
+        id: 'ghe-giam-doc',
+        name: 'Ghế giám đốc',
+        priority: 3,
+        mainUrl: '/ghe-giam-doc/',
+        matchKeywords: ['ghế giám đốc', 'ghe giam doc'],
+        trackedKeywords: ['ghế giám đốc', 'ghế giám đốc cao cấp'],
+        safeAnchors: ['các mẫu ghế giám đốc tại Nội Thất Hùng Ngọc', 'mẫu ghế giám đốc cho phòng làm việc'],
+      },
+      {
+        id: 'ghe-gap',
+        name: 'Ghế gấp',
+        priority: 4,
+        mainUrl: '/ghe-gap/',
+        matchKeywords: ['ghế gấp', 'ghe gap'],
+        trackedKeywords: ['ghế gấp', 'ghế gấp văn phòng'],
+        safeAnchors: ['các mẫu ghế gấp tại Nội Thất Hùng Ngọc', 'mẫu ghế gấp gọn dễ cất'],
+      },
+      {
+        id: 'ghe-gaming',
+        name: 'Ghế Gaming',
+        priority: 4,
+        mainUrl: '/ghe-gaming/',
+        matchKeywords: ['ghế gaming', 'ghe gaming'],
+        trackedKeywords: ['ghế gaming'],
+        safeAnchors: ['các mẫu ghế gaming tại Nội Thất Hùng Ngọc'],
+      },
+    ],
+  },
+  {
+    groupId: 'ban-van-phong',
+    groupName: 'Bàn văn phòng',
+    clusters: [
+      {
+        id: 'ban-nhan-vien',
+        name: 'Bàn nhân viên / Bàn chữ L',
+        priority: 2,
+        mainUrl: '/ban-nhan-vien/',
+        fallbackMainUrl: '/ban-van-phong/',
+        matchKeywords: ['bàn nhân viên', 'bàn làm việc', 'bàn chữ l', 'ban nhan vien', 'ban lam viec', 'ban chu l'],
+        trackedKeywords: ['bàn nhân viên chữ L 1m4', 'bàn nhân viên chữ L 1m6', 'bàn làm việc chữ L'],
+        safeAnchors: ['các mẫu bàn văn phòng tại Nội Thất Hùng Ngọc', 'mẫu bàn nhân viên chữ L 1m4 HN31', 'mẫu bàn nhân viên chữ L 1m6 HN33', 'các mẫu bàn làm việc văn phòng'],
+      },
+      {
+        id: 'ban-chan-sat',
+        name: 'Bàn chân sắt / Bàn chữ K',
+        priority: 2,
+        mainUrl: '/ban-chan-sat/',
+        matchKeywords: ['bàn chân sắt', 'bàn chữ k', 'ban chan sat', 'ban chu k'],
+        trackedKeywords: ['bàn chân sắt chữ K', 'bàn làm việc chân sắt chữ K', 'bàn chân sắt giá rẻ'],
+        safeAnchors: ['các mẫu bàn chân sắt tại Nội Thất Hùng Ngọc', 'bàn làm việc chân sắt chữ K', 'mẫu bàn chữ K cho văn phòng'],
+      },
+      {
+        id: 'ban-giam-doc',
+        name: 'Bàn giám đốc',
+        priority: 3,
+        mainUrl: '/ban-giam-doc/',
+        matchKeywords: ['bàn giám đốc', 'ban giam doc'],
+        trackedKeywords: ['bàn giám đốc giá rẻ', 'kích thước bàn giám đốc'],
+        safeAnchors: ['các mẫu bàn giám đốc tại Nội Thất Hùng Ngọc', 'bàn giám đốc phù hợp phòng làm việc', 'mẫu bàn giám đốc văn phòng'],
+      },
+      {
+        id: 'ban-hop',
+        name: 'Bàn họp',
+        priority: 3,
+        mainUrl: '/ban-hop/',
+        matchKeywords: ['bàn họp', 'ban hop'],
+        trackedKeywords: ['bàn họp', 'bàn họp văn phòng'],
+        safeAnchors: ['các mẫu bàn họp tại Nội Thất Hùng Ngọc', 'mẫu bàn họp văn phòng'],
+      },
+      {
+        id: 'cum-ban-lam-viec',
+        name: 'Cụm bàn làm việc',
+        priority: 3,
+        mainUrl: '/cum-ban/',
+        fallbackMainUrl: '/cum-ban-lam-viec/',
+        matchKeywords: ['cụm bàn làm việc', 'cụm bàn', 'cum ban lam viec', 'cum ban'],
+        trackedKeywords: ['cụm bàn làm việc', 'cụm bàn văn phòng'],
+        safeAnchors: ['các mẫu cụm bàn làm việc tại Nội Thất Hùng Ngọc', 'mẫu cụm bàn văn phòng tiết kiệm diện tích'],
+      },
+      {
+        id: 'quay-le-tan',
+        name: 'Quầy lễ tân',
+        priority: 4,
+        mainUrl: '/quay-le-tan/',
+        matchKeywords: ['quầy lễ tân', 'quay le tan'],
+        trackedKeywords: ['quầy lễ tân'],
+        safeAnchors: ['các mẫu quầy lễ tân tại Nội Thất Hùng Ngọc'],
+      },
+    ],
+  },
+  {
+    groupId: 'truong-hoc',
+    groupName: 'Trường học',
+    clusters: [
+      {
+        id: 'ban-ghe-giao-vien',
+        name: 'Bàn ghế giáo viên',
+        priority: 4,
+        mainUrl: '/ban-ghe-giao-vien/',
+        fallbackMainUrl: '/truong-hoc/',
+        matchKeywords: ['bàn ghế giáo viên', 'bàn giáo viên', 'ban ghe giao vien'],
+        trackedKeywords: ['bàn ghế giáo viên'],
+        safeAnchors: ['các mẫu bàn ghế giáo viên tại Nội Thất Hùng Ngọc', 'nội thất trường học cho phòng giáo viên'],
+      },
+      {
+        id: 'bang-tu',
+        name: 'Bảng từ',
+        priority: 3,
+        mainUrl: '/bang-tu/',
+        fallbackMainUrl: '/truong-hoc/',
+        matchKeywords: ['bảng từ', 'bang tu'],
+        trackedKeywords: ['bảng từ', 'bảng từ trắng'],
+        safeAnchors: ['các mẫu bảng từ tại Nội Thất Hùng Ngọc', 'mẫu bảng từ cho lớp học và văn phòng'],
+      },
+      {
+        id: 'ban-ghe-hoc-sinh',
+        name: 'Bàn ghế học sinh',
+        priority: 4,
+        mainUrl: '/ban-ghe-hoc-sinh/',
+        fallbackMainUrl: '/truong-hoc/',
+        matchKeywords: ['bàn ghế học sinh', 'bàn học sinh', 'ban ghe hoc sinh', 'ban hoc sinh'],
+        trackedKeywords: ['bàn ghế học sinh giá rẻ', 'bàn học sinh', 'nội thất trường học'],
+        safeAnchors: ['các mẫu bàn ghế học sinh tại Nội Thất Hùng Ngọc', 'mẫu bàn học sinh phù hợp theo cấp học', 'bàn ghế học sinh cho trường học'],
+      },
+    ],
+  },
+  {
+    groupId: 'gia-dinh',
+    groupName: 'Gia đình',
+    clusters: [
+      {
+        id: 'giuong-tang-sat',
+        name: 'Giường tầng sắt',
+        priority: 1,
+        mainUrl: '/giuong-tang-sat/',
+        matchKeywords: ['giường', 'giuong', 'giường tầng', 'giường sắt', 'giuong tang', 'giuong sat', 'hn402', 'hn417', 'hn411', 'hn409'],
+        trackedKeywords: ['giường sắt 2 tầng giá rẻ tại Hà Nội', 'giường tầng sắt', 'giường sắt 2 tầng', 'giá giường tầng sắt'],
+        safeAnchors: ['các mẫu giường sắt tại Nội Thất Hùng Ngọc', 'danh mục giường tầng bằng sắt', 'mẫu giường sắt phù hợp phòng trọ', 'các mẫu giường tiết kiệm diện tích', 'giường tầng phù hợp ký túc xá'],
+      },
+      {
+        id: 'giuong-go',
+        name: 'Giường gỗ',
+        priority: 3,
+        mainUrl: '/giuong-go/',
+        matchKeywords: ['giường gỗ', 'giuong go', 'giường ngủ gỗ'],
+        trackedKeywords: ['giường gỗ', 'giường ngủ gỗ'],
+        safeAnchors: ['các mẫu giường gỗ tại Nội Thất Hùng Ngọc', 'mẫu giường ngủ gỗ cho gia đình'],
+      },
+      {
+        id: 'tu-quan-ao',
+        name: 'Tủ quần áo',
+        priority: 3,
+        mainUrl: '/tu-quan-ao/',
+        matchKeywords: ['tủ quần áo', 'tu quan ao', 'hn906', 'hn903', 'hn909'],
+        trackedKeywords: ['tủ quần áo', 'tủ quần áo giá rẻ'],
+        safeAnchors: ['các mẫu tủ quần áo tại Nội Thất Hùng Ngọc', 'mẫu tủ quần áo cho gia đình'],
+      },
+      {
+        id: 'tu-giay',
+        name: 'Tủ giày',
+        priority: 4,
+        mainUrl: '/tu-giay/',
+        matchKeywords: ['tủ giày', 'tu giay'],
+        trackedKeywords: ['tủ giày', 'tủ giày dép'],
+        safeAnchors: ['các mẫu tủ giày tại Nội Thất Hùng Ngọc', 'mẫu tủ giày gọn cho gia đình'],
+      },
+      {
+        id: 'ban-trang-diem',
+        name: 'Bàn trang điểm',
+        priority: 4,
+        mainUrl: '/ban-trang-diem/',
+        matchKeywords: ['bàn trang điểm', 'ban trang diem'],
+        trackedKeywords: ['bàn trang điểm'],
+        safeAnchors: ['các mẫu bàn trang điểm tại Nội Thất Hùng Ngọc'],
+      },
+      {
+        id: 'ke-go',
+        name: 'Kệ gỗ',
+        priority: 4,
+        mainUrl: '/ke-go/',
+        matchKeywords: ['kệ gỗ', 'ke go'],
+        trackedKeywords: ['kệ gỗ'],
+        safeAnchors: ['các mẫu kệ gỗ tại Nội Thất Hùng Ngọc'],
+      },
+      {
+        id: 'ke-sach',
+        name: 'Kệ sách',
+        priority: 4,
+        mainUrl: '/ke-sach/',
+        matchKeywords: ['kệ sách', 'ke sach'],
+        trackedKeywords: ['kệ sách'],
+        safeAnchors: ['các mẫu kệ sách tại Nội Thất Hùng Ngọc'],
+      },
+      {
+        id: 'ke-tivi',
+        name: 'Kệ tivi',
+        priority: 4,
+        mainUrl: '/ke-tivi/',
+        matchKeywords: ['kệ tivi', 'ke tivi'],
+        trackedKeywords: ['kệ tivi'],
+        safeAnchors: ['các mẫu kệ tivi tại Nội Thất Hùng Ngọc'],
+      },
+      {
+        id: 'ke-trang-tri',
+        name: 'Kệ trang trí',
+        priority: 4,
+        mainUrl: '/ke-trang-tri/',
+        matchKeywords: ['kệ trang trí', 'ke trang tri'],
+        trackedKeywords: ['kệ trang trí'],
+        safeAnchors: ['các mẫu kệ trang trí tại Nội Thất Hùng Ngọc'],
+      },
+      {
+        id: 'ke-treo-quan-ao',
+        name: 'Kệ treo quần áo',
+        priority: 4,
+        mainUrl: '/ke-treo-quan-ao/',
+        matchKeywords: ['kệ treo quần áo', 'ke treo quan ao'],
+        trackedKeywords: ['kệ treo quần áo'],
+        safeAnchors: ['các mẫu kệ treo quần áo tại Nội Thất Hùng Ngọc'],
+      },
+      {
+        id: 'ket-sat',
+        name: 'Két sắt',
+        priority: 4,
+        mainUrl: '/ket-sat/',
+        matchKeywords: ['két sắt', 'ket sat'],
+        trackedKeywords: ['két sắt'],
+        safeAnchors: ['các mẫu két sắt tại Nội Thất Hùng Ngọc'],
+      },
+      {
+        id: 'ke-de-hang',
+        name: 'Kệ để hàng',
+        priority: 4,
+        mainUrl: '/ke-de-hang/',
+        matchKeywords: ['kệ để hàng', 'ke de hang'],
+        trackedKeywords: ['kệ để hàng'],
+        safeAnchors: ['các mẫu kệ để hàng tại Nội Thất Hùng Ngọc'],
+      },
+    ],
+  },
+];
+
+export function priorityLabel(priority: SeoClusterPriority) {
+  return priority <= 3 ? 'Ưu tiên ' + priority : 'Theo dõi';
+}

@@ -8,6 +8,7 @@ import SearchConsoleV7Center from './SearchConsoleV7Center';
 import GoogleAdsV8ImportCenter from './GoogleAdsV8ImportCenter';
 import IndexSummaryPanel from './IndexSummaryPanel';
 import SeoDashboardSyncV112 from './SeoDashboardSyncV112';
+import SeoClusterCheck from './SeoClusterCheck';
 import { Badge, EmptyState, MetricCard, ModuleCard } from './Ui';
 import { AiInsightPanel, LocalSeoPanel, TodaySummaryPanel } from './SeoV3Modules';
 import {
@@ -113,6 +114,10 @@ function SeoDashboardLowerModules({
           <DashboardAnalytics key={'analytics-' + restoreVersion} overview={overview} health={health} clusters={dashboard.seoClusters} keywords={dashboard.seoKeywords} tasks={dashboard.tasks} logs={dashboard.seoLogs} doNotTouch={dashboard.doNotTouch} searchConsoleV7={searchConsoleV7} indexSummary={indexSummary} />
           <SeoDashboardSyncV112 />
         </section>
+      </AccordionSection>
+
+      <AccordionSection id="kiem-tra-cum-seo" title="Kiểm tra cụm SEO" description="Rà soát link nội bộ, anchor, nội dung mỏng và nguy cơ trùng keyword theo menu thật của website.">
+        <SeoClusterCheck products={dashboard.productSeoItems} blogs={dashboard.blogSeoItems} keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} />
       </AccordionSection>
 
       <AccordionSection title="Từ khóa, cụm SEO và kế hoạch nội dung" description="Lọc bằng thanh tìm kiếm phía trên.">

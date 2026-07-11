@@ -2,6 +2,7 @@ import styles from "./news.module.css";
 import { notFound } from "next/navigation";
 import { getBlogBySlug } from "@/lib/blog";
 import BlogViewTracker from "@/components/BlogViewTracker";
+import { siteUrl } from "@/lib/url";
 
 export const revalidate = 3600;
 
@@ -11,7 +12,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   if (!post) return { title: "Nội Thất Hùng Ngọc" };
 
-  const canonicalUrl = `https://www.noithathungngoc.com/tin-tuc/${post.slug}`;
+  const canonicalUrl = siteUrl(`/tin-tuc/${post.slug}`);
   const shareImage = post.image?.startsWith("http")
     ? post.image
     : `https://www.noithathungngoc.com${post.image || "/logo.png"}`;
@@ -50,7 +51,7 @@ export default async function BlogDetail({ params }: { params: Promise<{ slug: s
 
   if (!post) return notFound();
 
-  const canonicalUrl = `https://www.noithathungngoc.com/tin-tuc/${post.slug}`;
+  const canonicalUrl = siteUrl(`/tin-tuc/${post.slug}`);
   const shareImage = post.image?.startsWith("http")
     ? post.image
     : `https://www.noithathungngoc.com${post.image || "/logo.png"}`;
@@ -74,7 +75,7 @@ export default async function BlogDetail({ params }: { params: Promise<{ slug: s
     author: {
       "@type": "Organization",
       name: "Nội Thất Hùng Ngọc",
-      url: "https://www.noithathungngoc.com",
+      url: siteUrl(),
     },
     publisher: {
       "@type": "Organization",

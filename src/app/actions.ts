@@ -56,6 +56,7 @@ const PRODUCT_FIELDS = `
   description,
   detailDescription,
   features,
+  alt,
   parent_slug
 `
 
@@ -340,3 +341,38 @@ export async function getRelatedProductsByCategory(
 // }
 
 
+
+
+function normalizeProductLookupText(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (Array.isArray(value)) return value.map(normalizeProductLookupText).join(' ');
+  if (typeof value === 'object') return Object.values(value as Record<string, unknown>).map(normalizeProductLookupText).join(' ');
+  return String(value)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
+}
+
+export async function findSingleProductByCode(codeValue: string, excludeSlug?: string) {
+  const compactCode = normalizeProductLookupText(codeValue).replace(/[^a-z0-9]/g, '');
+  if (!/^hn\d+$/.test(compactCode)) return null;
+
+  const products = await getAllProductsFromSupabase();
+  const matches = products.filter((product: any) => {
+    if (excludeSlug && product.slug === excludeSlug) return false;
+
+    const haystack = normalizeProductLookupText([
+      product.name,
+      product.slug,
+      product.alt,
+      product.description,
+      product.specs,
+      product.features,
+    ]).replace(/[^a-z0-9]/g, '');
+
+    return haystack.includes(compactCode);
+  });
+
+  return matches.length === 1 ? matches[0] : null;
+}

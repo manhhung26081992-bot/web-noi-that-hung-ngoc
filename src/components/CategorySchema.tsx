@@ -1,4 +1,5 @@
 import React from 'react';
+import { siteUrl } from '@/lib/url';
 
 interface CategorySchemaProps {
   categoryName: string;
@@ -12,14 +13,12 @@ interface CategorySchemaProps {
   }>;
 }
 
-const siteUrl = 'https://www.noithathungngoc.com';
-
 // Lấy ảnh đầu tiên và chuyển về URL đầy đủ cho Google.
 function normalizeImageUrl(image?: string | string[]) {
   const firstImage = Array.isArray(image) ? image[0] : image;
-  if (!firstImage) return `${siteUrl}/default-product.webp`;
+  if (!firstImage) return siteUrl("/default-product.webp");
   if (firstImage.startsWith('http')) return firstImage;
-  return `${siteUrl}${firstImage.startsWith('/') ? '' : '/'}${firstImage}`;
+  return siteUrl(firstImage);
 }
 
 // Chuẩn hóa giá về số thuần để Offer schema hợp lệ.
@@ -38,7 +37,7 @@ export default function CategorySchema({
   categorySlug,
   products,
 }: CategorySchemaProps) {
-  const categoryUrl = `${siteUrl}/${categorySlug}`;
+  const categoryUrl = siteUrl(`/${categorySlug}`);
   const schemaProducts = products
     .map((product) => ({
       ...product,
@@ -61,7 +60,7 @@ export default function CategorySchema({
             '@type': 'Product',
             name: product.name,
             image: normalizeImageUrl(product.image),
-            url: `${siteUrl}/san-pham/${product.slug}`,
+            url: siteUrl(`/san-pham/${product.slug}`),
             sku: product.id ? String(product.id) : product.slug,
             brand: {
               '@type': 'Brand',
@@ -73,7 +72,7 @@ export default function CategorySchema({
               price: product.schemaPrice,
               availability: 'https://schema.org/InStock',
               itemCondition: 'https://schema.org/NewCondition',
-              url: `${siteUrl}/san-pham/${product.slug}`,
+              url: siteUrl(`/san-pham/${product.slug}`),
             },
           },
         })),

@@ -239,12 +239,20 @@ export interface GoogleAdsKeywordImportRow {
   conversions?: number;
   conversion_rate?: number;
   cluster?: string;
+  parentCluster?: string;
+  subCluster?: string;
+  clusterReason?: string;
   businessPriority: number;
   commercialIntent: number;
 }
 
 export interface GoogleAdsImportSummary {
   keywordCount: number;
+  rawLineCount?: number;
+  parsedRowCount?: number;
+  mergedKeywordCount?: number;
+  skippedRowCount?: number;
+  unclusteredKeywordCount?: number;
   totalSearchVolume: number;
   averageCpc: number | null;
   averageCompetitionIndex: number | null;
@@ -254,6 +262,19 @@ export interface GoogleAdsImportSummary {
   totalConversions: number;
   hasAdsPerformance: boolean;
   lastUpdated: string;
+  headerRowNumber?: number | null;
+  detectedColumns?: string[];
+  clusterCounts?: Record<string, number>;
+  subClusterCounts?: Record<string, number>;
+  importDebug?: {
+    totalLines: number;
+    headerRowNumber: number | null;
+    parsedRowCount: number;
+    skippedRowCount: number;
+    detectedColumns: string[];
+    delimiter?: string;
+    message?: string;
+  };
 }
 
 export interface GoogleAdsOpportunity {

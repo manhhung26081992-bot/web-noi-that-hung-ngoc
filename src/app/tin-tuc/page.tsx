@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getAllBlogs, getPopularBlogs } from "@/lib/blog";
 import styles from "./news-list.module.css";
+import { addTrailingSlash, siteUrl } from "@/lib/url";
 
 export const revalidate = 3600;
 
@@ -19,13 +20,13 @@ export const metadata: Metadata = {
   description:
     "Cẩm nang chọn mua bàn ghế văn phòng, tủ locker, sofa, nội thất gia đình và kinh nghiệm thi công nội thất giá tốt tại Hà Nội.",
   alternates: {
-    canonical: "/tin-tuc",
+    canonical: siteUrl("/tin-tuc"),
   },
   openGraph: {
     title: "Tin tức & Cẩm nang nội thất - Nội Thất Hùng Ngọc",
     description:
       "Kinh nghiệm chọn mua, bố trí và bảo quản nội thất văn phòng, gia đình từ Nội Thất Hùng Ngọc.",
-    url: "https://www.noithathungngoc.com/tin-tuc",
+    url: siteUrl("/tin-tuc"),
     type: "website",
   },
 };
@@ -61,7 +62,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: "Tin tức & Cẩm nang nội thất",
-    url: "https://www.noithathungngoc.com/tin-tuc",
+    url: siteUrl("/tin-tuc"),
     description: metadata.description,
     publisher: {
       "@type": "Organization",
@@ -74,7 +75,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
       itemListElement: posts.slice(0, 20).map((post, index) => ({
         "@type": "ListItem",
         position: index + 1,
-        url: `https://www.noithathungngoc.com/tin-tuc/${post.slug}`,
+        url: siteUrl(`/tin-tuc/${post.slug}`),
         name: post.title,
       })),
     },
@@ -98,12 +99,12 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
           <section className={styles.box}>
             <h2 className={styles.boxTitle}>Chuyên mục</h2>
             <ul className={styles.categoryList}>
-              <li><Link href="/tin-tuc">Tin tức</Link></li>
-              <li><Link href="/tin-tuc">Kinh nghiệm</Link></li>
-              <li><Link href="/tu-van-phong">Tủ văn phòng</Link></li>
-              <li><Link href="/ban-van-phong">Bàn văn phòng</Link></li>
-              <li><Link href="/ghe-van-phong">Ghế văn phòng</Link></li>
-              <li><Link href="/sofa">Sofa</Link></li>
+              <li><Link href="/tin-tuc/">Tin tức</Link></li>
+              <li><Link href="/tin-tuc/">Kinh nghiệm</Link></li>
+              <li><Link href="/tu-van-phong/">Tủ văn phòng</Link></li>
+              <li><Link href="/ban-van-phong/">Bàn văn phòng</Link></li>
+              <li><Link href="/ghe-van-phong/">Ghế văn phòng</Link></li>
+              <li><Link href="/sofa/">Sofa</Link></li>
             </ul>
           </section>
 
@@ -111,7 +112,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
             <h2 className={styles.boxTitle}>Tin tức đọc nhiều</h2>
             <div className={styles.popularList}>
               {popularPosts.map((post) => (
-                <Link key={post.id} href={`/tin-tuc/${post.slug}`} className={styles.popularItem}>
+                <Link key={post.id} href={addTrailingSlash(`/tin-tuc/${post.slug}`)} className={styles.popularItem}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={getImageSrc(post)} alt={post.title} className={styles.popularThumb} loading="lazy" />
                   <span className={styles.popularName}>{post.title}</span>
@@ -129,7 +130,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
           ) : (
             <div className={styles.postList}>
               {visiblePosts.map((post) => (
-                <Link key={post.id} href={`/tin-tuc/${post.slug}`} className={styles.postItem}>
+                <Link key={post.id} href={addTrailingSlash(`/tin-tuc/${post.slug}`)} className={styles.postItem}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={getImageSrc(post)} alt={post.title} className={styles.postImage} loading="lazy" />
                   <div className={styles.postBody}>
@@ -147,7 +148,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
               {safeCurrentPage > 1 ? (
                 <Link
                   className={styles.pageButton}
-                  href={safeCurrentPage === 2 ? "/tin-tuc" : `/tin-tuc?page=${safeCurrentPage - 1}`}
+                  href={safeCurrentPage === 2 ? "/tin-tuc/" : addTrailingSlash(`/tin-tuc?page=${safeCurrentPage - 1}`)}
                   aria-label="Trang trước"
                 >
                   ‹
@@ -162,7 +163,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
                 <Link
                   key={pageNumber}
                   className={`${styles.pageButton} ${pageNumber === safeCurrentPage ? styles.activePage : ""}`}
-                  href={pageNumber === 1 ? "/tin-tuc" : `/tin-tuc?page=${pageNumber}`}
+                  href={pageNumber === 1 ? "/tin-tuc/" : addTrailingSlash(`/tin-tuc?page=${pageNumber}`)}
                   aria-current={pageNumber === safeCurrentPage ? "page" : undefined}
                 >
                   {pageNumber}
@@ -172,7 +173,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
               {safeCurrentPage < totalPages ? (
                 <Link
                   className={styles.pageButton}
-                  href={`/tin-tuc?page=${safeCurrentPage + 1}`}
+                  href={addTrailingSlash(`/tin-tuc?page=${safeCurrentPage + 1}`)}
                   aria-label="Trang sau"
                 >
                   ›

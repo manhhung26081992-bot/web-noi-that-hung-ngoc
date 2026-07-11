@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import styles from '@/styles/Product.module.css';
-import ProductCard from './ProductCard'; 
+import ProductCard from './ProductCard';
+import { addTrailingSlash } from '@/lib/url'; 
 
 // Kiểu dữ liệu đầu vào cho danh sách sản phẩm lấy từ Supabase.
 interface ProductListProps {
@@ -42,7 +43,7 @@ export default function ProductList({ title, products, categorySlugs, limit, vie
         {/* Link "Xem tất cả" cho trang chủ */}
         {limit && (
           <Link 
-            href={viewAllLink || (categorySlugs ? `/${categorySlugs[0]}` : '#')} 
+            href={viewAllLink ? addTrailingSlash(viewAllLink) : (categorySlugs ? addTrailingSlash(`/${categorySlugs[0]}`) : '#')} 
             className={styles.viewAll}
           >
             + Xem tất cả

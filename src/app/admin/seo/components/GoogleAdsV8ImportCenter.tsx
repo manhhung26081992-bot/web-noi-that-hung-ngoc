@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useMemo, useState } from 'react';
 import { Badge, EmptyState, MetricCard, ModuleCard } from './Ui';
@@ -9,6 +9,7 @@ import {
   mergeGoogleAdsImportData,
   normalizeGoogleAdsImportData,
   parseGoogleAdsImport,
+  parseGoogleAdsImportDebug,
 } from '../services/googleAdsImportService';
 import type { GoogleAdsImportData, GoogleAdsImportMode, GoogleAdsImportSource, GoogleAdsKeywordImportRow, GoogleAdsOpportunity, SearchConsoleV7Data, SeoCluster, SeoKeyword } from '../types/seo';
 import styles from '../seo-dashboard.module.css';
@@ -28,6 +29,8 @@ type LastImportResult = {
   totalCount: number;
 };
 
+type RowsPerPage = 50 | 100 | 200;
+
 function formatNumber(value: number | null | undefined) {
   return new Intl.NumberFormat('vi-VN').format(Number(value || 0));
 }
@@ -39,6 +42,18 @@ function formatMoney(value: number | null | undefined) {
 
 function key(table: string, id: unknown, slug: unknown, index: number) {
   return table + '-' + String(id ?? 'no-id') + '-' + String(slug ?? 'no-slug') + '-' + index;
+}
+
+function rowCpc(row: GoogleAdsKeywordImportRow) {
+  return row.cpc || row.low_top_of_page_bid || row.high_top_of_page_bid || 0;
+}
+
+function normalizeFilter(value: unknown) {
+  return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+}
+
+function uniqueOptions(rows: GoogleAdsKeywordImportRow[], field: 'parentCluster' | 'subCluster' | 'competition') {
+  return Array.from(new Set(rows.map((row) => String(row[field] || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'vi'));
 }
 
 function RecommendationBadge({ value }: { value: string }) {
@@ -81,15 +96,63 @@ function KeywordTable({ title, rows, mode = 'row' }: { title: string; rows: Goog
   );
 }
 
+function FullKeywordTable({ rows }: { rows: GoogleAdsKeywordImportRow[] }) {
+  return (
+    <div className={styles.tableWrap}>
+      <table>
+        <thead>
+          <tr>
+            <th>Keyword</th>
+            <th>Cụm cha</th>
+            <th>Danh mục con</th>
+            <th>Lượt tìm</th>
+            <th>Cạnh tranh</th>
+            <th>Chỉ số</th>
+            <th>Giá thấp</th>
+            <th>Giá cao</th>
+            <th>Tiền tệ</th>
+            <th>Lý do phân cụm</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, index) => (
+            <tr key={key('ads-full', row.id, row.keyword, index)}>
+              <td><strong>{row.keyword}</strong></td>
+              <td>{row.parentCluster || row.cluster || 'Theo dõi thêm'}</td>
+              <td>{row.subCluster || '-'}</td>
+              <td>{formatNumber(row.avg_monthly_searches)}</td>
+              <td>{row.competition || '-'}</td>
+              <td>{row.competition_index ?? '-'}</td>
+              <td>{formatMoney(row.low_top_of_page_bid)}</td>
+              <td>{formatMoney(row.high_top_of_page_bid)}</td>
+              <td>{row.currency || '-'}</td>
+              <td>{row.clusterReason || '-'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchConsoleData, onData }: Props) {
   const [rawText, setRawText] = useState('');
   const [data, setData] = useState<GoogleAdsImportData | null>(null);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'overview' | 'planner' | 'performance' | 'matrix'>('overview');
+  const [tab, setTab] = useState<'overview' | 'planner' | 'performance' | 'matrix' | 'all'>('overview');
   const [fileName, setFileName] = useState('');
   const [rowCount, setRowCount] = useState(0);
   const [importMode, setImportMode] = useState<GoogleAdsImportMode>('merge');
   const [lastImportResult, setLastImportResult] = useState<LastImportResult | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [parentFilter, setParentFilter] = useState('');
+  const [subFilter, setSubFilter] = useState('');
+  const [competitionFilter, setCompetitionFilter] = useState('');
+  const [minVolume, setMinVolume] = useState('');
+  const [maxCpc, setMaxCpc] = useState('');
+  const [unclusteredOnly, setUnclusteredOnly] = useState(false);
+  const [rowsPerPage, setRowsPerPage] = useState<RowsPerPage>(50);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     try {
@@ -111,6 +174,34 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
 
   const analyzed = useMemo(() => data, [data]);
   const summary = analyzed?.summary;
+  const allRows = analyzed?.rows || [];
+  const parentOptions = useMemo(() => uniqueOptions(allRows, 'parentCluster'), [allRows]);
+  const subOptions = useMemo(() => uniqueOptions(parentFilter ? allRows.filter((row) => row.parentCluster === parentFilter) : allRows, 'subCluster'), [allRows, parentFilter]);
+  const competitionOptions = useMemo(() => uniqueOptions(allRows, 'competition'), [allRows]);
+
+  const filteredRows = useMemo(() => {
+    const keywordNeedle = normalizeFilter(searchTerm);
+    const min = Number(minVolume || 0);
+    const max = Number(maxCpc || 0);
+    return allRows.filter((row) => {
+      if (keywordNeedle && !normalizeFilter(row.keyword).includes(keywordNeedle)) return false;
+      if (parentFilter && row.parentCluster !== parentFilter) return false;
+      if (subFilter && row.subCluster !== subFilter) return false;
+      if (competitionFilter && row.competition !== competitionFilter) return false;
+      if (unclusteredOnly && (row.parentCluster || row.cluster) !== 'Theo dõi thêm') return false;
+      if (min && Number(row.avg_monthly_searches || 0) < min) return false;
+      if (max && rowCpc(row) > max) return false;
+      return true;
+    });
+  }, [allRows, searchTerm, parentFilter, subFilter, competitionFilter, unclusteredOnly, minVolume, maxCpc]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, parentFilter, subFilter, competitionFilter, unclusteredOnly, minVolume, maxCpc, rowsPerPage]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / rowsPerPage));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = filteredRows.slice((safePage - 1) * rowsPerPage, safePage * rowsPerPage);
 
   function saveImport(nextData: GoogleAdsImportData, text: string, sourceFileName: string, nextRowCount: number, mode: GoogleAdsImportMode) {
     const storageValue = {
@@ -130,7 +221,8 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
 
   function applyImport(incoming: GoogleAdsImportData | null, text: string, sourceFileName: string, nextRowCount: number) {
     if (!incoming) {
-      setError('Chưa đọc được dữ liệu. Hãy kiểm tra file có cột keyword hoặc Từ khóa.');
+      const debug = parseGoogleAdsImportDebug(text);
+      setError(debug.message || 'Không tìm thấy dòng header Keyword Planner');
       return;
     }
     const result = mergeGoogleAdsImportData(
@@ -143,7 +235,8 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
       clusters,
     );
     if (!result) {
-      setError('Chưa đọc được dữ liệu. Hãy kiểm tra file có cột keyword hoặc Từ khóa.');
+      const debug = parseGoogleAdsImportDebug(text);
+      setError(debug.message || 'File rỗng hoặc sai định dạng');
       return;
     }
     setError('');
@@ -153,8 +246,8 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
 
   function analyze() {
     const incoming = analyzeGoogleAdsImport(rawText, searchConsoleData, keywords, clusters);
-    const nextRowCount = parseGoogleAdsImport(rawText).length;
-    applyImport(incoming, rawText, fileName || 'Dữ liệu dán thủ công', nextRowCount);
+    const debug = parseGoogleAdsImportDebug(rawText);
+    applyImport(incoming, rawText, fileName || 'Dữ liệu dán thủ công', debug.parsedRowCount || parseGoogleAdsImport(rawText).length);
   }
 
   function clearImport() {
@@ -175,12 +268,12 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
     try {
       const text = await readCsvFileAsText(file);
       const incoming = analyzeGoogleAdsImport(text, searchConsoleData, keywords, clusters);
-      const nextRowCount = parseGoogleAdsImport(text).length;
+      const debug = parseGoogleAdsImportDebug(text);
       if (!incoming) {
-        setError('File chưa đúng định dạng. Vui lòng export CSV từ Google hoặc copy bảng vào ô nhập.');
+        setError(debug.message || 'Không tìm thấy dòng header Keyword Planner');
         return;
       }
-      applyImport(incoming, text, file.name, nextRowCount);
+      applyImport(incoming, text, file.name, debug.parsedRowCount || parseGoogleAdsImport(text).length);
     } catch {
       setError('Không đọc được file CSV. Nếu dùng Excel, hãy lưu thành CSV trước.');
     } finally {
@@ -194,11 +287,12 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
   }
 
   const latestSource = analyzed?.sources?.[0];
+  const debug = summary?.importDebug;
 
   return (
     <ModuleCard
       title="Nhập dữ liệu Google Ads / Keyword Planner"
-      description="Vào Google Ads / Keyword Planner, export keyword plan hoặc report, copy dữ liệu rồi dán vào đây. Nếu dùng Excel, hãy lưu thành CSV trước."
+      description="Vào Google Ads / Keyword Planner, export keyword plan hoặc report, copy dữ liệu rồi dán vào đây. Dashboard tự tìm dòng header thật sau phần metadata của Google Ads."
       action={<Badge status={data ? 'ok' : 'pending'}>{data ? 'Đang dùng dữ liệu nhập thủ công' : 'Chưa nhập dữ liệu Google Ads'}</Badge>}
     >
       <div className={styles.scV7Stack}>
@@ -226,7 +320,7 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
               <input type="file" accept=".csv,text/csv,text/tab-separated-values" onChange={handleFileUpload} />
             </label>
             <span className={styles.fileImportMeta}>
-              {fileName ? fileName + ' · ' + rowCount + ' dòng' : 'Nếu dùng Excel, hãy lưu thành CSV trước.'}
+              {fileName ? fileName + ' · ' + rowCount + ' dòng parse thành công' : 'Hỗ trợ CSV có metadata đầu file, dấu phẩy, chấm phẩy, tab và UTF-8 BOM.'}
             </span>
           </div>
           <div className={styles.scImportActions}>
@@ -235,6 +329,13 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
             <button className={styles.secondaryButton} type="button" onClick={clearImport}>Xóa dữ liệu import</button>
           </div>
           {error ? <div className={styles.alert}>{error}</div> : null}
+          {debug ? (
+            <div className={styles.importResultBox}>
+              <strong>Debug import Keyword Planner</strong>
+              <span>Tổng dòng đọc được: {formatNumber(debug.totalLines)} · Header phát hiện ở dòng: {debug.headerRowNumber || '-'} · Parse thành công: {formatNumber(debug.parsedRowCount)} · Bỏ qua: {formatNumber(debug.skippedRowCount)}</span>
+              <span>Cột đã nhận diện: {(debug.detectedColumns || []).join(', ') || '-'}</span>
+            </div>
+          ) : null}
           {lastImportResult ? (
             <div className={styles.importResultBox}>
               <strong>{lastImportResult.source.mode === 'merge' ? 'Đã gộp dữ liệu Google Ads.' : 'Đã thay thế dữ liệu Google Ads cũ bằng file mới.'}</strong>
@@ -254,19 +355,20 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
         {summary && analyzed ? (
           <>
             <div className={styles.metricGridSmall}>
-              <MetricCard label="Từ khóa đã nhập" value={formatNumber(summary.keywordCount)} />
+              <MetricCard label="Dòng CSV đọc được" value={formatNumber(summary.rawLineCount || summary.importDebug?.totalLines)} />
+              <MetricCard label="Keyword parse thành công" value={formatNumber(summary.parsedRowCount || summary.keywordCount)} />
+              <MetricCard label="Keyword sau gộp trùng" value={formatNumber(summary.mergedKeywordCount || summary.keywordCount)} />
+              <MetricCard label="Keyword chưa phân cụm" value={formatNumber(summary.unclusteredKeywordCount)} />
+              <MetricCard label="Keyword trong Supabase/cache" value={formatNumber(summary.keywordCount)} />
+              <MetricCard label="Đang hiển thị sau lọc" value={formatNumber(filteredRows.length)} />
               <MetricCard label="Tổng lượt tìm kiếm" value={formatNumber(summary.totalSearchVolume)} />
               <MetricCard label="CPC trung bình" value={formatMoney(summary.averageCpc)} />
-              <MetricCard label="Cạnh tranh trung bình" value={summary.averageCompetitionIndex === null ? '-' : Math.round(summary.averageCompetitionIndex)} />
-              <MetricCard label="Tổng lượt nhấp" value={formatNumber(summary.totalClicks)} />
-              <MetricCard label="Tổng lượt hiển thị" value={formatNumber(summary.totalImpressions)} />
-              <MetricCard label="Tổng chi phí" value={formatMoney(summary.totalCost)} />
-              <MetricCard label="Tổng chuyển đổi" value={formatNumber(summary.totalConversions)} />
             </div>
 
             <div className={styles.scV7Tabs}>
               <button type="button" className={tab === 'overview' ? styles.scV7TabActive : ''} onClick={() => setTab('overview')}>Tổng quan</button>
               <button type="button" className={tab === 'planner' ? styles.scV7TabActive : ''} onClick={() => setTab('planner')}>Keyword Planner</button>
+              <button type="button" className={tab === 'all' ? styles.scV7TabActive : ''} onClick={() => setTab('all')}>Tất cả keyword</button>
               <button type="button" className={tab === 'performance' ? styles.scV7TabActive : ''} onClick={() => setTab('performance')}>Hiệu quả Ads</button>
               <button type="button" className={tab === 'matrix' ? styles.scV7TabActive : ''} onClick={() => setTab('matrix')}>Ma trận SEO + Ads</button>
             </div>
@@ -293,6 +395,44 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
                 <KeywordTable title="Keyword thương mại cao" rows={analyzed.highCommercial} />
                 <KeywordTable title="Keyword nên SEO" rows={analyzed.shouldSeo} mode="opportunity" />
                 <KeywordTable title="Keyword nên chạy Ads" rows={analyzed.shouldAds} mode="opportunity" />
+              </div>
+            ) : null}
+
+            {tab === 'all' ? (
+              <div className={styles.adsV8FullPanel}>
+                <div className={styles.adsV8FilterGrid}>
+                  <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Tìm keyword..." />
+                  <select value={parentFilter} onChange={(event) => { setParentFilter(event.target.value); setSubFilter(''); }}>
+                    <option value="">Tất cả cụm cha</option>
+                    {parentOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                  <select value={subFilter} onChange={(event) => setSubFilter(event.target.value)}>
+                    <option value="">Tất cả danh mục con</option>
+                    {subOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                  <select value={competitionFilter} onChange={(event) => setCompetitionFilter(event.target.value)}>
+                    <option value="">Mọi cạnh tranh</option>
+                    {competitionOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                  <input value={minVolume} onChange={(event) => setMinVolume(event.target.value)} inputMode="numeric" placeholder="Lượt tìm tối thiểu" />
+                  <input value={maxCpc} onChange={(event) => setMaxCpc(event.target.value)} inputMode="numeric" placeholder="CPC tối đa" />
+                  <select value={rowsPerPage} onChange={(event) => setRowsPerPage(Number(event.target.value) as RowsPerPage)}>
+                    <option value={50}>50 dòng/trang</option>
+                    <option value={100}>100 dòng/trang</option>
+                    <option value={200}>200 dòng/trang</option>
+                  </select>
+                  <label className={styles.v51Toggle}>
+                    <input type="checkbox" checked={unclusteredOnly} onChange={(event) => setUnclusteredOnly(event.target.checked)} />
+                    Chỉ keyword chưa phân cụm
+                  </label>
+                </div>
+                <div className={styles.adsV8Pager}>
+                  <strong>Hiển thị {formatNumber(pageRows.length)} / {formatNumber(filteredRows.length)} keyword</strong>
+                  <span>Trang {safePage}/{totalPages}</span>
+                  <button type="button" className={styles.secondaryButton} onClick={() => setPage(Math.max(1, safePage - 1))} disabled={safePage <= 1}>Trước</button>
+                  <button type="button" className={styles.secondaryButton} onClick={() => setPage(Math.min(totalPages, safePage + 1))} disabled={safePage >= totalPages}>Sau</button>
+                </div>
+                <FullKeywordTable rows={pageRows} />
               </div>
             ) : null}
 

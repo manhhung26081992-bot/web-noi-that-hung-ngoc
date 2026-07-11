@@ -7,6 +7,7 @@ import CategorySidebar from '@/components/CategorySidebar';
 import styles from '@/styles/Category.module.css';
 import Link from 'next/link';
 import { getProductsByMultipleCategories, getCategoryBySlug  } from '@/app/actions';
+import { addTrailingSlash, siteUrl } from '@/lib/url';
 
 interface Props {
   params: Promise<{ categorySlug: string }>;
@@ -189,13 +190,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const hasProducts = productsFromSupabase.length > 0;
   const title = categorySeo?.seo_title || category?.name || 'Danh mục sản phẩm';
 
+    const canonicalUrl = siteUrl(`/${cleanSlug}`);
+
   return {
     title,
     description:
       categorySeo?.seo_content ||
       `Mua ${title} giá tốt tại Nội Thất Hùng Ngọc. Giao hàng nhanh tại Hà Nội.`,
     alternates: {
-      canonical: `/${cleanSlug}`,
+      canonical: canonicalUrl,
     },
     robots: hasProducts
       ? {
@@ -211,7 +214,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description:
         categorySeo?.seo_content ||
         `Mua ${title} giá tốt tại Nội Thất Hùng Ngọc. Giao hàng nhanh tại Hà Nội.`,
-      url: `https://www.noithathungngoc.com/${cleanSlug}`,
+      url: canonicalUrl,
       type: 'website',
     },
   };
@@ -287,7 +290,7 @@ export default async function CategoryPage({ params }: Props) {
               <h3>Danh mục liên quan</h3>
               <div className={styles.relatedLinks}>
                 {internalLinks.map((link) => (
-                  <Link key={link.slug} href={`/${link.slug}`} className={styles.relatedLink}>
+                  <Link key={link.slug} href={addTrailingSlash(`/${link.slug}`)} className={styles.relatedLink}>
                     {link.name}
                   </Link>
                 ))}

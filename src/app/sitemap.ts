@@ -1,10 +1,9 @@
 import { MetadataRoute } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { MENU_ITEMS } from '@/components/Header/menuData';
+import { siteUrl } from '@/lib/url';
 
 export const dynamic = 'force-dynamic';
-
-const baseUrl = 'https://www.noithathungngoc.com';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,8 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: number,
     lastModified?: string | Date | null
   ) => {
-    const cleanPath = path === '/' ? '' : path.replace(/\/$/, '');
-    const url = `${baseUrl}${cleanPath}/`;
+    const url = siteUrl(path);
 
     urls.set(url, {
       url,

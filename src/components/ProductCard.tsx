@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import styles from '@/styles/Product.module.css';
 import { Product } from '@/types/types';
+import { addTrailingSlash } from '@/lib/url';
 
 interface ProductCardProps {
   product: Product;
@@ -83,7 +84,7 @@ export default function ProductCard({ product, enableSchema = false, priority = 
       />
       )}
       <Link 
-        href={`/san-pham/${product.slug}`} 
+        href={addTrailingSlash(`/san-pham/${product.slug}`)} 
         title={`Chi tiết sản phẩm ${product.name}`}
         className={styles.productLink}
       >
@@ -252,7 +253,7 @@ export default function ProductCard({ product, enableSchema = false, priority = 
 //       />
 
 //       <Link 
-//         href={`/san-pham/${product.slug}`} 
+//         href={addTrailingSlash(`/san-pham/${product.slug}`)} 
 //         title={`Chi tiết sản phẩm ${product.name}`}
 //         className={styles.productLink}
 //         prefetch={false}

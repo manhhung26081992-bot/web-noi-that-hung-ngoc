@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import styles from '@/components/Header/styles/searchBar.module.css';
+import { addTrailingSlash } from '@/lib/url';
 
 interface SearchSuggestion {
   id: string | number;
@@ -188,7 +189,7 @@ export default function SearchBar({
               {suggestions.map((item) => (
                 <li key={item.id} className={styles.suggestionRow}>
                   <Link
-                    href={`/san-pham/${item.slug}`}
+                    href={addTrailingSlash(`/san-pham/${item.slug}`)}
                     className={styles.suggestionItem}
                     role="option"
                     aria-selected="false"

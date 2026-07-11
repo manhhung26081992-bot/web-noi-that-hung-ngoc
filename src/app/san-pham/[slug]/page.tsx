@@ -1,10 +1,13 @@
-import { 
-  getProductBySlug, 
+import { addTrailingSlash, siteUrl } from '@/lib/url';
+import { productRedirects } from '@/data/productRedirects';
+import {
+  getProductBySlug,
   getAllProductsFromSupabase,
-  getRelatedProductsByCategory
+  getRelatedProductsByCategory,
+  findSingleProductByCode
 } from '@/app/actions';
 import ProductDetailClient from './ProductDetailClient';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 
 export const dynamic = 'force-static';
 export const dynamicParams = true; 
@@ -29,13 +32,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   
   if (!product) return { title: 'Nội Thất Hùng Ngọc' };
   
+  
+  const canonicalUrl = siteUrl(`/san-pham/${product.slug}`);
+
   return { 
     title: `${product.name} - Nội Thất Hùng Ngọc`,
     alternates: {
-      canonical: `https://www.noithathungngoc.com/san-pham/${slug}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
-      url: `https://www.noithathungngoc.com/san-pham/${slug}`,
+      url: canonicalUrl,
       title: `${product.name} - Nội Thất Hùng Ngọc`,
       images: [
         {
@@ -64,6 +70,21 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   const product = await getProductBySlug(slug);
 
   if (!product) {
+    const currentPath = addTrailingSlash(`/san-pham/${slug}`);
+    const manualRedirect = productRedirects[currentPath];
+
+    if (manualRedirect) {
+      permanentRedirect(manualRedirect);
+    }
+
+    const codeMatch = slug.match(/hn[-_ ]?\d+/i);
+    if (codeMatch) {
+      const matchedProduct = await findSingleProductByCode(codeMatch[0], slug);
+      if (matchedProduct?.slug) {
+        permanentRedirect(addTrailingSlash(`/san-pham/${matchedProduct.slug}`));
+      }
+    }
+
     notFound();
   }
 

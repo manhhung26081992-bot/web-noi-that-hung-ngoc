@@ -6,6 +6,7 @@ import { MENU_ITEMS } from '@/components/Header/menuData';
 import { supabase } from '@/lib/supabase';
 import type { Product } from '@/types/types';
 import styles from '@/styles/CategorySidebar.module.css';
+import { addTrailingSlash } from '@/lib/url';
 
 const PRODUCT_FIELDS = 'id, name, slug, image, price, category';
 
@@ -26,7 +27,7 @@ function getProductImage(product: HotProduct) {
 }
 
 function getProductUrl(product: HotProduct) {
-  return `/san-pham/${product.slug}`;
+  return addTrailingSlash(`/san-pham/${product.slug}`);
 }
 
 function formatPrice(price: HotProduct['price']) {
@@ -77,14 +78,14 @@ export default function CategorySidebar() {
         <ul className={styles.list}>
           {MENU_ITEMS.filter((item) => item.link !== '/').map((item) => (
             <li key={item.link} className={styles.item}>
-              <Link href={item.link} className={styles.mainLink}>
+              <Link href={addTrailingSlash(item.link)} className={styles.mainLink}>
                 {item.name}
               </Link>
               {item.submenu && item.submenu.length > 0 && (
                 <ul className={styles.subList}>
                   {item.submenu.slice(0, 6).map((sub) => (
                     <li key={sub.link}>
-                      <Link href={sub.link}>{sub.name}</Link>
+                      <Link href={addTrailingSlash(sub.link)}>{sub.name}</Link>
                     </li>
                   ))}
                 </ul>

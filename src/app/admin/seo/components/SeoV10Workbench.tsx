@@ -1,15 +1,17 @@
 ﻿'use client';
 
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Badge, EmptyState, ModuleCard } from './Ui';
 import type { GoogleAdsImportData, ProductSeoItem, SearchConsoleV7Data, SeoBlogQualityItem, SeoCluster, SeoKeyword } from '../types/seo';
 import {
   buildSeoWorkbenchItems,
   buildSeoWorkbenchSuggestion,
   buildUsedKeywordInsights,
+  countUsedKeywordCandidates,
   filterSeoWorkbenchItems,
   filterUsedKeywordInsights,
   normalizeKeyword,
+  sortUsedKeywordInsights,
   seoWorkbenchChecklistKey,
   type KeywordPrimaryMapEntry,
   type SeoWorkbenchItem,
@@ -19,6 +21,7 @@ import {
   type WorkbenchFilterKey,
   type WorkbenchTargetType,
 } from '../services/seoWorkbenchService';
+import { saveOneSeoKeyToSupabase } from '../lib/seoDashboardSupabaseSync';
 import styles from '../seo-dashboard.module.css';
 
 type Props = {
@@ -37,7 +40,18 @@ type KeywordMap = Record<string, KeywordPrimaryMapEntry>;
 const CHECKLIST_STORAGE_KEY = 'noithathungngoc-seo-workbench-checklist-v1';
 const KEYWORD_MAP_STORAGE_KEY = 'noithathungngoc-seo-keyword-map-v1';
 const PAGE_SIZE = 20;
-const KEYWORD_PAGE_SIZE = 20;
+const DEFAULT_KEYWORD_PAGE_SIZE = 50;
+const DEFAULT_KEYWORD_ANALYSIS_LIMIT = 200;
+const KEYWORD_BATCH_SIZE = 50;
+
+type AnalysisScope = 200 | 500 | 1000 | 'all';
+
+const analysisScopeOptions: Array<{ value: AnalysisScope; label: string; description: string }> = [
+  { value: 200, label: 'Top 200', description: 'Nhẹ nhất, nên dùng hằng ngày' },
+  { value: 500, label: 'Top 500', description: 'Rà rộng hơn khi cần' },
+  { value: 1000, label: 'Top 1000', description: 'Chạy sâu hơn, vẫn xử lý theo batch' },
+  { value: 'all', label: 'Toàn bộ keyword', description: 'Chỉ dùng khi cần rà toàn bộ' },
+];
 
 const typeOptions: Array<{ value: WorkbenchTargetType; label: string }> = [
   { value: 'product', label: 'Sản phẩm' },
@@ -78,6 +92,10 @@ function formatNumber(value?: number | null) {
   return new Intl.NumberFormat('vi-VN').format(value || 0);
 }
 
+function formatAnalysisScope(scope: AnalysisScope) {
+  return scope === 'all' ? 'Toàn bộ keyword' : 'Top ' + formatNumber(scope) + ' keyword ưu tiên';
+}
+
 function statusForScore(score: number) {
   if (score >= 75) return 'warning';
   if (score >= 45) return 'pending';
@@ -85,8 +103,8 @@ function statusForScore(score: number) {
 }
 
 function statusForKeyword(status: UsedKeywordInsight['status']) {
-  if (status === 'cannibalization') return 'warning';
-  if (status === 'unused' || status === 'support_article') return 'pending';
+  if (status === 'cannibalization' || status === 'category_product_duplicate' || status === 'blog_product_duplicate') return 'warning';
+  if (status === 'unused' || status === 'suggested_primary' || status === 'support_article' || status === 'manual_check') return 'pending';
   return 'ok';
 }
 
@@ -156,9 +174,9 @@ function ResultCard({ item, active, keywordInsight, onSelect }: { item: SeoWorkb
       <h4>{item.title}</h4>
       <p>{item.reasons[0] || 'Có thể tối ưu thêm để hỗ trợ SEO.'}</p>
       <div className={styles.workbenchResultMeta}>
-        {item.searchConsole ? <span>SC: {formatNumber(item.searchConsole.impressions)} impressions</span> : null}
-        {item.ads ? <span>KP: {formatNumber(item.ads.volume)} lượt tìm</span> : null}
-        {keywordInsight?.primaryUrl ? <span>URL chính: {keywordInsight.primaryUrl}</span> : null}
+        {item.searchConsole ? <span>SC: {formatNumber(item.searchConsole.impressions)} impressions</span> : <span>SC: Chưa có dữ liệu</span>}
+        {item.ads ? <span>KP: {formatNumber(item.ads.volume)} lượt tìm</span> : <span>KP: Chưa có dữ liệu</span>}
+        {item.url ? <span>URL chính: {item.url}</span> : <span>Chưa gán URL chính</span>}
         {item.issues.length ? <span>{item.issues.slice(0, 2).join(', ')}</span> : null}
       </div>
       <button className={styles.primaryButton} type="button" onClick={() => onSelect(item)}>Tạo gợi ý SEO</button>
@@ -172,7 +190,9 @@ function KeywordUsedTable({
   filter,
   onSearch,
   onFilter,
+  pageSize,
   onPage,
+  onPageSize,
   onChoosePrimary,
 }: {
   result: ReturnType<typeof filterUsedKeywordInsights>;
@@ -180,7 +200,9 @@ function KeywordUsedTable({
   filter: UsedKeywordFilterKey;
   onSearch: (value: string) => void;
   onFilter: (value: UsedKeywordFilterKey) => void;
+  pageSize: number;
   onPage: (page: number) => void;
+  onPageSize: (pageSize: number) => void;
   onChoosePrimary: (keyword: string, url: string, urlType: WorkbenchTargetType) => void;
 }) {
   return (
@@ -195,9 +217,12 @@ function KeywordUsedTable({
       </div>
 
       <div className={styles.workbenchKeywordTools}>
-        <input value={search} onChange={(event) => { onSearch(event.target.value); onPage(1); }} placeholder="Tìm keyword, URL, sản phẩm..." />
+        <input value={search} onChange={(event) => { onSearch(event.target.value); onPage(1); }} placeholder="Tìm keyword hoặc URL/slug chính..." />
         <select value={filter} onChange={(event) => { onFilter(event.target.value as UsedKeywordFilterKey); onPage(1); }}>
           {usedKeywordFilterOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select>
+        <select value={pageSize} onChange={(event) => { onPageSize(Number(event.target.value)); onPage(1); }}>
+          {[50, 100, 200].map((value) => <option key={value} value={value}>{value} dòng/trang</option>)}
         </select>
         <span>{formatNumber(result.total)} keyword phù hợp</span>
       </div>
@@ -225,7 +250,7 @@ function KeywordUsedTable({
                   </td>
                   <td><Badge status={statusForKeyword(insight.status)}>{insight.label}</Badge></td>
                   <td>
-                    {insight.urls.length > 1 ? (
+                    {insight.urls.length ? (
                       <select
                         className={styles.workbenchUrlSelect}
                         value={insight.primaryUrl || ''}
@@ -238,14 +263,16 @@ function KeywordUsedTable({
                         {insight.urls.map((url) => <option key={`${insight.normalizedKeyword}-${url.type}-${url.url}`} value={url.url}>{url.title} - {url.url}</option>)}
                       </select>
                     ) : insight.primaryUrl ? <a href={insight.primaryUrl} target="_blank" rel="noreferrer">{insight.primaryUrl}</a> : <span className={styles.muted}>Chưa có URL</span>}
+                    {insight.primaryUrl ? <small>Đã lưu: {insight.primaryUrl}</small> : insight.suggestedPrimaryUrl ? <small>Đề xuất: {insight.suggestedPrimaryUrl}</small> : null}
                   </td>
-                  <td>{insight.primaryUrlType ? typeLabel(insight.primaryUrlType) : '-'}</td>
+                  <td>{insight.primaryUrlType ? typeLabel(insight.primaryUrlType) : insight.suggestedPrimaryUrlType ? `Đề xuất: ${typeLabel(insight.suggestedPrimaryUrlType)}` : '-'}</td>
                   <td>{insight.competingCount}</td>
                   <td>{insight.recommendation}</td>
                   <td>
                     <div className={styles.workbenchInlineActions}>
-                      {insight.primaryUrl ? <a className={styles.secondaryButton} href={insight.primaryUrl} target="_blank" rel="noreferrer">Mở URL</a> : null}
+                      {insight.primaryUrl || insight.suggestedPrimaryUrl ? <a className={styles.secondaryButton} href={insight.primaryUrl || insight.suggestedPrimaryUrl} target="_blank" rel="noreferrer">Mở URL</a> : null}
                       {insight.primaryUrl && insight.primaryUrlType ? <button className={styles.secondaryButton} type="button" onClick={() => onChoosePrimary(insight.keyword, insight.primaryUrl || '', insight.primaryUrlType || 'keyword')}>Lưu URL chính</button> : null}
+                      {!insight.primaryUrl && insight.suggestedPrimaryUrl && insight.suggestedPrimaryUrlType ? <button className={styles.secondaryButton} type="button" onClick={() => onChoosePrimary(insight.keyword, insight.suggestedPrimaryUrl || '', insight.suggestedPrimaryUrlType || 'keyword')}>Lưu URL đề xuất</button> : null}
                       <button className={styles.secondaryButton} type="button" onClick={() => copyText(insight.anchorText)}>Copy anchor</button>
                       <button className={styles.secondaryButton} type="button" onClick={() => copyText(insight.taskText)}>Copy task</button>
                     </div>
@@ -346,7 +373,10 @@ function SuggestionPanel({ suggestion, checked, onToggle }: { suggestion: SeoWor
 }
 
 function SeoV10Workbench({ products, blogs, keywords, clusters, searchConsole, googleAds }: Props) {
-  const [analysisStarted, setAnalysisStarted] = useState(false);
+  const [analysisStatus, setAnalysisStatus] = useState<'idle' | 'running' | 'done'>('idle');
+  const [analysisScope, setAnalysisScope] = useState<AnalysisScope>(DEFAULT_KEYWORD_ANALYSIS_LIMIT);
+  const [analysisRunId, setAnalysisRunId] = useState(0);
+  const analysisCancelRef = useRef(0);
   const [targetType, setTargetType] = useState<WorkbenchTargetType>('product');
   const [search, setSearch] = useState('');
   const [activeFilters, setActiveFilters] = useState<WorkbenchFilterKey[]>([]);
@@ -357,33 +387,50 @@ function SeoV10Workbench({ products, blogs, keywords, clusters, searchConsole, g
   const [usedKeywordFilter, setUsedKeywordFilter] = useState<UsedKeywordFilterKey>('all');
   const [usedKeywordSearch, setUsedKeywordSearch] = useState('');
   const [usedKeywordPage, setUsedKeywordPage] = useState(1);
+  const [usedKeywordPageSize, setUsedKeywordPageSize] = useState(DEFAULT_KEYWORD_PAGE_SIZE);
+  const [items, setItems] = useState<SeoWorkbenchItem[]>([]);
+  const [usedKeywordInsights, setUsedKeywordInsights] = useState<UsedKeywordInsight[]>([]);
+  const [analysisProgress, setAnalysisProgress] = useState({ processed: 0, total: 0 });
 
   useEffect(() => {
     setChecklist(loadChecklist());
     setKeywordMap(loadKeywordMap());
   }, []);
 
-  const limitedGoogleAds = useMemo(() => googleAds ? {
-    ...googleAds,
-    rows: [...(googleAds.rows || [])]
-      .sort((a, b) => Number(b.avg_monthly_searches || 0) - Number(a.avg_monthly_searches || 0))
-      .slice(0, 300),
-  } : null, [googleAds]);
-  const inputData = useMemo(() => ({ products, blogs, keywords, clusters, searchConsole, googleAds: limitedGoogleAds }), [products, blogs, keywords, clusters, searchConsole, limitedGoogleAds]);
-  const items = useMemo(() => analysisStarted ? buildSeoWorkbenchItems(inputData) : [], [analysisStarted, inputData]);
-  const usedKeywordInsights = useMemo(() => analysisStarted ? buildUsedKeywordInsights(inputData, keywordMap) : [], [analysisStarted, inputData, keywordMap]);
+  const googleAdsForAnalysis = useMemo(() => {
+    if (!googleAds) return null;
+    const rows = [...(googleAds.rows || [])]
+      .sort((a, b) => Number(b.avg_monthly_searches || 0) - Number(a.avg_monthly_searches || 0));
+    return {
+      ...googleAds,
+      rows: analysisScope === 'all' ? rows : rows.slice(0, analysisScope),
+    };
+  }, [googleAds, analysisScope]);
+  const inputData = useMemo(() => ({ products, blogs, keywords, clusters, searchConsole, googleAds: googleAdsForAnalysis }), [products, blogs, keywords, clusters, searchConsole, googleAdsForAnalysis]);
+  const isAnalyzing = analysisStatus === 'running';
   const keywordLookup = useMemo(() => {
     const map = new Map<string, UsedKeywordInsight>();
     usedKeywordInsights.forEach((insight) => map.set(insight.normalizedKeyword, insight));
     return map;
   }, [usedKeywordInsights]);
-  const result = useMemo(() => filterSeoWorkbenchItems(items, { type: targetType, search, filters: activeFilters, page, pageSize: PAGE_SIZE }), [items, targetType, search, activeFilters, page]);
-  const usedKeywordResult = useMemo(() => filterUsedKeywordInsights(usedKeywordInsights, { filter: usedKeywordFilter, search: usedKeywordSearch, page: usedKeywordPage, pageSize: KEYWORD_PAGE_SIZE }), [usedKeywordInsights, usedKeywordFilter, usedKeywordSearch, usedKeywordPage]);
+  const result = useMemo(() => {
+    if (isAnalyzing) return { filtered: [], pageItems: [], totalPages: 1, page: 1 };
+    return filterSeoWorkbenchItems(items, { type: targetType, search, filters: activeFilters, page, pageSize: PAGE_SIZE });
+  }, [isAnalyzing, items, targetType, search, activeFilters, page]);
+  const usedKeywordResult = useMemo(() => {
+    if (isAnalyzing) return { total: 0, page: 1, totalPages: 1, items: [] };
+    return filterUsedKeywordInsights(usedKeywordInsights, { filter: usedKeywordFilter, search: usedKeywordSearch, page: usedKeywordPage, pageSize: usedKeywordPageSize });
+  }, [isAnalyzing, usedKeywordInsights, usedKeywordFilter, usedKeywordSearch, usedKeywordPage, usedKeywordPageSize]);
   const selectedInsight = useMemo(() => {
-    if (!selected) return undefined;
-    return keywordLookup.get(normalizeKeyword(selected.mainKeyword)) || usedKeywordInsights.find((insight) => normalizeKeyword(`${selected.title} ${selected.cluster}`).includes(insight.normalizedKeyword));
+    if (isAnalyzing || !selected) return undefined;
+    const direct = keywordLookup.get(normalizeKeyword(selected.mainKeyword));
+    if (direct && (!direct.primaryUrl || direct.primaryUrl === selected.url || selected.type === 'keyword')) return direct;
+    return usedKeywordInsights.find((insight) => {
+      if (insight.primaryUrl && selected.url && insight.primaryUrl !== selected.url && selected.type !== 'keyword') return false;
+      return normalizeKeyword(`${selected.title} ${selected.cluster}`).includes(insight.normalizedKeyword);
+    });
   }, [selected, keywordLookup, usedKeywordInsights]);
-  const suggestion = useMemo(() => selected ? buildSeoWorkbenchSuggestion(selected, selectedInsight) : null, [selected, selectedInsight]);
+  const suggestion = useMemo(() => selected && !isAnalyzing ? buildSeoWorkbenchSuggestion(selected, selectedInsight) : null, [isAnalyzing, selected, selectedInsight]);
   const checklistKey = suggestion ? seoWorkbenchChecklistKey(suggestion.item) : '';
   const checked = checklistKey ? checklist[checklistKey] || {} : {};
 
@@ -417,11 +464,27 @@ function SeoV10Workbench({ products, blogs, keywords, clusters, searchConsole, g
     saveChecklist(next);
   }
 
-  function startAnalysis() {
+  function startAnalysis(scope: AnalysisScope = DEFAULT_KEYWORD_ANALYSIS_LIMIT) {
+    if (isAnalyzing) return;
+    analysisCancelRef.current += 1;
     setSelected(null);
     setPage(1);
     setUsedKeywordPage(1);
-    setAnalysisStarted(true);
+    setItems([]);
+    setUsedKeywordInsights([]);
+    setAnalysisProgress({ processed: 0, total: 0 });
+    setAnalysisScope(scope);
+    setAnalysisStatus('running');
+    setAnalysisRunId((value) => value + 1);
+  }
+
+  function cancelAnalysis() {
+    analysisCancelRef.current += 1;
+    setAnalysisStatus('idle');
+    setSelected(null);
+    setItems([]);
+    setUsedKeywordInsights([]);
+    setAnalysisProgress({ processed: 0, total: 0 });
   }
 
   function choosePrimary(keyword: string, primaryUrl: string, urlType: WorkbenchTargetType) {
@@ -439,33 +502,94 @@ function SeoV10Workbench({ products, blogs, keywords, clusters, searchConsole, g
     };
     setKeywordMap(next);
     saveKeywordMap(next);
+    void saveOneSeoKeyToSupabase(KEYWORD_MAP_STORAGE_KEY).catch((error) => {
+      console.error('Không đồng bộ được URL chính lên Supabase store:', error);
+    });
   }
 
-  if (!analysisStarted) {
+  useEffect(() => {
+    if (analysisStatus !== 'running') return;
+
+    const runToken = analysisCancelRef.current;
+    const candidateCap = analysisScope === 'all' ? undefined : analysisScope;
+    const total = countUsedKeywordCandidates(inputData, candidateCap);
+    const builtItems = buildSeoWorkbenchItems(inputData);
+    let offset = 0;
+    let collected: UsedKeywordInsight[] = [];
+
+    setItems(builtItems);
+    setAnalysisProgress({ processed: 0, total });
+
+    const runBatch = () => {
+      if (analysisCancelRef.current !== runToken) return;
+      const batch = buildUsedKeywordInsights(inputData, keywordMap, {
+        candidateOffset: offset,
+        candidateLimit: KEYWORD_BATCH_SIZE,
+        candidateCap,
+      });
+      if (analysisCancelRef.current !== runToken) return;
+      collected = sortUsedKeywordInsights([...collected, ...batch]);
+      offset = Math.min(offset + KEYWORD_BATCH_SIZE, total);
+      setAnalysisProgress({ processed: offset, total });
+
+      if (offset < total) {
+        window.setTimeout(runBatch, 1);
+        return;
+      }
+
+      setUsedKeywordInsights(collected);
+      setAnalysisStatus('done');
+    };
+
+    window.setTimeout(runBatch, 0);
+  }, [analysisStatus, analysisRunId, analysisScope, inputData, keywordMap]);
+
+  if (analysisStatus === 'idle') {
     return (
       <ModuleCard
         title="Trợ lý SEO v10.0"
         description="Trợ lý này đọc toàn bộ sản phẩm, bài viết, danh mục và dữ liệu import để chống trùng keyword và tạo nội dung SEO. Phần phân tích khá nặng nên chỉ chạy khi bạn bấm nút bên dưới."
-        action={<button className={styles.primaryButton} type="button" onClick={startAnalysis}>Chạy phân tích SEO v10</button>}
+        action={<button className={styles.primaryButton} type="button" disabled={isAnalyzing} onClick={() => startAnalysis(DEFAULT_KEYWORD_ANALYSIS_LIMIT)}>Chạy phân tích SEO v10</button>}
       >
         <div className={styles.summaryGrid}>
           <div className={styles.workbenchMiniCard}><span>Sản phẩm</span><strong>{formatNumber(products.length)}</strong></div>
           <div className={styles.workbenchMiniCard}><span>Bài viết</span><strong>{formatNumber(blogs.length)}</strong></div>
           <div className={styles.workbenchMiniCard}><span>Từ khóa Supabase</span><strong>{formatNumber(keywords.length)}</strong></div>
-          <div className={styles.workbenchMiniCard}><span>Keyword Planner dùng để phân tích</span><strong>{formatNumber(limitedGoogleAds?.rows?.length || 0)}</strong></div>
+          <div className={styles.workbenchMiniCard}><span>Keyword Planner dùng để phân tích</span><strong>{formatNumber(googleAdsForAnalysis?.rows?.length || 0)}</strong></div>
         </div>
         <div className={styles.workbenchStartBox}>
           <p className={styles.muted}>Mở khung này không còn chạy phân tích ngay, nên dashboard sẽ nhẹ hơn. Khi cần tạo bài SEO hoặc kiểm tra keyword đã dùng trên toàn bộ website, hãy bấm nút bên dưới.</p>
-          <button className={styles.primaryButton} type="button" onClick={startAnalysis}>Chạy phân tích SEO v10</button>
+          <div className={styles.workbenchFilterList}>
+            {analysisScopeOptions.map((option) => (
+              <button
+                key={String(option.value)}
+                className={option.value === DEFAULT_KEYWORD_ANALYSIS_LIMIT ? styles.primaryButton : styles.secondaryButton}
+                type="button"
+                disabled={isAnalyzing}
+                title={option.description}
+                onClick={() => startAnalysis(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
       </ModuleCard>
     );
   }
 
   return (
-    <ModuleCard title="Trợ lý SEO v10.0" description="AI lấy toàn bộ sản phẩm, bài viết, danh mục, Search Console import và Keyword Planner import để tạo gợi ý SEO cụ thể: title, meta, FAQ, internal link và nội dung có thể copy.">
+    <ModuleCard
+      title="Trợ lý SEO v10.0"
+      description="AI lấy toàn bộ sản phẩm, bài viết, danh mục, Search Console import và Keyword Planner import để tạo gợi ý SEO cụ thể: title, meta, FAQ, internal link và nội dung có thể copy."
+      action={isAnalyzing ? <button className={styles.secondaryButton} type="button" onClick={cancelAnalysis}>Hủy phân tích</button> : <button className={styles.secondaryButton} type="button" onClick={() => startAnalysis(analysisScope)}>Chạy lại phân tích</button>}
+    >
       <div className={styles.workbenchLayout}>
         <section className={styles.workbenchControls}>
+          <div className={styles.workbenchSummaryLine}>
+            <span>{isAnalyzing ? `Đang phân tích ${formatNumber(analysisProgress.processed)}/${formatNumber(analysisProgress.total)} keyword...` : `Đã phân tích ${formatNumber(analysisProgress.total)} keyword`}</span>
+            <span>Chế độ: {formatAnalysisScope(analysisScope)}</span>
+          </div>
           <div className={styles.workbenchControlGrid}>
             <label>
               <span>Chọn loại tối ưu</span>
@@ -493,43 +617,58 @@ function SeoV10Workbench({ products, blogs, keywords, clusters, searchConsole, g
           </div>
         </section>
 
-        <KeywordUsedTable
-          result={usedKeywordResult}
-          search={usedKeywordSearch}
-          filter={usedKeywordFilter}
-          onSearch={setUsedKeywordSearch}
-          onFilter={setUsedKeywordFilter}
-          onPage={setUsedKeywordPage}
-          onChoosePrimary={choosePrimary}
-        />
-
-        <section className={styles.workbenchResults}>
-          {result.pageItems.length ? (
-            <div className={styles.workbenchResultGrid}>
-              {result.pageItems.map((item) => (
-                <ResultCard
-                  key={item.id}
-                  item={item}
-                  keywordInsight={keywordLookup.get(normalizeKeyword(item.mainKeyword))}
-                  active={selected?.id === item.id}
-                  onSelect={handleSelect}
-                />
-              ))}
+        {isAnalyzing ? (
+          <div className={styles.workbenchStartBox}>
+            <p className={styles.muted}>Đang chạy theo batch {formatNumber(KEYWORD_BATCH_SIZE)} keyword/lần. Bảng chống trùng và card gợi ý sẽ hiển thị sau khi phân tích xong để tránh treo trình duyệt.</p>
+            <div className={styles.workbenchSummaryLine}>
+              <span>Tiến độ: {formatNumber(analysisProgress.processed)}/{formatNumber(analysisProgress.total)} keyword</span>
+              <span>{formatAnalysisScope(analysisScope)}</span>
             </div>
-          ) : <EmptyState title="Chưa có mục phù hợp" detail="Thử bỏ bớt bộ lọc hoặc nhập từ khóa khác như giường tầng, bàn làm việc, bàn ghế học sinh." />}
-
-          <div className={styles.workbenchPagination}>
-            <button className={styles.secondaryButton} type="button" disabled={result.page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>Trước</button>
-            <span>Trang {result.page}/{result.totalPages}</span>
-            <button className={styles.secondaryButton} type="button" disabled={result.page >= result.totalPages} onClick={() => setPage((value) => Math.min(result.totalPages, value + 1))}>Sau</button>
+            <button className={styles.secondaryButton} type="button" onClick={cancelAnalysis}>Hủy phân tích</button>
           </div>
-        </section>
+        ) : (
+          <>
+            <KeywordUsedTable
+              result={usedKeywordResult}
+              search={usedKeywordSearch}
+              filter={usedKeywordFilter}
+              onSearch={setUsedKeywordSearch}
+              onFilter={setUsedKeywordFilter}
+              pageSize={usedKeywordPageSize}
+              onPage={setUsedKeywordPage}
+              onPageSize={setUsedKeywordPageSize}
+              onChoosePrimary={choosePrimary}
+            />
 
-        {suggestion ? <SuggestionPanel suggestion={suggestion} checked={checked} onToggle={toggleChecklist} /> : (
-          <div className={styles.workbenchSuggestionEmpty}>
-            <h3>Chọn một mục để tạo gợi ý SEO</h3>
-            <p>Trợ lý SEO sẽ tạo title, meta, FAQ, internal link, content HTML và checklist để bạn copy sang Supabase.</p>
-          </div>
+            <section className={styles.workbenchResults}>
+              {result.pageItems.length ? (
+                <div className={styles.workbenchResultGrid}>
+                  {result.pageItems.map((item) => (
+                    <ResultCard
+                      key={item.id}
+                      item={item}
+                      keywordInsight={keywordLookup.get(normalizeKeyword(item.mainKeyword))}
+                      active={selected?.id === item.id}
+                      onSelect={handleSelect}
+                    />
+                  ))}
+                </div>
+              ) : <EmptyState title="Chưa có mục phù hợp" detail="Thử bỏ bớt bộ lọc hoặc nhập từ khóa khác như giường tầng, bàn làm việc, bàn ghế học sinh." />}
+
+              <div className={styles.workbenchPagination}>
+                <button className={styles.secondaryButton} type="button" disabled={result.page <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>Trước</button>
+                <span>Trang {result.page}/{result.totalPages}</span>
+                <button className={styles.secondaryButton} type="button" disabled={result.page >= result.totalPages} onClick={() => setPage((value) => Math.min(result.totalPages, value + 1))}>Sau</button>
+              </div>
+            </section>
+
+            {suggestion ? <SuggestionPanel suggestion={suggestion} checked={checked} onToggle={toggleChecklist} /> : (
+              <div className={styles.workbenchSuggestionEmpty}>
+                <h3>Chọn một mục để tạo gợi ý SEO</h3>
+                <p>Trợ lý SEO sẽ tạo title, meta, FAQ, internal link, content HTML và checklist để bạn copy sang Supabase.</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </ModuleCard>

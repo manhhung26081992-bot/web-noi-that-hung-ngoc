@@ -8,6 +8,7 @@ import ProductSchema from '@/components/ProductSchema';
 import CategorySidebar from '@/components/CategorySidebar';
 import styles from '@/styles/ProductDetail.module.css';
 import { Product, CartItem } from '@/types/types';
+import { getCategoryDisplayName } from '@/lib/categoryDisplay';
 
 export default function ProductDetailClient({
   product: productData,
@@ -108,6 +109,7 @@ const allImages = useMemo(() => {
   if (!product) return null;
 
   const numericPrice = Number(String(product.price).replace(/\D/g, '')) || 0;
+  const categoryDisplayName = getCategoryDisplayName(product.category);
 
   return (
     <main className={styles.container}>
@@ -118,7 +120,7 @@ const allImages = useMemo(() => {
         <ul>
           <li><Link href="/">Trang chủ</Link></li>
           <li className={styles.separator}>/</li>
-          <li><Link href={`/${product.category}`}>{product.category || "Sản phẩm"}</Link></li>
+          <li><Link href={`/${product.category}`}>{categoryDisplayName || "Sản phẩm"}</Link></li>
           <li className={styles.separator}>/</li>
           <li><strong>{product.name}</strong></li>
         </ul>
@@ -273,7 +275,7 @@ const allImages = useMemo(() => {
             </div>
             <button className={styles.addToCartBtn} onClick={handleAddToCart}>THÊM VÀO GIỎ HÀNG</button>
           </div>
-          <p className={styles.catInfo}>Danh mục: <span>{product.category}</span></p>
+          <p className={styles.catInfo}>Danh mục: <span>{categoryDisplayName || product.category}</span></p>
 
           <div className={styles.supportStrip} aria-label="Cam kết khi mua hàng">
             <span>Giá xưởng</span>

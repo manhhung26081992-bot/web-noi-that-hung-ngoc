@@ -4,7 +4,7 @@ import {
   getProductBySlug,
   getAllProductsFromSupabase,
   getRelatedProductsByCategory,
-  findSingleProductByCode
+  findCanonicalProductForLegacySlug
 } from '@/app/actions';
 import ProductDetailClient from './ProductDetailClient';
 import { notFound, permanentRedirect } from 'next/navigation';
@@ -77,12 +77,9 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       permanentRedirect(manualRedirect);
     }
 
-    const codeMatch = slug.match(/hn[-_ ]?\d+/i);
-    if (codeMatch) {
-      const matchedProduct = await findSingleProductByCode(codeMatch[0], slug);
-      if (matchedProduct?.slug) {
-        permanentRedirect(addTrailingSlash(`/san-pham/${matchedProduct.slug}`));
-      }
+    const canonicalProduct = await findCanonicalProductForLegacySlug(slug);
+    if (canonicalProduct?.slug) {
+      permanentRedirect(addTrailingSlash(`/san-pham/${canonicalProduct.slug}`));
     }
 
     notFound();

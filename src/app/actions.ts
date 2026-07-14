@@ -354,6 +354,12 @@ function normalizeProductLookupText(value: unknown): string {
     .replace(/đ/g, 'd');
 }
 
+function getProductLookupCodes(value: unknown): string[] {
+  const normalizedValue = normalizeProductLookupText(value);
+  const matches = normalizedValue.match(/hn[-_ ]?\d+/g) ?? [];
+  return Array.from(new Set(matches.map((match) => match.replace(/[^a-z0-9]/g, ''))));
+}
+
 export async function findSingleProductByCode(codeValue: string, excludeSlug?: string) {
   const compactCode = normalizeProductLookupText(codeValue).replace(/[^a-z0-9]/g, '');
   if (!/^hn\d+$/.test(compactCode)) return null;
@@ -362,17 +368,54 @@ export async function findSingleProductByCode(codeValue: string, excludeSlug?: s
   const matches = products.filter((product: any) => {
     if (excludeSlug && product.slug === excludeSlug) return false;
 
-    const haystack = normalizeProductLookupText([
+    const productCodes = getProductLookupCodes([
       product.name,
       product.slug,
       product.alt,
       product.description,
       product.specs,
       product.features,
-    ]).replace(/[^a-z0-9]/g, '');
+    ]);
 
-    return haystack.includes(compactCode);
+    return productCodes.includes(compactCode);
   });
 
   return matches.length === 1 ? matches[0] : null;
 }
+
+export async function findCanonicalProductForLegacySlug(slugValue: string) {
+  const requestedSlug = normalizeProductLookupText(slugValue).trim();
+  if (!requestedSlug) return null;
+
+  const products = await getAllProductsFromSupabase();
+
+  const slugMatches = products.filter((product: any) => {
+    return normalizeProductLookupText(product.slug).trim() === requestedSlug;
+  });
+
+  if (slugMatches.length === 1) {
+    return slugMatches[0];
+  }
+
+  const codeMatch = slugValue.match(/hn[-_ ]?\d+/i);
+  if (!codeMatch) return null;
+
+  const compactCode = normalizeProductLookupText(codeMatch[0]).replace(/[^a-z0-9]/g, '');
+  if (!/^hn\d+$/.test(compactCode)) return null;
+
+  const codeMatches = products.filter((product: any) => {
+    const productCodes = getProductLookupCodes([
+      product.name,
+      product.slug,
+      product.alt,
+      product.description,
+      product.specs,
+      product.features,
+    ]);
+
+    return productCodes.includes(compactCode);
+  });
+
+  return codeMatches.length === 1 ? codeMatches[0] : null;
+}
+

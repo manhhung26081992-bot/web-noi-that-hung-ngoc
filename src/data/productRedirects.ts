@@ -8,8 +8,19 @@ const redirects: Record<string, string> = {
   "/san-pham/truong-hoc/": "/truong-hoc/",
   "/san-pham/gia-dinh/": "/gia-dinh/",
   "/san-pham/ban-ghe-an/": "/ban-ghe-an/",
+  "/san-pham/ghe-an/": "/ghe-an/",
+  "/san-pham/bo-ban-an-6-ghe/": "/bo-ban-an-6-ghe/",
+  "/san-pham/bo-ban-an-4-ghe/": "/bo-ban-an-4-ghe/",
+  "/san-pham/ban-an-thong-minh/": "/ban-an-thong-minh/",
+  "/san-pham/ban-an-mat-da/": "/ban-an-mat-da/",
   "/san-pham/ban-ghe-cafe/": "/ban-ghe-cafe/",
   "/san-pham/sofa/": "/sofa/",
+  "/san-pham/sofa-vang/": "/sofa-vang/",
+  "/san-pham/sofa-van-phong/": "/sofa-van-phong/",
+  "/san-pham/sofa-ni/": "/sofa-ni/",
+  "/san-pham/sofa-giuong/": "/sofa-giuong/",
+  "/san-pham/sofa-da/": "/sofa-da/",
+  "/san-pham/ban-sofa/": "/ban-sofa/",
 
   // Ban van phong.
   "/san-pham/ban-nhan-vien/": "/ban-nhan-vien/",
@@ -58,3 +69,4 @@ export const productRedirects = Object.fromEntries(
     addTrailingSlash(destination),
   ]),
 ) as Record<string, string>;
+

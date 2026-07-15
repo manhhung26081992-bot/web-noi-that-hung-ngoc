@@ -1,0 +1,30 @@
+warning: in the working copy of 'src/data/productRedirects.ts', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/src/data/productRedirects.ts b/src/data/productRedirects.ts[m
+[1mindex 8841b5e..055edff 100644[m
+[1m--- a/src/data/productRedirects.ts[m
+[1m+++ b/src/data/productRedirects.ts[m
+[36m@@ -8,8 +8,19 @@[m [mconst redirects: Record<string, string> = {[m
+   "/san-pham/truong-hoc/": "/truong-hoc/",[m
+   "/san-pham/gia-dinh/": "/gia-dinh/",[m
+   "/san-pham/ban-ghe-an/": "/ban-ghe-an/",[m
+[32m+[m[32m  "/san-pham/ghe-an/": "/ghe-an/",[m
+[32m+[m[32m  "/san-pham/bo-ban-an-6-ghe/": "/bo-ban-an-6-ghe/",[m
+[32m+[m[32m  "/san-pham/bo-ban-an-4-ghe/": "/bo-ban-an-4-ghe/",[m
+[32m+[m[32m  "/san-pham/ban-an-thong-minh/": "/ban-an-thong-minh/",[m
+[32m+[m[32m  "/san-pham/ban-an-mat-da/": "/ban-an-mat-da/",[m
+   "/san-pham/ban-ghe-cafe/": "/ban-ghe-cafe/",[m
+   "/san-pham/sofa/": "/sofa/",[m
+[32m+[m[32m  "/san-pham/sofa-vang/": "/sofa-vang/",[m
+[32m+[m[32m  "/san-pham/sofa-van-phong/": "/sofa-van-phong/",[m
+[32m+[m[32m  "/san-pham/sofa-ni/": "/sofa-ni/",[m
+[32m+[m[32m  "/san-pham/sofa-giuong/": "/sofa-giuong/",[m
+[32m+[m[32m  "/san-pham/sofa-da/": "/sofa-da/",[m
+[32m+[m[32m  "/san-pham/ban-sofa/": "/ban-sofa/",[m
+ [m
+   // Ban van phong.[m
+   "/san-pham/ban-nhan-vien/": "/ban-nhan-vien/",[m
+[36m@@ -58,3 +69,4 @@[m [mexport const productRedirects = Object.fromEntries([m
+     addTrailingSlash(destination),[m
+   ]),[m
+ ) as Record<string, string>;[m
+[41m+[m

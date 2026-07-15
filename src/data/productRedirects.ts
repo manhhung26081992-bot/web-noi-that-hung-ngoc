@@ -28,6 +28,7 @@ const redirects: Record<string, string> = {
   "/san-pham/ban-hop/": "/ban-hop/",
   "/san-pham/cum-ban/": "/cum-ban/",
   "/san-pham/ban-chan-sat/": "/ban-chan-sat/",
+"/san-pham/quay-le-tan/":"/quay-le-tan/",
 
   // Ghe van phong.
   "/san-pham/ghe-xoay/": "/ghe-xoay/",

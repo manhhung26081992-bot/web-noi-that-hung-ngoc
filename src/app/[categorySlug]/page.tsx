@@ -8,6 +8,7 @@ import styles from '@/styles/Category.module.css';
 import Link from 'next/link';
 import { getProductsByMultipleCategories, getCategoryBySlug  } from '@/app/actions';
 import { addTrailingSlash, siteUrl } from '@/lib/url';
+import { groupBedProducts } from '@/lib/bedCategoryGrouping';
 
 interface Props {
   params: Promise<{ categorySlug: string }>;
@@ -232,6 +233,10 @@ export default async function CategoryPage({ params }: Props) {
   const productsFromSupabase = await getProductsByMultipleCategories(finalSlugs);
   const categorySeo = await getCategoryBySlug(cleanSlug);
   const internalLinks = getInternalLinks(cleanSlug);
+  const bedGroups = cleanSlug === 'giuong-tang-sat'
+    ? groupBedProducts(productsFromSupabase || [])
+    : null;
+  const schemaProducts = bedGroups ? bedGroups.allProducts : productsFromSupabase;
 
   return (
     <main className={styles.container}>
@@ -239,7 +244,7 @@ export default async function CategoryPage({ params }: Props) {
       <CategorySchema
         categoryName={category.name}
         categorySlug={cleanSlug}
-        products={productsFromSupabase || []}
+        products={schemaProducts || []}
       />
 
       <nav className={styles.breadcrumb}>
@@ -256,13 +261,41 @@ export default async function CategoryPage({ params }: Props) {
         <div className={styles.categoryMain}>
       <div className={styles.productSection}>
         {productsFromSupabase && productsFromSupabase.length > 0 ? (
-          <div className={styles.productGridFull}>
-            <ProductList 
-              title="" 
-              products={productsFromSupabase} 
-              categorySlugs={finalSlugs} 
-            />
-          </div>
+          bedGroups ? (
+            <>
+              <div className={styles.productGridFull}>
+                <ProductList
+                  title="Các mẫu giường tầng sắt nổi bật"
+                  products={[...bedGroups.bunkProducts, ...bedGroups.unknownProducts]}
+                  categorySlugs={finalSlugs}
+                />
+              </div>
+
+              {bedGroups.singleProducts.length > 0 && (
+                <div className={`${styles.productGridFull} ${styles.bedReferenceGroup}`}>
+                  <div className={styles.bedReferenceIntro}>
+                    <p>
+                      Một số mẫu giường sắt đơn vẫn được giữ trong danh mục để khách tham khảo thêm khi cần giường ký túc xá,
+                      giường phòng trọ hoặc giường cá nhân. Nhóm sản phẩm chính của trang vẫn ưu tiên giường tầng và giường lệch tầng.
+                    </p>
+                  </div>
+                  <ProductList
+                    title="Các mẫu giường sắt đơn tham khảo"
+                    products={bedGroups.singleProducts}
+                    categorySlugs={finalSlugs}
+                  />
+                </div>
+              )}
+            </>
+          ) : (
+            <div className={styles.productGridFull}>
+              <ProductList
+                title=""
+                products={productsFromSupabase}
+                categorySlugs={finalSlugs}
+              />
+            </div>
+          )
         ) : (
           <div className={styles.noProduct}>
             <p>

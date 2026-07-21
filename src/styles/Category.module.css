@@ -244,3 +244,40 @@
     text-align: center;
   }
 }
+
+
+.bedReferenceGroup {
+  margin-top: 34px;
+}
+
+.bedReferenceIntro {
+  margin: 0 0 18px;
+  padding: 18px 20px;
+  border: 1px solid #dbe8f6;
+  border-radius: 8px;
+  background: #f8fbff;
+}
+
+.bedReferenceIntro h2 {
+  margin: 0 0 10px;
+  color: #1f2937;
+  font-size: 22px;
+  line-height: 1.35;
+}
+
+.bedReferenceIntro p {
+  margin: 0;
+  color: #374151;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+@media (max-width: 768px) {
+  .bedReferenceIntro {
+    padding: 16px;
+  }
+
+  .bedReferenceIntro h2 {
+    font-size: 20px;
+  }
+}

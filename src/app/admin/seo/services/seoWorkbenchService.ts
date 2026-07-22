@@ -439,7 +439,7 @@ export function buildSeoWorkbenchItems(input: SeoWorkbenchBuildInput): SeoWorkbe
     const ads = matchAds(text, input.googleAds);
     const group = detectGroup(text);
     const issues = blog.issues || [];
-    const titleKeyword = blog.title.replace(/[-â€“|].*$/, '').trim().toLowerCase();
+    const titleKeyword = blog.title.replace(/[- -|].*$/, '').trim().toLowerCase();
     items.push({
       id: `blog-${blog.id}-${blog.slug}`,
       type: 'blog',

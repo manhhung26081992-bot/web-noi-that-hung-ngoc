@@ -1,4 +1,4 @@
-/* 1. CONTAINER TÃ¡Â»â€NG */
+/* 1. CONTAINER TỔNG */
 .container {
   max-width: var(--container-max-width);
   margin: 40px auto;
@@ -9,7 +9,7 @@
   margin-bottom: 60px;
 }
 
-/* 2. HEADER DANH MÃ¡Â»Â¤C - TÃ¡Â»â€˜i Ã†Â°u nhÃ¡ÂºÂ­n diÃ¡Â»â€¡n Bot Google */
+/* 2. HEADER DANH MỤC - Tối ưu nhận diện Bot Google */
 .sectionHeader {
   display: flex;
   justify-content: space-between;
@@ -73,7 +73,7 @@
 }
 
 
-/* 4. CARD SÃ¡ÂºÂ¢N PHÃ¡ÂºÂ¨M - HiÃ¡Â»â€¡u Ã¡Â»Â©ng cao cÃ¡ÂºÂ¥p */
+/* 4. CARD SẢN PHẨM - Hiệu ứng cao cấp */
 .productCard {
   background: #fff;
   border: 1px solid var(--border-color);
@@ -87,16 +87,16 @@
 }
 
 .productCard:hover {
-  transform: translateY(-8px); /* Bay nhÃ¡ÂºÂ¹ hÃ†Â¡n mÃ¡Â»â„¢t chÃƒÂºt */
+  transform: translateY(-8px); /* Bay nhẹ hơn một chút */
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
   border-color: #32a7c8;
 }
 
-/* Khung Ã¡ÂºÂ£nh chÃ¡Â»â€˜ng giÃ¡ÂºÂ­t Layout (CLS) */
+/* Khung ảnh chống giật layout (CLS) */
 .imgBox {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1; /* CÃ¡Â»â€˜ Ã„â€˜Ã¡Â»â€¹nh tÃ¡Â»â€° lÃ¡Â»â€¡ vuÃƒÂ´ng giÃƒÂºp SEO tÃ¡Â»â€˜t hÃ†Â¡n */
+  aspect-ratio: 1 / 1; /* Cố định tỷ lệ vuông giúp SEO tốt hơn */
   overflow: hidden;
   margin-bottom: 12px;
   background-color: #fcfcfc;
@@ -111,10 +111,10 @@
 }
 
 .productCard:hover .imgBox img {
-  transform: scale(1.08); /* Zoom nhÃ¡ÂºÂ¹ Ã¡ÂºÂ£nh sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m khi hover card */
+  transform: scale(1.08); /* Zoom nhẹ ảnh sản phẩm khi hover card */
 }
 
-/* TÃƒÂªn sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m & GiÃƒÂ¡ */
+/* Tên sản phẩm và giá */
 .productName {
   font-size: 15px;
   color: var(--foreground);
@@ -141,11 +141,11 @@
   color: #d0021b;
   font-weight: 700;
   font-size: 17px;
-  margin-top: auto; /* Ã„ÂÃ¡ÂºÂ©y giÃƒÂ¡ xuÃ¡Â»â€˜ng dÃ†Â°Ã¡Â»â€ºi cÃƒÂ¹ng */
+  margin-top: auto; /* Đẩy giá xuống dưới cùng */
   margin-bottom: 15px;
 }
 
-/* 5. NÃƒÅ¡T THÃƒÅ M VÃƒâ‚¬O GIÃ¡Â»Å½ - TÃ¡Â»â€˜i Ã†Â°u trÃ¡ÂºÂ£i nghiÃ¡Â»â€¡m mobile */
+/* 5. NÚT THÊM VÀO GIỎ - Tối ưu trải nghiệm mobile */
 .addToCartBtn {
   background-color: transparent;
   color: #d40f2e;
@@ -190,7 +190,7 @@
   stroke-linejoin: round;
 }
 
-/* 6. LINK SEO GÃ¡Â»Â¢I ÃƒÂ TÃƒÅ’M KIÃ¡ÂºÂ¾M */
+/* 6. LINK SEO GỢI Ý TÌM KIẾM */
 .subCategoryLinks {
   margin-top: 15px;
   font-size: 13px;
@@ -205,22 +205,22 @@
 .subCategoryLinks a:hover {
   text-decoration: underline;
 }
-/* PhÃ¡ÂºÂ§n khung chÃ¡Â»Â©a Ã¡ÂºÂ£nh: Ã„ÂÃ¡ÂºÂ£m bÃ¡ÂºÂ£o Ã¡ÂºÂ£nh khÃƒÂ´ng lÃƒÂ m mÃƒÂ©o khung */
+/* Phần khung chứa ảnh: đảm bảo ảnh không làm méo khung */
 .imageWrapper {
   width: 100%;
-  aspect-ratio: 1 / 1; /* Ãƒâ€°p Ã¡ÂºÂ£nh luÃƒÂ´n lÃƒÂ  hÃƒÂ¬nh vuÃƒÂ´ng */
+  aspect-ratio: 1 / 1; /* Ép ảnh luôn là hình vuông */
   position: relative;
   overflow: hidden;
   margin-bottom: 10px;
 }
 .imageWrapper img {
-  object-fit: cover; /* Ã¡ÂºÂ¢nh sÃ¡ÂºÂ½ lÃ¡ÂºÂ¥p Ã„â€˜Ã¡ÂºÂ§y khung mÃƒÂ  khÃƒÂ´ng bÃ¡Â»â€¹ mÃƒÂ©o */
+  object-fit: cover; /* Ảnh sẽ lấp đầy khung mà không bị méo */
   width: 100%;
   height: 100%;
 }
 
 
-/* BÃ¡Â»â€¢ sung vÃƒÂ o Product.module.css */
+/* Bổ sung vào Product.module.css */
 .watermark {
   position: absolute;
   bottom: 6px;
@@ -251,7 +251,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #d0021b; /* MÃƒÂ u Ã„â€˜Ã¡Â»Â trÃƒÂ¹ng vÃ¡Â»â€ºi mÃƒÂ u giÃƒÂ¡ cÃ¡Â»Â§a bÃ¡ÂºÂ¡n */
+  background: #d0021b; /* Màu đỏ trùng với màu giá của bạn */
   border-radius: 50%;
   width: 18px;
   height: 18px;
@@ -304,7 +304,7 @@
   box-shadow: 0 4px 12px rgba(50, 167, 200, 0.08);
 }
 
-/* NÃƒÂºt trang hiÃ¡Â»â€¡n tÃ¡ÂºÂ¡i mÃƒÂ u xÃƒÂ¡m Ã„â€˜Ã¡ÂºÂ­m */
+/* Nút trang hiện tại màu xám đậm */
 .activePage {
   background-color: #32a7c8 !important;
   border-color: #32a7c8 !important;
@@ -322,7 +322,7 @@
   cursor: not-allowed;
   box-shadow: none;
 }
-/* --- TÃ¡Â»ÂI Ã†Â¯U RESPONSIVE --- */
+/* TỐI ƯU RESPONSIVE */
 @media (max-width: 1024px) {
   .productGrid { grid-template-columns: repeat(3, 1fr); gap: 15px; }
 }
@@ -333,34 +333,34 @@
   
 .productCard {
     display: flex;
-    flex-direction: column; /* XÃ¡ÂºÂ¿p cÃƒÂ¡c thÃƒÂ nh phÃ¡ÂºÂ§n theo hÃƒÂ ng dÃ¡Â»Âc */
-    padding: 0;             /* BÃ¡Â»Â padding Ã„â€˜Ã¡Â»Æ’ Ã¡ÂºÂ£nh trÃƒÂ n ra sÃƒÂ¡t mÃƒÂ©p card */
-    gap: 0;                 /* TriÃ¡Â»â€¡t tiÃƒÂªu khoÃ¡ÂºÂ£ng hÃ¡Â»Å¸ mÃ¡ÂºÂ·c Ã„â€˜Ã¡Â»â€¹nh giÃ¡Â»Â¯a cÃƒÂ¡c phÃ¡ÂºÂ§n tÃ¡Â»Â­ */
+    flex-direction: column; /* Xếp các thành phần theo hàng dọc */
+    padding: 0;             /* Bỏ padding để ảnh tràn ra sát mép card */
+    gap: 0;                 /* Triệt tiêu khoảng hở mặc định giữa các phần tử */
   }
 
   .productLink {
     display: flex;
-    flex-direction: column; /* Ã„ÂÃ†Â°a cÃƒÂ¡c thÃƒÂ nh phÃ¡ÂºÂ§n bÃƒÂªn trong Link thÃƒÂ nh hÃƒÂ ng dÃ¡Â»Âc */
+    flex-direction: column; /* Đưa các thành phần bên trong Link thành hàng dọc */
   }
 
-  /* 1. LÃƒâ‚¬M Ã¡ÂºÂ¢NH TO VÃƒâ‚¬ TRÃƒâ‚¬N VIÃ¡Â»â‚¬N */
+  /* 1. LÀM ẢNH TO VÀ TRÀN VIỀN */
   .imgBox {
-    order: 1;               /* LuÃƒÂ´n nÃ¡ÂºÂ±m Ã„â€˜Ã¡ÂºÂ§u tiÃƒÂªn */
+    order: 1;               /* Luôn nằm đầu tiên */
     width: 100% !important;
-    aspect-ratio: 1 / 1;    /* Ãƒâ€°p Ã¡ÂºÂ£nh vuÃƒÂ´ng chuÃ¡ÂºÂ©n sÃƒÂ n TMÃ„ÂT */
+    aspect-ratio: 1 / 1;    /* Ép ảnh vuông chuẩn sàn thương mại điện tử */
     position: relative;
     overflow: hidden;
   }
 
   .productImg {
-    object-fit: contain;    /* ThÃ¡ÂºÂ¥y hÃ¡ÂºÂ¿t toÃƒÂ n bÃ¡Â»â„¢ hÃƒÂ¬nh dÃƒÂ¡ng bÃƒÂ n/ghÃ¡ÂºÂ¿ */
-    padding: 8px;           /* Ã„ÂÃ¡Â»â€¡m nhÃ¡ÂºÂ¹ Ã„â€˜Ã¡Â»Æ’ sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m khÃƒÂ´ng dÃƒÂ­nh vÃƒÂ¡ch card */
+    object-fit: contain;    /* Thấy hết toàn bộ hình dáng bàn/ghế */
+    padding: 8px;           /* Đệm nhẹ để sản phẩm không dính vách card */
   }
 
-  /* 2. Ã„ÂÃ†Â¯A TÃƒÅ N SÃ¡ÂºÂ¢N PHÃ¡ÂºÂ¨M XUÃ¡Â»ÂNG DÃ†Â¯Ã¡Â»Å¡I Ã¡ÂºÂ¢NH */
+  /* 2. ĐƯA TÊN SẢN PHẨM XUỐNG DƯỚI ẢNH */
   .productName {
-    order: 2;               /* NÃ¡ÂºÂ±m ngay dÃ†Â°Ã¡Â»â€ºi Ã¡ÂºÂ£nh */
-    padding: 10px 8px 5px;  /* CÃƒÂ¡ch lÃ¡Â»Â trÃƒÂ¡i phÃ¡ÂºÂ£i Ã„â€˜Ã¡Â»Æ’ dÃ¡Â»â€¦ nhÃƒÂ¬n */
+    order: 2;               /* Nằm ngay dưới ảnh */
+    padding: 10px 8px 5px;  /* Cách lề trái phải để dễ nhìn */
     font-size: 14px;
     font-weight: 500;
     line-height: 1.4;
@@ -376,14 +376,14 @@
     margin: 0;
   }
 
-  /* 3. GIÃƒÂ TIÃ¡Â»â‚¬N */
+  /* 3. GIÁ TIỀN */
   .priceWrapper {
     order: 3;
     width: 100%;
     display: flex;
-    justify-content: center; /* CÃ„Æ’n giÃ¡Â»Â¯a theo chiÃ¡Â»Âu ngang */
-    align-items: center;     /* CÃ„Æ’n giÃ¡Â»Â¯a theo chiÃ¡Â»Âu dÃ¡Â»Âc */
-    padding: 5px 0;          /* KhoÃ¡ÂºÂ£ng cÃƒÂ¡ch trÃƒÂªn dÃ†Â°Ã¡Â»â€ºi */
+    justify-content: center; /* Căn giữa theo chiều ngang */
+    align-items: center;     /* Căn giữa theo chiều dọc */
+    padding: 5px 0;          /* Khoảng cách trên dưới */
     margin-bottom: 5px;
   }
 
@@ -394,10 +394,10 @@
     text-align: center;
   }
 
-  /* 4. NÃƒÅ¡T THÃƒÅ M VÃƒâ‚¬O GIÃ¡Â»Å½ */
+  /* 4. NÚT THÊM VÀO GIỎ */
   .addToCartBtn {
     order: 4;
-    width: calc(100% - 16px); /* NÃƒÂºt dÃƒÂ i ra sÃƒÂ¡t lÃ¡Â»Â cho dÃ¡Â»â€¦ bÃ¡ÂºÂ¥m */
+    width: calc(100% - 16px); /* Nút dài ra sát lề cho dễ bấm */
     margin: 0 8px 10px;
     padding: 8px 0;
     font-size: 12px;
@@ -409,7 +409,7 @@
   }
 }
 
-/* Desktop: giÃ¡ÂºÂ£m khung Ã¡ÂºÂ£nh Ã„â€˜Ã¡Â»Æ’ sÃ¡ÂºÂ£n phÃ¡ÂºÂ©m khÃƒÂ´ng bÃ¡Â»â€¹ phÃƒÂ³ng quÃƒÂ¡ lÃ¡Â»â€ºn trÃƒÂªn mÃƒÂ n hÃƒÂ¬nh mÃƒÂ¡y tÃƒÂ­nh. */
+/* Desktop: giảm khung ảnh để sản phẩm không bị phóng quá lớn trên màn hình máy tính. */
 @media (min-width: 769px) {
   .sectionHeader {
     border-bottom-color: #32a7c8;
@@ -501,7 +501,7 @@
   }
 }
 
-/* Mobile vÃ¡ÂºÂ«n giÃ¡Â»Â¯ Ã¡ÂºÂ£nh vuÃƒÂ´ng, dÃ¡Â»â€¦ nhÃƒÂ¬n vÃƒÂ  dÃ¡Â»â€¦ bÃ¡ÂºÂ¥m trÃƒÂªn Ã„â€˜iÃ¡Â»â€¡n thoÃ¡ÂºÂ¡i. */
+/* Mobile vẫn giữ ảnh vuông, dễ nhìn và dễ bấm trên điện thoại. */
 @media (max-width: 768px) {
   .productCard .imgBox {
     aspect-ratio: 1 / 1 !important;

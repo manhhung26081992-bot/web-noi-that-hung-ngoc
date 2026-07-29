@@ -104,7 +104,7 @@ export function SearchConsoleCenter({ data }: { data: SearchConsoleV5Data | null
         <MetricCard label="CTR tham khảo" value={formatCtr(source.overview.ctr)} />
         <MetricCard label="Average Position tham khảo" value={source.overview.position || '-'} />
       </div>
-      <MiniBarChart data={source.keywordTrend.slice(-28).map((item) => ({ date: item.date, impressions: item.impressions, clicks: item.clicks }))} label="Trend tham khảo 28 ngày" />
+      <MiniBarChart data={source.keywordTrend.slice(-32).map((item) => ({ date: item.date, impressions: item.impressions, clicks: item.clicks }))} label="Trend tham khảo từ dữ liệu đã nhập" />
       <div className={styles.v5TwoTables}>
         <div><h3>Top từ khóa tham khảo</h3>{topQueries.length ? <table><tbody>{topQueries.map((item, index) => <tr key={safeKey('gsc-query', item.query, item.page, index)}><td>{item.query}</td><td>{item.page}</td><td>{formatNumber(item.impressions)}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có query" detail="Dùng Search Console Import Center để nhập dữ liệu thật thủ công." />}</div>
         <div><h3>Top trang tham khảo</h3>{topPages.length ? <table><tbody>{topPages.map((item, index) => <tr key={safeKey('gsc-page', item.page, item.query, index)}><td>{item.page}</td><td>{formatNumber(item.clicks)}</td><td>{formatNumber(item.impressions)}</td></tr>)}</tbody></table> : <EmptyState title="Chưa có page" detail="Dùng Search Console Import Center để nhập dữ liệu thật thủ công." />}</div>

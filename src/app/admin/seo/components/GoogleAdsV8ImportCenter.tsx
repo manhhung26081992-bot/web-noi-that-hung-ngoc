@@ -5,7 +5,6 @@ import { Badge, EmptyState, MetricCard, ModuleCard } from './Ui';
 import {
   GOOGLE_ADS_IMPORT_STORAGE_KEY,
   analyzeGoogleAdsImport,
-  googleAdsSampleData,
   mergeGoogleAdsImportData,
   normalizeGoogleAdsImportData,
   parseGoogleAdsImport,
@@ -14,12 +13,16 @@ import {
 import type { GoogleAdsImportData, GoogleAdsImportMode, GoogleAdsImportSource, GoogleAdsKeywordImportRow, GoogleAdsOpportunity, SearchConsoleV7Data, SeoCluster, SeoKeyword } from '../types/seo';
 import styles from '../seo-dashboard.module.css';
 import { countImportRows, readCsvFileAsText } from '../services/importFileReader';
+import { saveOneSeoKeyToSupabase } from '../lib/seoDashboardSupabaseSync';
 
 type Props = {
   keywords: SeoKeyword[];
   clusters: SeoCluster[];
   searchConsoleData?: SearchConsoleV7Data | null;
   onData?: (data: GoogleAdsImportData | null) => void;
+  compact?: boolean;
+  externalData?: GoogleAdsImportData | null;
+  onOpenDetails?: () => void;
 };
 
 type LastImportResult = {
@@ -135,7 +138,7 @@ function FullKeywordTable({ rows }: { rows: GoogleAdsKeywordImportRow[] }) {
   );
 }
 
-export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchConsoleData, onData }: Props) {
+export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchConsoleData, onData, compact = false, externalData, onOpenDetails }: Props) {
   const [rawText, setRawText] = useState('');
   const [data, setData] = useState<GoogleAdsImportData | null>(null);
   const [error, setError] = useState('');
@@ -171,6 +174,14 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
       onData?.(null);
     }
   }, [onData]);
+
+  useEffect(() => {
+    if (!externalData) return;
+    const normalized = normalizeGoogleAdsImportData(externalData);
+    setData(normalized);
+    setFileName((current) => normalized?.sources?.[0]?.fileName || current);
+    setRowCount((current) => normalized?.sources?.[0]?.rowCount || normalized?.summary.keywordCount || current);
+  }, [externalData]);
 
   const analyzed = useMemo(() => data, [data]);
   const summary = analyzed?.summary;
@@ -217,6 +228,7 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
     setRowCount(nextRowCount);
     setData(nextData);
     onData?.(nextData);
+    saveOneSeoKeyToSupabase(GOOGLE_ADS_IMPORT_STORAGE_KEY).catch(() => null);
   }
 
   function applyImport(incoming: GoogleAdsImportData | null, text: string, sourceFileName: string, nextRowCount: number) {
@@ -281,13 +293,44 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
     }
   }
 
-  function useSample() {
-    const incoming = analyzeGoogleAdsImport(googleAdsSampleData, searchConsoleData, keywords, clusters);
-    applyImport(incoming, googleAdsSampleData, 'du-lieu-mau-google-ads.csv', parseGoogleAdsImport(googleAdsSampleData).length);
-  }
-
   const latestSource = analyzed?.sources?.[0];
   const debug = summary?.importDebug;
+
+  if (compact) {
+    const latestUpdated = data?.lastImportedAt || data?.lastUpdated || data?.summary.lastUpdated || '';
+    return (
+      <ModuleCard
+        title="Nhập Google Ads / Keyword Planner"
+        description="Hỗ trợ file Keyword Planner có metadata đầu file."
+        action={<Badge status={data ? 'connected' : 'pending'}>{data ? 'Đã có Keyword Planner' : 'Chưa có Keyword Planner'}</Badge>}
+      >
+        <div className={styles.importCompactCard}>
+          <div className={styles.fileImportRow}>
+            <label className={styles.fileImportButton}>
+              Import Keyword Planner
+              <input type="file" accept=".csv,text/csv,text/tab-separated-values" onChange={handleFileUpload} />
+            </label>
+            <button className={styles.secondaryButton} type="button" onClick={onOpenDetails}>Xem tất cả keyword trong Phân tích nâng cao</button>
+          </div>
+          <p className={styles.fileImportMeta}>Chọn file CSV export từ Keyword Planner. Dashboard tự tìm dòng header thật sau phần metadata đầu file.</p>
+          <div className={styles.metricGridSmall}>
+            <MetricCard label="Keyword Planner" value={summary?.keywordCount ? formatNumber(summary.keywordCount) + ' keyword' : 'Chưa có dữ liệu'} />
+            <MetricCard label="Cập nhật mới nhất" value={latestUpdated ? new Date(latestUpdated).toLocaleDateString('vi-VN') : 'Chưa có dữ liệu'} hint={latestUpdated ? new Date(latestUpdated).toLocaleTimeString('vi-VN') : 'Chưa có dữ liệu'} />
+            <MetricCard label="Trạng thái" value={data ? 'Đã đồng bộ Supabase' : 'Chưa đồng bộ'} />
+            <MetricCard label="File gần nhất" value={latestSource?.fileName || fileName || 'Chưa có file'} />
+          </div>
+          {lastImportResult ? (
+            <div className={styles.importResultBox}>
+              <strong>Import Keyword Planner xong</strong>
+              <span>Thêm mới: {formatNumber(lastImportResult.addedCount)} · Cập nhật trùng: {formatNumber(lastImportResult.updatedCount)} · Tổng keyword: {formatNumber(lastImportResult.totalCount)}</span>
+            </div>
+          ) : null}
+          {!summary?.keywordCount ? <div className={styles.v61PlanAlerts}><span>Chưa có Keyword Planner mới, AI chỉ dùng Search Console và Supabase.</span></div> : null}
+          {error ? <div className={styles.alert}>{error}</div> : null}
+        </div>
+      </ModuleCard>
+    );
+  }
 
   return (
     <ModuleCard
@@ -325,7 +368,6 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
           </div>
           <div className={styles.scImportActions}>
             <button className={styles.primaryButton} type="button" onClick={analyze}>Phân tích dữ liệu</button>
-            <button className={styles.secondaryButton} type="button" onClick={useSample}>Dùng dữ liệu mẫu</button>
             <button className={styles.secondaryButton} type="button" onClick={clearImport}>Xóa dữ liệu import</button>
           </div>
           {error ? <div className={styles.alert}>{error}</div> : null}
@@ -465,7 +507,7 @@ export default function GoogleAdsV8ImportCenter({ keywords, clusters, searchCons
               </div>
             ) : null}
           </>
-        ) : <EmptyState title="Chưa có dữ liệu Google Ads" detail="Bạn có thể dùng dữ liệu mẫu để kiểm tra nhanh hoặc dán file export từ Keyword Planner." />}
+        ) : <EmptyState title="Chưa có dữ liệu Google Ads" detail="Dán file export thật từ Keyword Planner để AI lập kế hoạch." />}
       </div>
     </ModuleCard>
   );

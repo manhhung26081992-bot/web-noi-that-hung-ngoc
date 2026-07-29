@@ -346,8 +346,8 @@ export interface GoogleAdsImportData {
   lastImportedAt?: string;
 }
 
-export type SearchConsoleRange = '7d' | '28d' | '90d';
-export type SearchConsoleRequestType = 'overview' | 'queries' | 'pages' | 'devices' | 'countries' | 'opportunities';
+export type SearchConsoleRange = string;
+export type SearchConsoleRequestType = 'overview' | 'queries' | 'pages' | 'devices' | 'countries' | 'dates' | 'searchAppearance' | 'opportunities';
 export type SearchConsoleSource = 'api' | 'fallback' | 'import';
 
 export interface SearchConsoleOverview {
@@ -404,6 +404,30 @@ export interface SearchConsoleDatePoint {
   position: number;
 }
 
+export interface SearchConsoleSearchAppearance {
+  searchAppearance: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
+export interface SearchConsoleImportMeta {
+  id: string;
+  source: 'search-console';
+  type: 'queries' | 'pages' | 'query-page' | 'dates' | 'devices' | 'countries' | 'search-appearance' | 'manual-summary';
+  dateRangeLabel: string;
+  startDate?: string;
+  endDate?: string;
+  importedAt: string;
+  updatedAt: string;
+  rowCount: number;
+  columns: string[];
+  fileName?: string;
+  zipFileName?: string;
+  storeKey?: string;
+}
+
 export interface SearchConsoleOpportunity {
   id: string;
   query: string;
@@ -422,11 +446,13 @@ export interface SearchConsoleV7Data {
   source: SearchConsoleSource;
   selectedType: SearchConsoleRequestType;
   overview: SearchConsoleOverview;
+  imports?: SearchConsoleImportMeta[];
   queries: SearchConsoleQuery[];
   pages: SearchConsolePage[];
   devices: SearchConsoleDevice[];
   countries: SearchConsoleCountry[];
   trend: SearchConsoleDatePoint[];
+  searchAppearances?: SearchConsoleSearchAppearance[];
   opportunities: SearchConsoleOpportunity[];
 }
 

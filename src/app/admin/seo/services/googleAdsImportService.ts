@@ -19,17 +19,6 @@ import type {
 
 export const GOOGLE_ADS_IMPORT_STORAGE_KEY = 'noithathungngoc-google-ads-import-v1';
 
-export const googleAdsSampleData = [
-  'Keyword\tCurrency\tAvg. monthly searches\tCompetition\tCompetition (indexed value)\tTop of page bid (low range)\tTop of page bid (high range)\tClicks\tImpressions',
-  'giường tầng sắt giá rẻ\tVND\t1200\tMedium\t55\t2800\t6900\t42\t1800',
-  'giường sắt 2 tầng\tVND\t900\tLow\t32\t2200\t5200\t35\t1400',
-  'bàn làm việc 1m2\tVND\t5000\tCao\t100\t4257\t19299\t58\t2600',
-  'bàn văn phòng giá rẻ\tVND\t1300\tMedium\t62\t4200\t9000\t44\t2100',
-  'bàn ghế học sinh\tVND\t1000\tLow\t28\t2200\t4800\t39\t1750',
-  'ghế chân quỳ\tVND\t700\tHigh\t78\t5200\t12000\t21\t900',
-  'tủ locker\tVND\t650\tMedium\t58\t3900\t8300\t18\t820',
-].join('\n');
-
 const headerMap: Record<string, keyof GoogleAdsKeywordImportRow> = {
   keyword: 'keyword',
   keywords: 'keyword',

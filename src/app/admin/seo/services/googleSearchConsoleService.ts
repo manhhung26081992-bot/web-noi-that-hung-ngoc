@@ -9,11 +9,12 @@ import type {
 const DEFAULT_SITE_URL = 'https://www.noithathungngoc.com/';
 
 function toRange(value: string | null): SearchConsoleRange {
-  return value === '7d' || value === '90d' ? value : '28d';
+  const clean = String(value || '').trim();
+  return clean || 'manual';
 }
 
 function toType(value: string | null): SearchConsoleRequestType {
-  const allowed: SearchConsoleRequestType[] = ['overview', 'queries', 'pages', 'devices', 'countries', 'opportunities'];
+  const allowed: SearchConsoleRequestType[] = ['overview', 'queries', 'pages', 'devices', 'countries', 'dates', 'searchAppearance', 'opportunities'];
   return allowed.includes(value as SearchConsoleRequestType) ? value as SearchConsoleRequestType : 'overview';
 }
 
@@ -50,7 +51,7 @@ function fallback(range: SearchConsoleRange, selectedType: SearchConsoleRequestT
   };
 }
 
-export async function getSearchConsoleData(range: SearchConsoleRange = '28d', selectedType: SearchConsoleRequestType = 'overview'): Promise<SearchConsoleV7Data> {
+export async function getSearchConsoleData(range: SearchConsoleRange = 'manual', selectedType: SearchConsoleRequestType = 'overview'): Promise<SearchConsoleV7Data> {
   return fallback(
     range,
     selectedType,

@@ -16,6 +16,13 @@ export type SeoDashboardRestoreResult = {
 export const SEO_DASHBOARD_SYNC_KEYS = [
   'noithathungngoc-search-console-import-v1',
   'noithathungoc-search-console-import-v1',
+  'noithathungngoc-search-console-queries-v1',
+  'noithathungngoc-search-console-pages-v1',
+  'noithathungngoc-search-console-query-pages-v1',
+  'noithathungngoc-search-console-dates-v1',
+  'noithathungngoc-search-console-devices-v1',
+  'noithathungngoc-search-console-countries-v1',
+  'noithathungngoc-search-console-search-appearance-v1',
   'noithathungngoc-google-ads-import-v1',
   'noithathungngoc-index-summary-v1',
   'noithathungngoc-seo-work-log-v11',

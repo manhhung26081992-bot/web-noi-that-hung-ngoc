@@ -201,7 +201,7 @@ function buildSearchConsoleActions(data: SearchConsoleV7Data | null): V9SeoActio
       reason += ' Query đã gần top, ưu tiên tăng CTR.';
     }
 
-    if (row.impressions >= 100 && row.ctr < 0.02) {
+    if (row.impressions >= 100 && row.ctr < 2) {
       score += 20;
       action = 'Tối ưu title/meta vì impression cao nhưng CTR thấp.';
       reason += ' CTR thấp so với lượng hiển thị.';
@@ -228,8 +228,8 @@ function buildSearchConsoleActions(data: SearchConsoleV7Data | null): V9SeoActio
     type: 'category' as const,
     url: row.page,
     cluster: detectCluster(row.page),
-    reason: `Trang có ${row.impressions} impression, ${row.clicks} click, CTR ${(row.ctr * 100).toFixed(1)}%.`,
-    priorityScore: clamp(35 + businessPriority(row.page) + Math.min(25, row.impressions / 12) + (row.ctr < 0.02 ? 20 : 0)),
+    reason: `Trang có ${row.impressions} impression, ${row.clicks} click, CTR ${row.ctr.toFixed(1)}%.`,
+    priorityScore: clamp(35 + businessPriority(row.page) + Math.min(25, row.impressions / 12) + (row.ctr < 2 ? 20 : 0)),
     difficulty: 'Trung bình' as const,
     action: 'Kiểm tra title/meta, thêm mô tả đầu trang, FAQ và internal link từ bài viết liên quan.',
     source: 'Search Console import' as const,

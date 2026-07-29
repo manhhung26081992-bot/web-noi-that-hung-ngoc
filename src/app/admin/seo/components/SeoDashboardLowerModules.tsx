@@ -107,8 +107,8 @@ function SeoDashboardLowerModules({
     <div className={styles.v61Deferred}>
       <AccordionSection id="search-console" title="Import Google thủ công và dữ liệu tổng quan" description="Search Console và Google Ads dùng dữ liệu import thủ công, không dùng API." defaultOpen>
         <section className={styles.gridTwo}>
-          <SearchConsoleV7Center key={'search-console-' + restoreVersion} keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} onData={onSearchConsoleV7Data} />
-          <GoogleAdsV8ImportCenter key={'google-ads-' + restoreVersion} keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} searchConsoleData={searchConsoleV7} onData={onGoogleAdsV8Data} />
+          <SearchConsoleV7Center key={'search-console-' + restoreVersion} keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} externalData={searchConsoleV7} onData={onSearchConsoleV7Data} />
+          <GoogleAdsV8ImportCenter key={'google-ads-' + restoreVersion} keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} searchConsoleData={searchConsoleV7} externalData={googleAdsV8} onData={onGoogleAdsV8Data} />
         </section>
         <section className={styles.stack}>
           <DashboardAnalytics key={'analytics-' + restoreVersion} overview={overview} health={health} clusters={dashboard.seoClusters} keywords={dashboard.seoKeywords} tasks={dashboard.tasks} logs={dashboard.seoLogs} doNotTouch={dashboard.doNotTouch} searchConsoleV7={searchConsoleV7} indexSummary={indexSummary} />

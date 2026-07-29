@@ -5,6 +5,7 @@ import { MetricCard, ModuleCard, SkeletonGrid } from './Ui';
 import { buildAiInsights, buildSeoCommands, buildTodaySummary } from './SeoV3Modules';
 import { buildAiDailyBrief, buildSeoScoreV41 } from './SeoV4Modules';
 import { buildContentOpportunities, getRoadmap30Days } from '../services/seoDashboardService';
+import { buildProfessionalSeoPlan, type ProfessionalSeoTask } from '../services/seoProfessionalPlanService';
 import { SeoV51FilterBar, type DashboardSeoFilters } from './SeoV5Modules';
 import { AiBlogRanking, AiProductRanking, AiProgressEngine, AiRecommendationHistory, OpportunityScorePanel, SeoHealthRadar, TodaySeoFocusV61, buildV6Analysis } from './SeoV6Modules';
 import SeoV9Modules from './SeoV9Modules';
@@ -14,6 +15,8 @@ import { SEO_DASHBOARD_RESTORED_EVENT } from '../lib/seoDashboardSupabaseSync';
 import type { GoogleAdsImportData, IndexSummaryManual, SearchConsoleV7Data } from '../types/seo';
 
 const SeoDashboardLowerModules = lazy(() => import('./SeoDashboardLowerModules'));
+const SearchConsoleV7Center = lazy(() => import('./SearchConsoleV7Center'));
+const GoogleAdsV8ImportCenter = lazy(() => import('./GoogleAdsV8ImportCenter'));
 const SeoV10Workbench = lazy(() => import('./SeoV10Workbench'));
 const SeoWorkLogV11 = lazy(() => import('./SeoWorkLogV11'));
 const SeoNextActionsV11 = lazy(() => import('./SeoNextActionsV11'));
@@ -22,8 +25,14 @@ function formatNumber(value: number) {
   return new Intl.NumberFormat('vi-VN').format(value || 0);
 }
 
-function isConnected(status?: string) {
-  return status === 'connected';
+function formatDateTime(date: Date) {
+  return date.toLocaleString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 }
 
 function norm(value: unknown) {
@@ -43,6 +52,17 @@ function matchesSearch(search: string, ...values: unknown[]) {
   return norm(values.filter(Boolean).join(' ')).includes(needle);
 }
 
+function formatOptionalDate(value?: string | null) {
+  if (!value) return 'Chưa có dữ liệu';
+  const time = Date.parse(value);
+  if (!Number.isFinite(time)) return value;
+  return formatDateTime(new Date(time));
+}
+
+function copyTaskText(task: ProfessionalSeoTask) {
+  navigator.clipboard?.writeText(task.copyText);
+}
+
 const defaultFilters: DashboardSeoFilters = {
   search: '',
   priority: 'all',
@@ -59,6 +79,8 @@ export default function SeoDashboard() {
   const [googleAdsV8, setGoogleAdsV8] = useState<GoogleAdsImportData | null>(null);
   const [indexSummary, setIndexSummary] = useState<IndexSummaryManual | null>(null);
   const [workbenchEnabled, setWorkbenchEnabled] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(() => formatDateTime(new Date()));
   const [restoreVersion, setRestoreVersion] = useState(0);
 
   useEffect(() => {
@@ -71,10 +93,23 @@ export default function SeoDashboard() {
   }, []);
 
   function openWorkbench() {
+    setAdvancedOpen(true);
     setWorkbenchEnabled(true);
     window.setTimeout(() => {
       document.getElementById('seo-workbench')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 0);
+  }
+
+  function openAdvancedSection(sectionId: string) {
+    setAdvancedOpen(true);
+    window.setTimeout(() => {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+  }
+
+  async function reloadDashboard() {
+    await actions.reload();
+    setLastUpdated(formatDateTime(new Date()));
   }
 
   const filteredKeywords = useMemo(() => dashboard.seoKeywords.filter((item) => {
@@ -110,8 +145,7 @@ export default function SeoDashboard() {
 
   const overview = dashboard.overview;
   const health = dashboard.health;
-  const searchConsoleConnected = Boolean(searchConsoleV7?.overview.impressions);
-  const googleAdsConnected = Boolean(googleAdsV8?.summary.keywordCount);
+  const searchConsoleConnected = Boolean(searchConsoleV7?.overview.connected || searchConsoleV7?.overview.impressions);
 
   const commands = useMemo(() => buildSeoCommands({
     overview,
@@ -154,13 +188,6 @@ export default function SeoDashboard() {
 
   const opportunities = useMemo(() => buildContentOpportunities(filteredClusters, filteredKeywords, overview), [filteredClusters, filteredKeywords, overview]);
   const roadmap = useMemo(() => getRoadmap30Days(), []);
-  const lastUpdated = useMemo(() => new Date().toLocaleString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  }), []);
 
   const v6Analysis = useMemo(() => buildV6Analysis({
     overview,
@@ -205,6 +232,16 @@ export default function SeoDashboard() {
   }), [commands, filters.search, filters.status]);
 
   const filteredDailyBrief = useMemo(() => dailyBrief.filter((item) => matchesSearch(filters.search, item.text, item.level)), [dailyBrief, filters.search]);
+  const professionalPlan = useMemo(() => buildProfessionalSeoPlan({
+    searchConsole: searchConsoleV7,
+    googleAds: googleAdsV8,
+    products: dashboard.productSeoItems,
+    blogs: dashboard.blogSeoItems,
+    clusters: dashboard.seoClusters,
+    keywords: dashboard.seoKeywords,
+    tasks: filteredTasks,
+    internalLinks: dashboard.internalLinkSuggestions,
+  }), [dashboard.blogSeoItems, dashboard.internalLinkSuggestions, dashboard.productSeoItems, dashboard.seoClusters, dashboard.seoKeywords, filteredTasks, googleAdsV8, searchConsoleV7]);
 
   if (loading) {
     return (
@@ -228,7 +265,7 @@ export default function SeoDashboard() {
         </div>
         <div className={styles.heroActions}>
           <button className={`${styles.secondaryButton} ${styles.themeButton}`} onClick={() => setDarkMode((value) => !value)}>{darkMode ? 'Giao diện sáng' : 'Giao diện tối'}</button>
-          <button className={`${styles.primaryButton} ${styles.refreshButton}`} onClick={actions.reload}>Làm mới</button>
+          <button className={`${styles.primaryButton} ${styles.refreshButton}`} onClick={reloadDashboard}>Làm mới</button>
           <button className={`${styles.primaryButton} ${styles.refreshButton}`} type="button" onClick={openWorkbench}>Mở Trợ lý SEO v10</button>
         </div>
       </header>
@@ -236,19 +273,22 @@ export default function SeoDashboard() {
       {error ? <div className={styles.alert}>{error}</div> : null}
 
       <nav className={styles.v61Tabs} aria-label="Điều hướng SEO Dashboard">
-        <a href="#tong-quan">Tổng quan</a>
         <a href="#hom-nay">Hôm nay</a>
-          <a href="#seo-work-log-v11">Nhật ký SEO</a>
-          <a href="#seo-next-actions-v11">Bước tiếp theo</a>
-        <a href="#action-plan">Kế hoạch SEO AI</a>
-        <a href="#seo-workbench">Trợ lý SEO</a>
-        <a href="#san-pham">Sản phẩm</a>
-        <a href="#bai-viet">Bài viết</a>
-        <a href="#cum-seo">Cụm SEO</a>
-        <a href="#internal-link">Liên kết nội bộ</a>
-        <a href="#search-console">Search Console</a>
-        <a href="#he-thong">Hệ thống</a>
+        <a href="#tong-quan">Tổng quan</a>
+        <a href="#ke-hoach-seo">Kế hoạch SEO</a>
+        <a href="#nhap-du-lieu-seo">Nhập dữ liệu SEO</a>
+        <a href="#buoc-tiep-theo">Bước tiếp theo</a>
+        <a href="#phan-tich-nang-cao">Phân tích nâng cao</a>
       </nav>
+
+      <section id="tong-quan" className={styles.metricGrid}>
+        <MetricCard label="Tổng sản phẩm" value={formatNumber(overview?.products || 0)} />
+        <MetricCard label="Tổng bài viết" value={formatNumber(overview?.blogPosts || 0)} />
+        <MetricCard label="Tổng danh mục" value={formatNumber(overview?.categories || 0)} hint={overview?.categorySource === 'supabase' ? 'Lấy từ Supabase' : 'Fallback từ menu'} />
+        <MetricCard label="URL tạo từ website" value={formatNumber(overview?.generatedUrls || 0)} hint={`${overview?.activeCategoryUrls || 0} danh mục có sản phẩm, ${overview?.staticUrls || 0} trang tĩnh`} />
+        <MetricCard label="GSC cập nhật" value={formatOptionalDate(professionalPlan.sourceSummary.searchConsoleUpdatedAt)} hint={`${professionalPlan.sourceSummary.searchConsoleKeywordCount} keyword, ${professionalPlan.sourceSummary.searchConsoleUrlCount} URL có impression - ${professionalPlan.sourceSummary.searchConsoleDateRanges.join(', ') || 'chưa có range'}`} />
+        <MetricCard label="Keyword Planner" value={professionalPlan.sourceSummary.googleAdsKeywordCount ? formatNumber(professionalPlan.sourceSummary.googleAdsKeywordCount) : 'Chưa có dữ liệu'} hint={formatOptionalDate(professionalPlan.sourceSummary.googleAdsUpdatedAt)} />
+      </section>
 
       <section id="hom-nay">
         <TodaySeoFocusV61
@@ -262,125 +302,225 @@ export default function SeoDashboard() {
         />
       </section>
 
-
-      <section id="seo-work-log-v11">
-        <Suspense fallback={<SkeletonGrid />}>
-          <SeoWorkLogV11 key={`work-log-${restoreVersion}`} tasks={filteredTasks} noteContent={dashboard.note?.content || ''} />
-        </Suspense>
+      <section id="ke-hoach-seo">
+        <ModuleCard title="Kế hoạch SEO chuyên nghiệp" description="AI ưu tiên Search Console mới nhất trước, sau đó mới xét Keyword Planner và dữ liệu Supabase.">
+          <div className={styles.v61PlanSource}>
+            <span>Dữ liệu AI đang dùng: {professionalPlan.sourceSummary.usingSources}</span>
+            <span>GSC ưu tiên: {professionalPlan.sourceSummary.activeSearchConsoleSource}. Type đã nhập: {professionalPlan.sourceSummary.searchConsoleImportTypes.join(', ') || 'chưa có'}.</span>
+            {professionalPlan.sourceSummary.warning ? <strong>{professionalPlan.sourceSummary.warning}</strong> : null}
+          </div>
+          {professionalPlan.alerts.length ? (
+            <div className={styles.v61PlanAlerts}>
+              {professionalPlan.alerts.map((item) => <span key={'plan-alert-' + item}>{item}</span>)}
+            </div>
+          ) : null}
+          <div className={styles.v61PlanColumns}>
+            <div>
+              <h3>Hôm nay cần làm</h3>
+              {professionalPlan.today.map((task) => (
+                <article className={styles.v61PlanTask} key={task.id}>
+                  <div><strong>{task.title}</strong><span>{task.priority} - {task.score}/100 - {task.estimatedTime}</span></div>
+                  <p><b>URL:</b> {task.url || 'Chưa có URL chính'}</p>
+                  <p><b>Keyword:</b> {task.keyword || 'Chưa xác định'}</p>
+                  <p>{task.reason}</p>
+                  <small>{task.action}</small>
+                  <button className={styles.secondaryButton} type="button" onClick={() => copyTaskText(task)}>Copy việc cho Codex</button>
+                </article>
+              ))}
+            </div>
+            <div>
+              <h3>7 ngày tới</h3>
+              {professionalPlan.week.map((task) => (
+                <article className={styles.v61PlanMiniTask} key={task.id}>
+                  <strong>{task.title}</strong>
+                  <span>{task.type} - {task.priority} - {task.estimatedTime}</span>
+                </article>
+              ))}
+            </div>
+            <div>
+              <h3>Cơ hội theo dõi</h3>
+              {professionalPlan.watch.map((task) => (
+                <article className={styles.v61PlanMiniTask} key={task.id}>
+                  <strong>{task.keyword || task.title}</strong>
+                  <span>{task.source} - {task.score}/100</span>
+                </article>
+              ))}
+            </div>
+          </div>
+        </ModuleCard>
       </section>
 
-      <section id="seo-next-actions-v11">
-        <Suspense fallback={<SkeletonGrid />}>
-          <SeoNextActionsV11
-            key={`next-actions-${restoreVersion}`}
-            products={dashboard.productSeoItems as unknown as Record<string, unknown>[]}
-            blogs={dashboard.blogSeoItems as unknown as Record<string, unknown>[]}
-            keywords={dashboard.seoKeywords as unknown as Record<string, unknown>[]}
-            clusters={dashboard.seoClusters as unknown as Record<string, unknown>[]}
-            tasks={filteredTasks as unknown as Record<string, unknown>[]}
-            logs={dashboard.seoLogs as unknown as Record<string, unknown>[]}
-            searchConsole={searchConsoleV7}
-            googleAds={googleAdsV8}
-            indexSummary={indexSummary}
-          />
-        </Suspense>
-      </section>
-
-      <section id="action-plan">
-        <SeoV9Modules
-          key={`v9-${restoreVersion}`}
-          overview={overview}
-          products={filteredProducts}
-          blogs={filteredBlogs}
-          keywords={filteredKeywords}
-          clusters={filteredClusters}
-          tasks={filteredTasks}
-          logs={dashboard.seoLogs}
-          internalLinks={dashboard.internalLinkSuggestions}
-          opportunities={opportunities}
-          searchConsole={searchConsoleV7}
-          googleAds={googleAdsV8}
-          indexSummary={indexSummary}
-        />
-      </section>
-
-      <section id="seo-workbench">
-        {workbenchEnabled ? (
+      <section id="nhap-du-lieu-seo" className={styles.importMainSection}>
+        <div className={styles.sectionHeader}>
+          <div>
+            <h2>Nhập dữ liệu SEO</h2>
+            <p>Cập nhật Search Console và Keyword Planner hằng ngày. Màn hình này chỉ hiển thị trạng thái, số lượng và nút import.</p>
+          </div>
+        </div>
+        <div className={styles.gridTwo}>
           <Suspense fallback={<SkeletonGrid />}>
-            <SeoV10Workbench
-              key={`workbench-${restoreVersion}`}
-              products={dashboard.productSeoItems}
-              blogs={dashboard.blogSeoItems}
+            <SearchConsoleV7Center
+              compact
               keywords={dashboard.seoKeywords}
               clusters={dashboard.seoClusters}
-              searchConsole={searchConsoleV7}
-              googleAds={googleAdsV8}
+              externalData={searchConsoleV7}
+              onData={setSearchConsoleV7}
+              onOpenDetails={() => openAdvancedSection('search-console')}
+            />
+            <GoogleAdsV8ImportCenter
+              compact
+              keywords={dashboard.seoKeywords}
+              clusters={dashboard.seoClusters}
+              searchConsoleData={searchConsoleV7}
+              externalData={googleAdsV8}
+              onData={setGoogleAdsV8}
+              onOpenDetails={() => openAdvancedSection('search-console')}
             />
           </Suspense>
-        ) : (
-          <ModuleCard
-            title="Trợ lý SEO v10.0"
-            description="Phần này phân tích toàn bộ sản phẩm, bài viết, danh mục và keyword để chống trùng SEO, tạo title, meta, FAQ và gợi ý liên kết nội bộ. Mình để tải khi cần để trang /admin/seo mở nhanh hơn."
-            action={<button className={styles.primaryButton} type="button" onClick={openWorkbench}>Mở Trợ lý SEO v10</button>}
-          >
-            <p className={styles.muted}>Nếu bạn chỉ xem tổng quan, Search Console hoặc Google Ads thì chưa cần mở phần này. Khi cần tạo bài, kiểm tra keyword đã dùng hoặc copy nội dung SEO thì bấm nút mở.</p>
-          </ModuleCard>
-        )}
-      </section>
-
-      <section id="tong-quan" className={styles.metricGrid}>
-        <MetricCard label="Tổng sản phẩm" value={formatNumber(overview?.products || 0)} />
-        <MetricCard label="Tổng bài viết" value={formatNumber(overview?.blogPosts || 0)} />
-        <MetricCard label="Tổng danh mục" value={formatNumber(overview?.categories || 0)} hint={overview?.categorySource === 'supabase' ? 'Lấy từ Supabase' : 'Fallback từ menu'} />
-        <MetricCard label="URL tạo từ website" value={formatNumber(overview?.generatedUrls || 0)} hint={`${overview?.activeCategoryUrls || 0} danh mục có sản phẩm, ${overview?.staticUrls || 0} trang tĩnh`} />
-      </section>
-
-      <SeoV51FilterBar filters={filters} onChange={setFilters} />
-
-      <section id="he-thong" className={styles.gridTwo}>
-        <SeoHealthRadar points={v6Analysis.radar} />
-        <AiProgressEngine analysis={v6Analysis} />
-      </section>
-
-      <section id="cum-seo" className={styles.gridTwo}>
-        <OpportunityScorePanel items={filteredV6Opportunities} />
-        <AiRecommendationHistory decisions={filteredV6Decisions} />
-      </section>
-
-      <section className={styles.gridTwo}>
-        <div id="san-pham">
-          <AiProductRanking products={filteredV6ProductRanking} />
-        </div>
-        <div id="bai-viet">
-          <AiBlogRanking blogs={filteredV6BlogRanking} />
         </div>
       </section>
 
-      <Suspense fallback={<SkeletonGrid />}>
-        <SeoDashboardLowerModules
-          restoreVersion={restoreVersion}
-          dashboard={dashboard}
-          saving={saving}
-          actions={actions}
-          overview={overview}
-          health={health}
-          score={score}
-          opportunities={opportunities}
-          insights={insights}
-          summary={summary}
-          roadmap={roadmap}
-          filteredKeywords={filteredKeywords}
-          filteredClusters={filteredClusters}
-          filteredTasks={filteredTasks}
-          filteredProducts={filteredProducts}
-          searchConsoleV7={searchConsoleV7}
-          onSearchConsoleV7Data={setSearchConsoleV7}
-          googleAdsV8={googleAdsV8}
-          onGoogleAdsV8Data={setGoogleAdsV8}
-          indexSummary={indexSummary}
-          onIndexSummaryData={setIndexSummary}
-        />
-      </Suspense>
+      <section id="buoc-tiep-theo">
+        <ModuleCard title="Bước tiếp theo" description="Các việc nên làm sau khi cập nhật dữ liệu, giữ gọn để màn hình chính không thành bảng phân tích.">
+          <div className={styles.v61PlanSource}>
+            <span>AI SEO đang dùng: {professionalPlan.sourceSummary.usingSources || 'Supabase hiện có'}</span>
+            <span>Cập nhật dữ liệu xong thì danh sách này tự đổi theo Search Console / Keyword Planner mới nhất.</span>
+          </div>
+          <div className={styles.v61NextStepGrid}>
+            {[...professionalPlan.week, ...professionalPlan.watch].slice(0, 4).map((task) => (
+              <article className={styles.v61PlanMiniTask} key={'next-step-' + task.id}>
+                <strong>{task.title}</strong>
+                <span>{task.type} - {task.priority} - {task.estimatedTime}</span>
+              </article>
+            ))}
+          </div>
+        </ModuleCard>
+      </section>
+
+      <details
+        id="phan-tich-nang-cao"
+        className={styles.v61AdvancedShell}
+        open={advancedOpen}
+        onToggle={(event) => setAdvancedOpen(event.currentTarget.open)}
+      >
+        <summary>
+          <span>Phân tích nâng cao</span>
+          <small>Workbench, nhập dữ liệu Google, radar, sản phẩm, bài viết, cụm SEO và các bảng quản trị.</small>
+        </summary>
+        <div className={styles.v61AdvancedBody}>
+          <SeoV51FilterBar filters={filters} onChange={setFilters} />
+
+          <section id="action-plan">
+            <SeoV9Modules
+              key={`v9-${restoreVersion}`}
+              overview={overview}
+              products={filteredProducts}
+              blogs={filteredBlogs}
+              keywords={filteredKeywords}
+              clusters={filteredClusters}
+              tasks={filteredTasks}
+              logs={dashboard.seoLogs}
+              internalLinks={dashboard.internalLinkSuggestions}
+              opportunities={opportunities}
+              searchConsole={searchConsoleV7}
+              googleAds={googleAdsV8}
+              indexSummary={indexSummary}
+            />
+          </section>
+
+          <section id="seo-next-actions-v11">
+            <Suspense fallback={<SkeletonGrid />}>
+              <SeoNextActionsV11
+                key={`next-actions-${restoreVersion}`}
+                products={dashboard.productSeoItems as unknown as Record<string, unknown>[]}
+                blogs={dashboard.blogSeoItems as unknown as Record<string, unknown>[]}
+                keywords={dashboard.seoKeywords as unknown as Record<string, unknown>[]}
+                clusters={dashboard.seoClusters as unknown as Record<string, unknown>[]}
+                tasks={filteredTasks as unknown as Record<string, unknown>[]}
+                logs={dashboard.seoLogs as unknown as Record<string, unknown>[]}
+                searchConsole={searchConsoleV7}
+                googleAds={googleAdsV8}
+                indexSummary={indexSummary}
+              />
+            </Suspense>
+          </section>
+
+          <section id="seo-workbench">
+            {workbenchEnabled ? (
+              <Suspense fallback={<SkeletonGrid />}>
+                <SeoV10Workbench
+                  key={`workbench-${restoreVersion}`}
+                  products={dashboard.productSeoItems}
+                  blogs={dashboard.blogSeoItems}
+                  keywords={dashboard.seoKeywords}
+                  clusters={dashboard.seoClusters}
+                  searchConsole={searchConsoleV7}
+                  googleAds={googleAdsV8}
+                />
+              </Suspense>
+            ) : (
+              <ModuleCard
+                title="Trợ lý SEO v10.0"
+                description="Phần này phân tích toàn bộ sản phẩm, bài viết, danh mục và keyword để chống trùng SEO, tạo title, meta, FAQ và gợi ý liên kết nội bộ. Mình để tải khi cần để trang /admin/seo mở nhanh hơn."
+                action={<button className={styles.primaryButton} type="button" onClick={openWorkbench}>Mở Trợ lý SEO v10</button>}
+              >
+                <p className={styles.muted}>Nếu bạn chỉ xem tổng quan, Search Console hoặc Google Ads thì chưa cần mở phần này. Khi cần tạo bài, kiểm tra keyword đã dùng hoặc copy nội dung SEO thì bấm nút mở.</p>
+              </ModuleCard>
+            )}
+          </section>
+
+          <section id="he-thong" className={styles.gridTwo}>
+            <SeoHealthRadar points={v6Analysis.radar} />
+            <AiProgressEngine analysis={v6Analysis} />
+          </section>
+
+          <section id="cum-seo" className={styles.gridTwo}>
+            <OpportunityScorePanel items={filteredV6Opportunities} />
+            <AiRecommendationHistory decisions={filteredV6Decisions} />
+          </section>
+
+          <section className={styles.gridTwo}>
+            <div id="san-pham">
+              <AiProductRanking products={filteredV6ProductRanking} />
+            </div>
+            <div id="bai-viet">
+              <AiBlogRanking blogs={filteredV6BlogRanking} />
+            </div>
+          </section>
+
+          <section id="seo-work-log-v11">
+            <Suspense fallback={<SkeletonGrid />}>
+              <SeoWorkLogV11 key={`work-log-${restoreVersion}`} tasks={filteredTasks} noteContent={dashboard.note?.content || ''} />
+            </Suspense>
+          </section>
+
+          <Suspense fallback={<SkeletonGrid />}>
+            <SeoDashboardLowerModules
+              restoreVersion={restoreVersion}
+              dashboard={dashboard}
+              saving={saving}
+              actions={actions}
+              overview={overview}
+              health={health}
+              score={score}
+              opportunities={opportunities}
+              insights={insights}
+              summary={summary}
+              roadmap={roadmap}
+              filteredKeywords={filteredKeywords}
+              filteredClusters={filteredClusters}
+              filteredTasks={filteredTasks}
+              filteredProducts={filteredProducts}
+              searchConsoleV7={searchConsoleV7}
+              onSearchConsoleV7Data={setSearchConsoleV7}
+              googleAdsV8={googleAdsV8}
+              onGoogleAdsV8Data={setGoogleAdsV8}
+              indexSummary={indexSummary}
+              onIndexSummaryData={setIndexSummary}
+            />
+          </Suspense>
+        </div>
+      </details>
     </main>
   );
 }

@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { MetricCard, ModuleCard, SkeletonGrid } from './Ui';
+import { Badge, MetricCard, ModuleCard, SkeletonGrid } from './Ui';
 import { buildAiInsights, buildSeoCommands, buildTodaySummary } from './SeoV3Modules';
 import { buildAiDailyBrief, buildSeoScoreV41 } from './SeoV4Modules';
 import { buildContentOpportunities, getRoadmap30Days } from '../services/seoDashboardService';
@@ -13,7 +13,7 @@ import { useSeoDashboard } from '../hooks/useSeoDashboard';
 import styles from '../seo-dashboard.module.css';
 import { SEO_DASHBOARD_RESTORED_EVENT } from '../lib/seoDashboardSupabaseSync';
 import { loadSeoWorkLogs } from '../lib/seoWorkLogStorage';
-import type { GoogleAdsImportData, IndexSummaryManual, SearchConsoleManualSummary, SearchConsoleV7Data } from '../types/seo';
+import type { AiSeoDailyPlan, AiSeoDailyTask, GoogleAdsImportData, IndexSummaryManual, SearchConsoleManualSummary, SearchConsoleV7Data } from '../types/seo';
 import type { SeoWorkLogItem } from '../types/seoV11';
 
 const SeoDashboardLowerModules = lazy(() => import('./SeoDashboardLowerModules'));
@@ -66,6 +66,14 @@ function copyTaskText(task: ProfessionalSeoTask) {
   navigator.clipboard?.writeText(task.copyText);
 }
 
+function copyDailyTaskText(task: AiSeoDailyTask) {
+  navigator.clipboard?.writeText(task.copyPrompt);
+}
+
+function dailySourceRows(plan: AiSeoDailyPlan | null) {
+  return plan?.dataSources || [];
+}
+
 const defaultFilters: DashboardSeoFilters = {
   search: '',
   priority: 'all',
@@ -87,6 +95,9 @@ export default function SeoDashboard() {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(() => formatDateTime(new Date()));
   const [restoreVersion, setRestoreVersion] = useState(0);
+  const [dailyAiPlan, setDailyAiPlan] = useState<AiSeoDailyPlan | null>(null);
+  const [dailyAiLoading, setDailyAiLoading] = useState(false);
+  const [dailyAiMessage, setDailyAiMessage] = useState('');
 
   useEffect(() => {
     const handleRestore = () => {
@@ -105,6 +116,7 @@ export default function SeoDashboard() {
   }, []);
 
   useEffect(() => {
+    loadDailyAiPlan();
     setSeoWorkLogsV11(loadSeoWorkLogs());
     try {
       const savedManual = localStorage.getItem(GSC_MANUAL_SUMMARY_KEY);
@@ -132,6 +144,37 @@ export default function SeoDashboard() {
   async function reloadDashboard() {
     await actions.reload();
     setLastUpdated(formatDateTime(new Date()));
+  }
+
+  async function loadDailyAiPlan() {
+    try {
+      const response = await fetch('/api/admin/seo-daily/run', { headers: { Accept: 'application/json' } });
+      const body = await response.json().catch(() => ({})) as { ok?: boolean; plan?: AiSeoDailyPlan; message?: string; error?: string };
+      if (response.ok && body.plan) setDailyAiPlan(body.plan);
+      if (!response.ok && response.status !== 401) setDailyAiMessage(body.message || body.error || 'Chưa đọc được AI SEO Daily đã lưu.');
+    } catch {
+      setDailyAiMessage('Chưa đọc được AI SEO Daily đã lưu.');
+    }
+  }
+
+  async function runDailyAiPlan() {
+    setDailyAiLoading(true);
+    setDailyAiMessage('');
+    try {
+      const response = await fetch('/api/admin/seo-daily/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ range: '28d', rowLimit: 10000, maxPages: 2 }),
+      });
+      const body = await response.json().catch(() => ({})) as { ok?: boolean; plan?: AiSeoDailyPlan; message?: string; error?: string; warnings?: string[] };
+      if (!response.ok || !body.plan) throw new Error(body.message || body.error || 'Không chạy được AI SEO hôm nay.');
+      setDailyAiPlan(body.plan);
+      setDailyAiMessage((body.message || 'Đã chạy AI SEO hôm nay.') + (body.warnings?.length ? ' ' + body.warnings.join(' ') : ''));
+    } catch (err) {
+      setDailyAiMessage(err instanceof Error ? err.message : 'Không chạy được AI SEO hôm nay.');
+    } finally {
+      setDailyAiLoading(false);
+    }
   }
 
   const filteredKeywords = useMemo(() => dashboard.seoKeywords.filter((item) => {
@@ -285,7 +328,7 @@ export default function SeoDashboard() {
         <div>
           <p className={styles.eyebrow}>Nội Thất Hùng Ngọc</p>
           <h1>SEO Dashboard v9.0</h1>
-          <p>AI SEO Operating System ra quyết định SEO hằng ngày từ Supabase và dữ liệu Google import thủ công. Không dùng Google API/OAuth/billing.</p>
+          <p>AI SEO Operating System ra quyết định SEO hằng ngày từ Supabase, Search Console API/import, GSC nhập tay, Keyword Planner và Nhật ký SEO.</p>
         </div>
         <div className={styles.heroActions}>
           <button className={`${styles.secondaryButton} ${styles.themeButton}`} onClick={() => setDarkMode((value) => !value)}>{darkMode ? 'Giao diện sáng' : 'Giao diện tối'}</button>
@@ -299,6 +342,7 @@ export default function SeoDashboard() {
       <nav className={styles.v61Tabs} aria-label="Điều hướng SEO Dashboard">
         <a href="#hom-nay">Hôm nay</a>
         <a href="#tong-quan">Tổng quan</a>
+        <a href="#ai-seo-daily">AI SEO Daily</a>
         <a href="#ke-hoach-seo">Kế hoạch SEO</a>
         <a href="#nhap-du-lieu-seo">Nhập dữ liệu SEO</a>
         <a href="#nhat-ky-seo">Nhật ký SEO</a>
@@ -330,6 +374,96 @@ export default function SeoDashboard() {
           dailyBrief={filteredDailyBrief}
           lastUpdated={lastUpdated}
         />
+      </section>
+
+      <section id="ai-seo-daily">
+        <ModuleCard
+          title="AI SEO tự động hôm nay"
+          description="Kế hoạch được tạo từ route server an toàn, lưu vào Supabase và không tự gọi Search Console API khi mở dashboard."
+          action={<button className={styles.primaryButton} type="button" onClick={runDailyAiPlan} disabled={dailyAiLoading}>{dailyAiLoading ? 'Đang chạy...' : 'Chạy AI SEO hôm nay'}</button>}
+        >
+          <div className={styles.aiDailyStatusGrid}>
+            <MetricCard label="Lần phân tích gần nhất" value={formatOptionalDate(dailyAiPlan?.generatedAt)} hint={dailyAiPlan?.source === 'auto-daily' ? 'Chạy tự động/cron' : dailyAiPlan ? 'Chạy thủ công' : 'Chưa có plan đã lưu'} />
+            <MetricCard label="Trạng thái dữ liệu" value={dailyAiPlan?.dataFreshness.status === 'fresh' ? 'Dữ liệu mới' : dailyAiPlan?.dataFreshness.status === 'stale' ? 'Dữ liệu cũ' : 'Thiếu dữ liệu'} hint={dailyAiPlan?.dataFreshness.newestUpdatedAt ? formatOptionalDate(dailyAiPlan.dataFreshness.newestUpdatedAt) : 'Chưa có nguồn mới'} />
+            <MetricCard label="Query+Page rows" value={formatNumber(dailyAiPlan?.dataSources.find((item) => item.id === 'query-page-api')?.count || 0)} hint={dailyAiPlan?.dataSources.find((item) => item.id === 'query-page-api')?.detail || 'Không tự sync khi mở trang'} />
+            <MetricCard label="Google Ads" value={formatNumber(dailyAiPlan?.dataSources.find((item) => item.id === 'google-ads')?.count || professionalPlan.sourceSummary.googleAdsKeywordCount || 0)} hint="Keyword Planner đã import" />
+            <MetricCard label="Supabase đã đọc" value={`${formatNumber(overview?.products || 0)} / ${formatNumber(overview?.blogPosts || 0)}`} hint="Sản phẩm / bài viết" />
+            <MetricCard label="Nhật ký SEO v11" value={formatNumber(dailyAiPlan?.workLogSummary.total || professionalPlan.sourceSummary.workLogTotal)} hint={`${dailyAiPlan?.workLogSummary.needFix ?? professionalPlan.sourceSummary.workLogNeedFix} cần sửa tiếp`} />
+          </div>
+
+          <div className={styles.v61PlanSource}>
+            <strong>AI đang phân tích dựa trên:</strong>
+            {dailySourceRows(dailyAiPlan).length ? dailySourceRows(dailyAiPlan).map((source) => (
+              <span key={source.id}>{source.label}: {source.hasData ? 'có' : 'chưa có'}{source.count != null ? ' - ' + formatNumber(source.count) : ''}{source.status === 'stale' ? ' - dữ liệu đã cũ' : ''}</span>
+            )) : (
+              <span>Chưa có daily plan đã lưu. Bấm chạy để AI tạo kế hoạch từ dữ liệu hiện có.</span>
+            )}
+          </div>
+
+          {dailyAiMessage ? <div className={styles.alert}>{dailyAiMessage}</div> : null}
+          {dailyAiPlan?.notes.length ? <div className={styles.v61PlanAlerts}>{dailyAiPlan.notes.slice(0, 4).map((note) => <span key={'daily-note-' + note}>{note}</span>)}</div> : null}
+
+          {dailyAiPlan?.internalLinkSuggestions.length ? (
+            <div className={styles.aiDailyInternalLinks}>
+              <h3>Gợi ý internal link</h3>
+              {dailyAiPlan.internalLinkSuggestions.slice(0, 10).map((item) => (
+                <article className={styles.v61PlanMiniTask} key={item.id}>
+                  <strong>{item.fromTitle} → {item.toTitle}</strong>
+                  <span>Từ: {item.fromUrl}</span>
+                  <span>Về: {item.toUrl}</span>
+                  <span>Anchor: {item.anchorText}</span>
+                  <span>{item.reason}</span>
+                  <button className={styles.secondaryButton} type="button" onClick={() => navigator.clipboard?.writeText(item.copyPrompt)}>Copy việc cho Codex</button>
+                </article>
+              ))}
+            </div>
+          ) : null}
+
+          <div className={styles.v61PlanColumns}>
+            <div>
+              <h3>Hôm nay cần làm</h3>
+              {(dailyAiPlan?.todayTasks || []).slice(0, 5).map((task) => (
+                <article className={styles.v61PlanTask} key={'daily-today-' + task.id}>
+                  <div><strong>{task.title}</strong><span>{task.priority} - {task.score}/100</span></div>
+                  <p><b>URL:</b> {task.url || 'Chưa có URL chính'}</p>
+                  <p><b>Keyword:</b> {task.keyword || 'Chưa xác định'}</p>
+                  <p>{task.reason}</p>
+                  <p><b>Nguồn dữ liệu:</b> {task.sourceData}</p>
+                  {task.savedPrimaryUrl ? <p><b>URL chính đã lưu:</b> {task.savedPrimaryUrl}</p> : null}
+                  {task.suggestedPrimaryUrl ? <p><b>URL đề xuất:</b> {task.suggestedPrimaryUrl}</p> : null}
+                  {task.competingUrls?.length ? <p><b>URL cạnh tranh:</b> {task.competingUrls.join(', ')}</p> : null}
+                  <small>{task.action}</small>
+                  <button className={styles.secondaryButton} type="button" onClick={() => copyDailyTaskText(task)}>Copy prompt cho Codex</button>
+                </article>
+              ))}
+              {!dailyAiPlan?.todayTasks.length ? <div className={styles.emptyState}><strong>Chưa có kế hoạch tự động</strong><span>Bấm “Chạy AI SEO hôm nay” để tạo plan và lưu vào Supabase.</span></div> : null}
+            </div>
+            <div>
+              <h3>7 ngày tới</h3>
+              {(dailyAiPlan?.next7DaysTasks || []).slice(0, 7).map((task) => (
+                <article className={styles.v61PlanMiniTask} key={'daily-week-' + task.id}>
+                  <strong>{task.title}</strong>
+                  <span>{task.type} - {task.priority} - {task.sourceData}</span>
+                </article>
+              ))}
+            </div>
+            <div>
+              <h3>Cơ hội theo dõi</h3>
+              {(dailyAiPlan?.watchOpportunities || []).slice(0, 5).map((task) => (
+                <article className={styles.v61PlanMiniTask} key={'daily-watch-' + task.id}>
+                  <strong>{task.keyword || task.title}</strong>
+                  <span>{task.score}/100 - {task.sourceData}</span>
+                </article>
+              ))}
+              {dailyAiPlan?.cannibalizationWarnings.slice(0, 3).map((item) => (
+                <article className={styles.v61PlanMiniTask} key={'daily-cannibal-' + item.query}>
+                  <strong>{item.query}</strong>
+                  <span>{item.pages.length} URL cạnh tranh - {formatNumber(item.impressions)} impression</span>
+                </article>
+              ))}
+            </div>
+          </div>
+        </ModuleCard>
       </section>
 
       <section id="ke-hoach-seo">

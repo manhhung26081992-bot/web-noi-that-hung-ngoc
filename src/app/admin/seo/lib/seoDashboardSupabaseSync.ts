@@ -32,6 +32,8 @@ export const SEO_DASHBOARD_SYNC_KEYS = [
   'noithathungngoc-seo-work-log-v1',
   'noithathungngoc-seo-workbench-checklist-v1',
   'noithathungngoc-seo-keyword-map-v1',
+  'noithathungngoc-ai-seo-daily-plan-v1',
+  'noithathungngoc-ai-seo-daily-history-v1',
   'hn_ai_recommendation_history',
 ];
 

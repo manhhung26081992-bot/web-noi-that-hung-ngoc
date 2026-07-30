@@ -61,6 +61,11 @@ type SearchAnalyticsRow = {
 
 type QueryPageRange = '28d' | '3m' | '6m' | '12m' | '16m';
 
+export type QueryPageSyncOptions = {
+  rowLimit?: number;
+  maxPages?: number;
+};
+
 export type GscQueryPageStoppedReason = 'completed' | 'max_pages_reached' | 'empty_response' | 'api_error';
 
 export type GscQueryPageSyncMeta = {
@@ -371,6 +376,12 @@ export function resolveDateRange(range: string | null | undefined) {
   };
 }
 
+function resolveQueryPageFetchLimits(options: QueryPageSyncOptions = {}) {
+  const rowLimit = Math.max(1000, Math.min(DEFAULT_ROW_LIMIT, Math.floor(Number(options.rowLimit || DEFAULT_ROW_LIMIT))));
+  const maxPages = Math.max(1, Math.min(MAX_PAGE_COUNT, Math.floor(Number(options.maxPages || MAX_PAGE_COUNT))));
+  return { rowLimit, maxPages };
+}
+
 function normalizeGscRows(rows: SearchAnalyticsRow[]) {
   return rows.map((row) => ({
     query: String(row.keys?.[0] || '').trim(),
@@ -382,14 +393,15 @@ function normalizeGscRows(rows: SearchAnalyticsRow[]) {
   })).filter((row) => row.query && row.page);
 }
 
-async function fetchQueryPageRows(accessToken: string, siteUrl: string, startDate: string, endDate: string) {
+async function fetchQueryPageRows(accessToken: string, siteUrl: string, startDate: string, endDate: string, options: QueryPageSyncOptions = {}) {
+  const { rowLimit, maxPages } = resolveQueryPageFetchLimits(options);
   const allRows: SearchConsoleQuery[] = [];
   let pagesFetched = 0;
   let stoppedReason: GscQueryPageStoppedReason = 'completed';
   let maxPagesReached = false;
 
-  for (let pageIndex = 0; pageIndex < MAX_PAGE_COUNT; pageIndex += 1) {
-    const startRow = pageIndex * DEFAULT_ROW_LIMIT;
+  for (let pageIndex = 0; pageIndex < maxPages; pageIndex += 1) {
+    const startRow = pageIndex * rowLimit;
     const endpoint = 'https://www.googleapis.com/webmasters/v3/sites/' + encodeURIComponent(siteUrl) + '/searchAnalytics/query';
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -403,7 +415,7 @@ async function fetchQueryPageRows(accessToken: string, siteUrl: string, startDat
         endDate,
         dimensions: ['query', 'page'],
         type: 'web',
-        rowLimit: DEFAULT_ROW_LIMIT,
+        rowLimit,
         startRow,
       }),
     });
@@ -417,11 +429,11 @@ async function fetchQueryPageRows(accessToken: string, siteUrl: string, startDat
       break;
     }
     allRows.push(...rows);
-    if (rows.length < DEFAULT_ROW_LIMIT) {
+    if (rows.length < rowLimit) {
       stoppedReason = 'completed';
       break;
     }
-    if (pageIndex === MAX_PAGE_COUNT - 1) {
+    if (pageIndex === maxPages - 1) {
       maxPagesReached = true;
       stoppedReason = 'max_pages_reached';
     }
@@ -429,8 +441,8 @@ async function fetchQueryPageRows(accessToken: string, siteUrl: string, startDat
 
   return {
     rows: allRows,
-    rowLimit: DEFAULT_ROW_LIMIT,
-    maxPages: MAX_PAGE_COUNT,
+    rowLimit,
+    maxPages,
     pagesFetched,
     fetchedRows: allRows.length,
     maxPagesReached,
@@ -598,7 +610,7 @@ export async function getApiStatus() {
   };
 }
 
-export async function syncQueryPage(range: string | null | undefined, force: boolean): Promise<QueryPageSyncResponse> {
+export async function syncQueryPage(range: string | null | undefined, force: boolean, options: QueryPageSyncOptions = {}): Promise<QueryPageSyncResponse> {
   const token = await getTokenStore();
   if (!token?.connected) throw new Error('Chua ket noi Search Console OAuth.');
 
@@ -660,7 +672,7 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
 
   const refreshToken = decryptRefreshToken(token);
   const accessToken = await refreshAccessToken(refreshToken);
-  const fetchResult = await fetchQueryPageRows(accessToken, siteUrl, resolved.startDate, resolved.endDate);
+  const fetchResult = await fetchQueryPageRows(accessToken, siteUrl, resolved.startDate, resolved.endDate, options);
   const rows = fetchResult.rows;
   const now = new Date().toISOString();
   const meta: SearchConsoleImportMeta = {

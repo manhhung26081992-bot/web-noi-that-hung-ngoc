@@ -464,7 +464,6 @@ export interface SearchConsoleV7Data {
   opportunities: SearchConsoleOpportunity[];
 }
 
-
 export interface SearchConsoleManualSummary {
   range: string;
   clicks: number | null;
@@ -474,6 +473,89 @@ export interface SearchConsoleManualSummary {
   checkedAt: string;
   note: string;
   updatedAt: string;
+}
+
+
+export interface AiSeoDailyDataSource {
+  id: string;
+  label: string;
+  hasData: boolean;
+  count?: number;
+  updatedAt?: string | null;
+  status: 'fresh' | 'stale' | 'missing';
+  detail?: string;
+}
+
+export interface AiSeoDailyTask {
+  id: string;
+  title: string;
+  type: string;
+  priority: string;
+  score: number;
+  url: string;
+  keyword: string;
+  secondaryKeywords: string[];
+  reason: string;
+  sourceData: string;
+  action: string;
+  expectedResult: string;
+  reindex: string;
+  copyPrompt: string;
+  savedPrimaryUrl?: string;
+  suggestedPrimaryUrl?: string;
+  competingUrls?: string[];
+}
+
+export interface AiSeoDailyPlan {
+  date: string;
+  generatedAt: string;
+  source: 'auto-daily' | 'manual-run';
+  dataSources: AiSeoDailyDataSource[];
+  dataFreshness: {
+    status: 'fresh' | 'stale' | 'missing';
+    newestUpdatedAt: string | null;
+    staleSources: string[];
+    missingSources: string[];
+  };
+  seoHealthSummary: {
+    overviewSource: string;
+    clicks: number | null;
+    impressions: number | null;
+    ctr: number | null;
+    position: number | null;
+    summary: string;
+    alerts: string[];
+  };
+  todayTasks: AiSeoDailyTask[];
+  next7DaysTasks: AiSeoDailyTask[];
+  watchOpportunities: AiSeoDailyTask[];
+  internalLinkSuggestions: Array<{
+    id: string;
+    fromUrl: string;
+    fromTitle: string;
+    toUrl: string;
+    toTitle: string;
+    anchorText: string;
+    reason: string;
+    priority: string;
+    source: string;
+    copyPrompt: string;
+  }>;
+  cannibalizationWarnings: Array<{ query: string; pages: string[]; impressions: number; reason: string; savedPrimaryUrl?: string; suggestedPrimaryUrl?: string }>;
+  contentTasks: AiSeoDailyTask[];
+  productOptimizationTasks: AiSeoDailyTask[];
+  indexCheckTasks: AiSeoDailyTask[];
+  notes: string[];
+  apiSummary?: unknown;
+  manualGscSummary?: SearchConsoleManualSummary | null;
+  googleAdsSummary?: GoogleAdsImportSummary | null;
+  workLogSummary: {
+    total: number;
+    watching: number;
+    needFix: number;
+    dueToday: number;
+    overdue: number;
+  };
 }
 
 export interface IndexSummaryManual {

@@ -352,7 +352,7 @@ export type SearchConsoleSource = 'api' | 'fallback' | 'import';
 
 export interface SearchConsoleOverview {
   connected: boolean;
-  reason?: 'missing_credentials' | 'permission_denied' | 'api_error' | 'manual_import' | 'unknown';
+  reason?: 'missing_credentials' | 'permission_denied' | 'api_error' | 'manual_import' | 'api_sync' | 'unknown';
   message: string;
   siteUrl: string;
   range: SearchConsoleRange;

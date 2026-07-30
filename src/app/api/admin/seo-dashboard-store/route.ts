@@ -10,6 +10,7 @@ type StorePostItem = {
 
 const MAX_REQUEST_CHARS = 900000;
 const MAX_ROW_PAYLOAD_CHARS = 650000;
+const SERVER_ONLY_STORE_KEYS = new Set(['noithathungngoc-search-console-oauth-v1']);
 
 async function isAdminRequest() {
   const adminPassword = process.env.ADMIN_PASSWORD;
@@ -99,12 +100,14 @@ export async function GET() {
 
     return NextResponse.json({
       ok: true,
-      items: (data || []).map((item) => ({
-        storeKey: item.store_key,
-        payload: item.payload,
-        version: item.version,
-        updatedAt: item.updated_at,
-      })),
+      items: (data || [])
+        .filter((item) => !SERVER_ONLY_STORE_KEYS.has(item.store_key))
+        .map((item) => ({
+          storeKey: item.store_key,
+          payload: item.payload,
+          version: item.version,
+          updatedAt: item.updated_at,
+        })),
     });
   } catch (error) {
     const readable = getReadableSupabaseMessage(error, 'Lỗi đọc Supabase.');
@@ -134,6 +137,9 @@ export async function POST(request: NextRequest) {
     const rows = items
       .filter((item) => typeof item.storeKey === 'string' && item.storeKey.trim())
       .map((item) => {
+        if (SERVER_ONLY_STORE_KEYS.has(String(item.storeKey).trim())) {
+          throw new Error('Không được ghi key server-only từ client: ' + String(item.storeKey));
+        }
         const payload = item.payload ?? {};
         const payloadSize = JSON.stringify(payload).length;
         if (payloadSize > MAX_ROW_PAYLOAD_CHARS) {

@@ -131,6 +131,35 @@ type GscSummaryNumbers = {
   source: 'pages' | 'queries' | 'none';
 };
 
+type GscApiStatus = {
+  connected: boolean;
+  siteUrl: string;
+  latestQueryPageSync?: {
+    updatedAt: string;
+    dateRangeLabel: string;
+    startDate?: string;
+    endDate?: string;
+    rowCount: number;
+    source: 'api';
+  } | null;
+};
+
+type GscApiSyncResponse = {
+  ok: boolean;
+  skipped?: boolean;
+  message: string;
+  storeKey: string;
+  siteUrl: string;
+  dateRangeLabel: string;
+  startDate: string;
+  endDate: string;
+  rowCount: number;
+  updatedAt: string;
+  data: SearchConsoleV7Data;
+};
+
+
+
 const STORAGE_KEY = 'noithathungngoc-search-console-import-v1';
 const LEGACY_STORAGE_KEY = 'noithathungoc-search-console-import-v1';
 const GSC_MANUAL_SUMMARY_KEY = 'noithathungngoc-gsc-manual-summary-v11';
@@ -147,6 +176,13 @@ const SEARCH_CONSOLE_STORE_KEYS: Record<SearchConsoleImportKind, string> = {
 };
 
 const dateRangeOptions = ['Chua xac dinh', '7 ngay', '28 ngay', '3 thang', '6 thang', '12 thang', '16 thang', 'Tuy chinh'];
+const apiDateRangeOptions = [
+  { value: '28d', label: '28 ngày' },
+  { value: '3m', label: '3 tháng' },
+  { value: '6m', label: '6 tháng' },
+  { value: '12m', label: '12 tháng' },
+  { value: '16m', label: '16 tháng' },
+];
 const metricHeaders = ['clicks', 'impressions', 'ctr', 'position'];
 const dimensionHeaders = ['query', 'page', 'device', 'date', 'country', 'searchAppearance'];
 const MAX_GSC_TEXT_FILE_BYTES = 8 * 1024 * 1024;
@@ -878,6 +914,19 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
   const [batchSummary, setBatchSummary] = useState<SearchConsoleBatchSummary | null>(null);
   const [manualSummary, setManualSummary] = useState<GscManualSummary | null>(null);
   const [manualDraft, setManualDraft] = useState<GscManualSummaryDraft>(() => defaultManualDraft());
+  const [apiStatus, setApiStatus] = useState<GscApiStatus | null>(null);
+  const [apiRange, setApiRange] = useState('3m');
+  const [apiSyncing, setApiSyncing] = useState(false);
+  const [apiMessage, setApiMessage] = useState('');
+
+  useEffect(() => {
+    fetch('/api/admin/search-console/status', { headers: { Accept: 'application/json' }, cache: 'no-store' })
+      .then((response) => response.json())
+      .then((body) => {
+        if (body?.ok) setApiStatus({ connected: Boolean(body.connected), siteUrl: body.siteUrl || '', latestQueryPageSync: body.latestQueryPageSync || null });
+      })
+      .catch(() => null);
+  }, []);
 
   useEffect(() => {
     try {
@@ -976,6 +1025,75 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
     setManualSummary(null);
     setManualDraft(defaultManualDraft());
     localStorage.removeItem(GSC_MANUAL_SUMMARY_KEY);
+  };
+
+  const connectSearchConsoleApi = async () => {
+    setApiMessage('');
+    setError('');
+    try {
+      const response = await fetch('/api/admin/search-console/auth-url', { headers: { Accept: 'application/json' }, cache: 'no-store' });
+      const body = await response.json().catch(() => ({})) as { url?: string; message?: string; detail?: string };
+      if (!response.ok || !body.url) throw new Error(body.detail || body.message || 'Không tạo được OAuth URL.');
+      window.location.href = body.url;
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Không kết nối được Search Console API.');
+    }
+  };
+
+  const applyApiQueryPageData = (result: GscApiSyncResponse) => {
+    const nextData = result.data;
+    const latestMeta = latestImport(nextData.imports);
+    const now = result.updatedAt || new Date().toISOString();
+    setData(nextData);
+    setRawText('');
+    setFileName('Google Search Console API');
+    setRowCount(result.rowCount);
+    setDateRangeLabel(latestMeta?.dateRangeLabel || result.dateRangeLabel);
+    setRawTextByType((current) => ({ ...current, 'query-page': '' }));
+    setFileNames((current) => ({ ...current, 'query-page': 'Google Search Console API' }));
+    setRowCounts((current) => ({ ...current, 'query-page': result.rowCount }));
+    setApiStatus({ connected: true, siteUrl: result.siteUrl, latestQueryPageSync: { updatedAt: now, dateRangeLabel: result.dateRangeLabel, startDate: result.startDate, endDate: result.endDate, rowCount: result.rowCount, source: 'api' } });
+    onData?.(nextData);
+
+    const aggregateRaw = JSON.stringify({
+      version: 2,
+      rawText: '',
+      data: nextData,
+      fileName: 'Google Search Console API',
+      rowCount: result.rowCount,
+      rawTextByType: { ...rawTextByType, 'query-page': '' },
+      fileNames: { ...fileNames, 'query-page': 'Google Search Console API' },
+      rowCounts: { ...rowCounts, 'query-page': result.rowCount },
+      imports: nextData.imports || [],
+      lastUpdated: now,
+    } satisfies SearchConsoleImportStore);
+    try {
+      localStorage.setItem(STORAGE_KEY, aggregateRaw);
+    } catch {
+      setApiMessage('Đã lưu Supabase store; cache trình duyệt không lưu đủ vì dữ liệu Query+Page lớn.');
+    }
+  };
+
+  const syncQueryPageFromApi = async (force = false) => {
+    setApiSyncing(true);
+    setApiMessage('Đang đồng bộ Query+Page từ API...');
+    setError('');
+    try {
+      const response = await fetch('/api/admin/search-console/query-page', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ range: apiRange, force }),
+      });
+      const body = await response.json().catch(() => ({})) as Partial<GscApiSyncResponse> & { message?: string; detail?: string };
+      if (!response.ok || !body.data) throw new Error(body.detail || body.message || 'Không đồng bộ được Query+Page từ API.');
+      applyApiQueryPageData(body as GscApiSyncResponse);
+      setApiMessage(body.message || 'Đã đồng bộ Query+Page từ API.');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Không đồng bộ được Query+Page từ API.');
+      setApiMessage('Lỗi đồng bộ API.');
+    } finally {
+      setApiSyncing(false);
+    }
   };
 
   const parseTextImport = (text: string, nextFileName: string, zipFileName?: string): ParsedSearchConsoleImport | null => {
@@ -1228,7 +1346,23 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
             </label>
             <button className={styles.secondaryButton} type="button" onClick={onOpenDetails}>Xem chi tiết trong Phân tích nâng cao</button>
           </div>
+          <div className={styles.fileImportRow}>
+            <select value={apiRange} onChange={(event) => setApiRange(event.target.value)} disabled={apiSyncing}>
+              {apiDateRangeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+            <button className={styles.secondaryButton} type="button" onClick={connectSearchConsoleApi} disabled={apiSyncing}>{apiStatus?.connected ? 'Đã kết nối Search Console' : 'Kết nối Search Console'}</button>
+            <button className={styles.primaryButton} type="button" onClick={() => syncQueryPageFromApi(false)} disabled={apiSyncing || !apiStatus?.connected}>{apiSyncing ? 'Đang đồng bộ...' : 'Đồng bộ Query+Page từ API'}</button>
+            <button className={styles.secondaryButton} type="button" onClick={() => syncQueryPageFromApi(true)} disabled={apiSyncing || !apiStatus?.connected}>Lấy lại dữ liệu</button>
+          </div>
           <p className={styles.fileImportMeta}>Chọn 1 CSV/TSV, nhiều CSV/TSV hoặc 1 ZIP. Dashboard chỉ parse khi bạn chọn file import.</p>
+          <div className={styles.scV7Status}>
+            API: {apiStatus?.connected ? 'Đã kết nối Search Console' : 'Chưa kết nối Search Console'}{apiStatus?.siteUrl ? ' - ' + apiStatus.siteUrl : ''}{apiStatus?.latestQueryPageSync ? ' - Query+Page API: ' + formatNumber(apiStatus.latestQueryPageSync.rowCount) + ' dòng, ' + new Date(apiStatus.latestQueryPageSync.updatedAt).toLocaleString('vi-VN') : ''}
+          </div>
+          {apiMessage ? <div className={styles.scV7Status}>{apiMessage}</div> : null}
+          <div className={styles.scV7Status}>
+            API: {apiStatus?.connected ? 'Đã kết nối Search Console' : 'Chưa kết nối Search Console'}{apiStatus?.siteUrl ? ' - ' + apiStatus.siteUrl : ''}{apiStatus?.latestQueryPageSync ? ' - Query+Page API: ' + formatNumber(apiStatus.latestQueryPageSync.rowCount) + ' dòng, ' + new Date(apiStatus.latestQueryPageSync.updatedAt).toLocaleString('vi-VN') : ''}
+          </div>
+          {apiMessage ? <div className={styles.scV7Status}>{apiMessage}</div> : null}
           <div className={styles.importCompactTypes}>
             {gscTypeStatus.map((item) => (
               <span key={'gsc-compact-' + item.type} className={item.present ? styles.importTypeOk : styles.importTypeMissing}>
@@ -1290,6 +1424,14 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
             <span className={styles.fileImportMeta}>
               {processing ? 'Đang xử lý file...' : fileName ? fileName + ' - ' + rowCount + ' dòng' : 'Có thể chọn 1 CSV/TSV, nhiều CSV/TSV, hoặc 1 ZIP chứa nhiều CSV/TSV.'}{importSummaryText ? ' - ' + importSummaryText : ''}
             </span>
+          </div>
+          <div className={styles.fileImportRow}>
+            <select value={apiRange} onChange={(event) => setApiRange(event.target.value)} disabled={apiSyncing}>
+              {apiDateRangeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+            <button className={styles.secondaryButton} type="button" onClick={connectSearchConsoleApi} disabled={apiSyncing}>{apiStatus?.connected ? 'Đã kết nối Search Console' : 'Kết nối Search Console'}</button>
+            <button className={styles.primaryButton} type="button" onClick={() => syncQueryPageFromApi(false)} disabled={apiSyncing || !apiStatus?.connected}>{apiSyncing ? 'Đang đồng bộ...' : 'Đồng bộ Query+Page từ API'}</button>
+            <button className={styles.secondaryButton} type="button" onClick={() => syncQueryPageFromApi(true)} disabled={apiSyncing || !apiStatus?.connected}>Lấy lại dữ liệu</button>
           </div>
           <div className={styles.scImportActions}>
             <button className={styles.primaryButton} onClick={analyze} disabled={processing}>{processing ? 'Đang xử lý' : 'Phân tích dữ liệu'}</button>

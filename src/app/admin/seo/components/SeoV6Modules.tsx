@@ -193,7 +193,7 @@ function notifications(input: V6Input, products: ProductSeoItem[], blogs: SeoBlo
   if (weakCluster) list.push({ id: 'weak-cluster', title: weakCluster + ' cụm SEO dưới 70 điểm', detail: 'Cần thêm bài, sản phẩm hoặc liên kết nội bộ.', level: 'critical', count: weakCluster });
   const adsKeywordCount = getImportedKeywordCount(input.googleAdsV8);
   if (adsKeywordCount) list.push({ id: 'ads-import', title: adsKeywordCount + ' keyword Keyword Planner đã import', detail: 'AI đang dùng dữ liệu Ads import thủ công để ưu tiên SEO/Ads.', level: 'medium', count: adsKeywordCount });
-  if (!input.searchConsoleV7?.overview.impressions) list.push({ id: 'gsc-import-pending', title: 'Chưa import dữ liệu Search Console', detail: 'Có thể import thủ công nếu cần phân tích query, page, CTR và position. Không dùng API ở phiên bản hiện tại.', level: 'medium' });
+  if (!input.searchConsoleV7?.overview.impressions) list.push({ id: 'gsc-import-pending', title: 'Chưa import dữ liệu Search Console', detail: 'Có thể nhập CSV/TSV/ZIP hoặc đồng bộ Query+Page bằng API để phân tích query, page, CTR và position.', level: 'medium' });
   return list;
 }
 

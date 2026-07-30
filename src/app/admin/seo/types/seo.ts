@@ -414,7 +414,7 @@ export interface SearchConsoleSearchAppearance {
 
 export interface SearchConsoleImportMeta {
   id: string;
-  source: 'search-console';
+  source: 'search-console' | 'search-console-api';
   type: 'queries' | 'pages' | 'query-page' | 'dates' | 'devices' | 'countries' | 'search-appearance' | 'manual-summary';
   dateRangeLabel: string;
   startDate?: string;
@@ -426,6 +426,14 @@ export interface SearchConsoleImportMeta {
   fileName?: string;
   zipFileName?: string;
   storeKey?: string;
+  dimensions?: string[];
+  partial?: boolean;
+  rowLimit?: number;
+  maxPages?: number;
+  pagesFetched?: number;
+  fetchedRows?: number;
+  maxPagesReached?: boolean;
+  stoppedReason?: 'completed' | 'max_pages_reached' | 'empty_response' | 'api_error';
 }
 
 export interface SearchConsoleOpportunity {

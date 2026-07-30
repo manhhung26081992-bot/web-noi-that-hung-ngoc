@@ -105,7 +105,7 @@ function SeoDashboardLowerModules({
 }: Props) {
   return (
     <div className={styles.v61Deferred}>
-      <AccordionSection id="search-console" title="Import Google thủ công và dữ liệu tổng quan" description="Search Console và Google Ads dùng dữ liệu import thủ công, không dùng API." defaultOpen>
+      <AccordionSection id="search-console" title="Dữ liệu Google và phân tích tổng quan" description="Search Console hỗ trợ CSV/TSV/ZIP và Query+Page API; Google Ads dùng dữ liệu Keyword Planner import." defaultOpen>
         <section className={styles.gridTwo}>
           <SearchConsoleV7Center key={'search-console-' + restoreVersion} keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} externalData={searchConsoleV7} onData={onSearchConsoleV7Data} />
           <GoogleAdsV8ImportCenter key={'google-ads-' + restoreVersion} keywords={dashboard.seoKeywords} clusters={dashboard.seoClusters} searchConsoleData={searchConsoleV7} externalData={googleAdsV8} onData={onGoogleAdsV8Data} />

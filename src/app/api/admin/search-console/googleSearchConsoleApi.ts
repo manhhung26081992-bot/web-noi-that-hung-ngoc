@@ -61,6 +61,30 @@ type SearchAnalyticsRow = {
 
 type QueryPageRange = '28d' | '3m' | '6m' | '12m' | '16m';
 
+export type GscQueryPageStoppedReason = 'completed' | 'max_pages_reached' | 'empty_response' | 'api_error';
+
+export type GscQueryPageSyncMeta = {
+  source: 'search-console-api';
+  type: 'query-page';
+  storeKey: string;
+  siteUrl: string;
+  dateRangeLabel: string;
+  startDate: string;
+  endDate: string;
+  importedAt: string;
+  updatedAt: string;
+  rowCount: number;
+  dimensions: string[];
+  columns: string[];
+  partial: boolean;
+  rowLimit: number;
+  maxPages: number;
+  pagesFetched: number;
+  fetchedRows: number;
+  maxPagesReached: boolean;
+  stoppedReason: GscQueryPageStoppedReason;
+};
+
 export type QueryPageSyncResponse = {
   ok: boolean;
   skipped?: boolean;
@@ -72,7 +96,16 @@ export type QueryPageSyncResponse = {
   endDate: string;
   rowCount: number;
   updatedAt: string;
-  data: SearchConsoleV7Data;
+  partial: boolean;
+  rowLimit: number;
+  maxPages: number;
+  pagesFetched: number;
+  fetchedRows: number;
+  maxPagesReached: boolean;
+  stoppedReason: GscQueryPageStoppedReason;
+  metadata: GscQueryPageSyncMeta;
+  overview: SearchConsoleV7Data['overview'];
+  topRows: SearchConsoleQuery[];
 };
 
 export async function isAdminRequest() {
@@ -351,6 +384,10 @@ function normalizeGscRows(rows: SearchAnalyticsRow[]) {
 
 async function fetchQueryPageRows(accessToken: string, siteUrl: string, startDate: string, endDate: string) {
   const allRows: SearchConsoleQuery[] = [];
+  let pagesFetched = 0;
+  let stoppedReason: GscQueryPageStoppedReason = 'completed';
+  let maxPagesReached = false;
+
   for (let pageIndex = 0; pageIndex < MAX_PAGE_COUNT; pageIndex += 1) {
     const startRow = pageIndex * DEFAULT_ROW_LIMIT;
     const endpoint = 'https://www.googleapis.com/webmasters/v3/sites/' + encodeURIComponent(siteUrl) + '/searchAnalytics/query';
@@ -371,12 +408,41 @@ async function fetchQueryPageRows(accessToken: string, siteUrl: string, startDat
       }),
     });
     const body = await response.json().catch(() => ({})) as { rows?: SearchAnalyticsRow[]; error?: { message?: string } };
-    if (!response.ok) throw new Error(body.error?.message || 'Google Search Console API trả lỗi.');
+    if (!response.ok) throw new Error(body.error?.message || 'Google Search Console API tra loi.');
+
+    pagesFetched += 1;
     const rows = normalizeGscRows(body.rows || []);
+    if (!rows.length) {
+      stoppedReason = 'empty_response';
+      break;
+    }
     allRows.push(...rows);
-    if (rows.length < DEFAULT_ROW_LIMIT) break;
+    if (rows.length < DEFAULT_ROW_LIMIT) {
+      stoppedReason = 'completed';
+      break;
+    }
+    if (pageIndex === MAX_PAGE_COUNT - 1) {
+      maxPagesReached = true;
+      stoppedReason = 'max_pages_reached';
+    }
   }
-  return allRows;
+
+  return {
+    rows: allRows,
+    rowLimit: DEFAULT_ROW_LIMIT,
+    maxPages: MAX_PAGE_COUNT,
+    pagesFetched,
+    fetchedRows: allRows.length,
+    maxPagesReached,
+    partial: maxPagesReached,
+    stoppedReason,
+  };
+}
+
+function previewRows(rows: SearchConsoleQuery[]) {
+  return [...rows]
+    .sort((a, b) => b.impressions - a.impressions || b.clicks - a.clicks || a.position - b.position)
+    .slice(0, 50);
 }
 
 function mergeByPage(rows: SearchConsoleQuery[]): SearchConsolePage[] {
@@ -446,13 +512,17 @@ function mergeImportMeta(previous: SearchConsoleImportMeta[] = [], incoming: Sea
 
 function mergeAggregate(previous: SearchConsoleV7Data | null | undefined, incoming: SearchConsoleV7Data): SearchConsoleV7Data {
   const imports = mergeImportMeta(previous?.imports, incoming.imports);
+  const previousImports = previous?.imports || [];
+  const hasManualQueries = previousImports.some((item) => item.type === 'queries');
+  const hasManualPages = previousImports.some((item) => item.type === 'pages');
+
   return {
     source: 'api',
     selectedType: 'overview',
     overview: incoming.overview,
     imports,
-    queries: incoming.queries,
-    pages: incoming.pages,
+    queries: hasManualQueries ? (previous?.queries || []).filter((row) => !row.page) : [],
+    pages: hasManualPages ? (previous?.pages || []) : [],
     devices: previous?.devices || [],
     countries: previous?.countries || [],
     trend: previous?.trend || [],
@@ -517,13 +587,20 @@ export async function getApiStatus() {
       endDate: latest.endDate,
       rowCount: latest.rowCount,
       source: 'api',
+      partial: latest.partial,
+      rowLimit: latest.rowLimit,
+      maxPages: latest.maxPages,
+      pagesFetched: latest.pagesFetched,
+      fetchedRows: latest.fetchedRows,
+      maxPagesReached: latest.maxPagesReached,
+      stoppedReason: latest.stoppedReason,
     } : null,
   };
 }
 
 export async function syncQueryPage(range: string | null | undefined, force: boolean): Promise<QueryPageSyncResponse> {
   const token = await getTokenStore();
-  if (!token?.connected) throw new Error('Chưa kết nối Search Console OAuth.');
+  if (!token?.connected) throw new Error('Chua ket noi Search Console OAuth.');
 
   const siteUrl = token.siteUrl || getConfiguredSiteUrl();
   const resolved = resolveDateRange(range);
@@ -536,10 +613,31 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
   );
   const today = new Date().toISOString().slice(0, 10);
   if (!force && existing?.updatedAt?.startsWith(today) && typed?.data) {
+    const metadata: GscQueryPageSyncMeta = {
+      source: 'search-console-api',
+      type: 'query-page',
+      storeKey: GSC_QUERY_PAGE_STORE_KEY,
+      siteUrl,
+      dateRangeLabel: resolved.dateRangeLabel,
+      startDate: resolved.startDate,
+      endDate: resolved.endDate,
+      importedAt: existing.importedAt || existing.updatedAt,
+      updatedAt: existing.updatedAt,
+      rowCount: existing.rowCount,
+      dimensions: existing.dimensions || ['query', 'page'],
+      columns: existing.columns || ['query', 'page', 'clicks', 'impressions', 'ctr', 'position'],
+      partial: Boolean(existing.partial),
+      rowLimit: Number(existing.rowLimit || DEFAULT_ROW_LIMIT),
+      maxPages: Number(existing.maxPages || MAX_PAGE_COUNT),
+      pagesFetched: Number(existing.pagesFetched || 0),
+      fetchedRows: Number(existing.fetchedRows || existing.rowCount || 0),
+      maxPagesReached: Boolean(existing.maxPagesReached),
+      stoppedReason: existing.stoppedReason || 'completed',
+    };
     return {
       ok: true,
       skipped: true,
-      message: 'Query+Page đã được đồng bộ trong hôm nay. Bấm Lấy lại dữ liệu nếu muốn ép đồng bộ.',
+      message: 'Query+Page da duoc dong bo trong hom nay. Bam Lay lai du lieu neu muon ep dong bo.',
       storeKey: GSC_QUERY_PAGE_STORE_KEY,
       siteUrl,
       dateRangeLabel: resolved.dateRangeLabel,
@@ -547,17 +645,27 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
       endDate: resolved.endDate,
       rowCount: existing.rowCount,
       updatedAt: existing.updatedAt,
-      data: typed.data,
+      partial: metadata.partial,
+      rowLimit: metadata.rowLimit,
+      maxPages: metadata.maxPages,
+      pagesFetched: metadata.pagesFetched,
+      fetchedRows: metadata.fetchedRows,
+      maxPagesReached: metadata.maxPagesReached,
+      stoppedReason: metadata.stoppedReason,
+      metadata,
+      overview: typed.data.overview,
+      topRows: previewRows(typed.data.queries || []),
     };
   }
 
   const refreshToken = decryptRefreshToken(token);
   const accessToken = await refreshAccessToken(refreshToken);
-  const rows = await fetchQueryPageRows(accessToken, siteUrl, resolved.startDate, resolved.endDate);
+  const fetchResult = await fetchQueryPageRows(accessToken, siteUrl, resolved.startDate, resolved.endDate);
+  const rows = fetchResult.rows;
   const now = new Date().toISOString();
   const meta: SearchConsoleImportMeta = {
     id: 'gsc-api-query-page-' + resolved.key + '-' + now,
-    source: 'search-console',
+    source: 'search-console-api',
     type: 'query-page',
     dateRangeLabel: resolved.dateRangeLabel,
     startDate: resolved.startDate,
@@ -566,6 +674,14 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
     updatedAt: now,
     rowCount: rows.length,
     columns: ['query', 'page', 'clicks', 'impressions', 'ctr', 'position'],
+    dimensions: ['query', 'page'],
+    partial: fetchResult.partial,
+    rowLimit: fetchResult.rowLimit,
+    maxPages: fetchResult.maxPages,
+    pagesFetched: fetchResult.pagesFetched,
+    fetchedRows: fetchResult.fetchedRows,
+    maxPagesReached: fetchResult.maxPagesReached,
+    stoppedReason: fetchResult.stoppedReason,
     fileName: 'Google Search Console API',
     storeKey: GSC_QUERY_PAGE_STORE_KEY,
   };
@@ -582,6 +698,13 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
     rowCount: rows.length,
     dimensions: ['query', 'page'],
     columns: ['query', 'page', 'clicks', 'impressions', 'ctr', 'position'],
+    partial: fetchResult.partial,
+    rowLimit: fetchResult.rowLimit,
+    maxPages: fetchResult.maxPages,
+    pagesFetched: fetchResult.pagesFetched,
+    fetchedRows: fetchResult.fetchedRows,
+    maxPagesReached: fetchResult.maxPagesReached,
+    stoppedReason: fetchResult.stoppedReason,
     data: rows,
   };
   const nextTyped = mergeTypedStore(typed || null, apiData, apiPayload, now);
@@ -590,23 +713,50 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
   const aggregateStore = await readStoreValue<unknown>(GSC_AGGREGATE_STORE_KEY);
   const previousAggregate = extractDataFromAggregateStore(aggregateStore);
   const aggregateData = mergeAggregate(previousAggregate, apiData);
+  const previousStore = (aggregateStore || {}) as {
+    rawTextByType?: Record<string, string>;
+    fileNames?: Record<string, string>;
+    rowCounts?: Record<string, number>;
+  };
+  const metadata: GscQueryPageSyncMeta = {
+    source: 'search-console-api',
+    type: 'query-page',
+    storeKey: GSC_QUERY_PAGE_STORE_KEY,
+    siteUrl,
+    dateRangeLabel: resolved.dateRangeLabel,
+    startDate: resolved.startDate,
+    endDate: resolved.endDate,
+    importedAt: now,
+    updatedAt: now,
+    rowCount: rows.length,
+    dimensions: ['query', 'page'],
+    columns: ['query', 'page', 'clicks', 'impressions', 'ctr', 'position'],
+    partial: fetchResult.partial,
+    rowLimit: fetchResult.rowLimit,
+    maxPages: fetchResult.maxPages,
+    pagesFetched: fetchResult.pagesFetched,
+    fetchedRows: fetchResult.fetchedRows,
+    maxPagesReached: fetchResult.maxPagesReached,
+    stoppedReason: fetchResult.stoppedReason,
+  };
   const nextAggregate = {
     version: 2,
     rawText: '',
     data: aggregateData,
     fileName: 'Google Search Console API',
     rowCount: rows.length,
-    rawTextByType: { 'query-page': '' },
-    fileNames: { 'query-page': 'Google Search Console API' },
-    rowCounts: { 'query-page': rows.length },
+    rawTextByType: { ...(previousStore.rawTextByType || {}), 'query-page': '' },
+    fileNames: { ...(previousStore.fileNames || {}), 'query-page': 'Google Search Console API' },
+    rowCounts: { ...(previousStore.rowCounts || {}), 'query-page': rows.length },
     imports: aggregateData.imports || [],
+    queryPageApi: metadata,
     lastUpdated: now,
   };
   await upsertStoreValue(GSC_AGGREGATE_STORE_KEY, nextAggregate);
 
   return {
     ok: true,
-    message: 'Đã đồng bộ Query+Page từ Google Search Console API.',
+    message: 'Da dong bo Query+Page tu Google Search Console API.',
     storeKey: GSC_QUERY_PAGE_STORE_KEY,
     siteUrl,
     dateRangeLabel: resolved.dateRangeLabel,
@@ -614,6 +764,15 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
     endDate: resolved.endDate,
     rowCount: rows.length,
     updatedAt: now,
-    data: aggregateData,
+    partial: fetchResult.partial,
+    rowLimit: fetchResult.rowLimit,
+    maxPages: fetchResult.maxPages,
+    pagesFetched: fetchResult.pagesFetched,
+    fetchedRows: fetchResult.fetchedRows,
+    maxPagesReached: fetchResult.maxPagesReached,
+    stoppedReason: fetchResult.stoppedReason,
+    metadata,
+    overview: apiData.overview,
+    topRows: previewRows(rows),
   };
 }

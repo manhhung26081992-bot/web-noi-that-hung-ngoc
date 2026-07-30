@@ -93,9 +93,9 @@ export function SearchConsoleCenter({ data }: { data: SearchConsoleV5Data | null
   const source = data;
   const topQueries = useMemo(() => uniqueBy(source?.topQueries || [], (item) => `${item.query || ''}-${item.page || ''}`), [source]);
   const topPages = useMemo(() => uniqueBy(source?.topPages || [], (item) => item.page || ''), [source]);
-  const fallbackMessage = 'Không dùng API ở phiên bản hiện tại. Hãy dùng mục Nhập dữ liệu Search Console để nhập dữ liệu thủ công.';
+  const fallbackMessage = 'Hãy dùng mục Nhập dữ liệu Search Console để nhập CSV/TSV/ZIP hoặc đồng bộ Query+Page bằng API khi cần.';
 
-  return <ModuleCard title="Trung tâm Search Console v5" description="Trạng thái cũ đã chuyển sang hướng import thủ công, không OAuth, không billing." action={<Badge status="pending">Import thủ công</Badge>}>
+  return <ModuleCard title="Trung tâm Search Console v5" description="Trạng thái cũ đã chuyển sang dữ liệu Search Console thật từ import hoặc Query+Page API." action={<Badge status="pending">Import/API</Badge>}>
     {!source ? <EmptyState title="Chưa import dữ liệu Search Console" detail={fallbackMessage} /> : <div className={styles.v5Stack}>
       <div className={styles.v5Warning}>{fallbackMessage}</div>
       <div className={styles.metricGridSmall}>

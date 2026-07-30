@@ -205,6 +205,54 @@ function hasCtrOpportunity(row: Pick<SearchConsoleQuery, 'impressions' | 'ctr' |
   return row.impressions >= 50 && row.ctr < 2 && row.position >= 4 && row.position <= 30;
 }
 
+const PLAN_SEARCH_CONSOLE_SCAN_LIMIT = 2000;
+const PLAN_SEARCH_CONSOLE_TASK_LIMIT = 1000;
+const PLAN_SEARCH_CONSOLE_PAGE_LIMIT = 500;
+const PLAN_GOOGLE_ADS_ROW_LIMIT = 1000;
+
+function summarizeSearchConsoleForPlan(data: SearchConsoleV7Data | null): SearchConsoleV7Data | null {
+  if (!data) return null;
+  const scannedQueries = (data.queries || []).slice(0, PLAN_SEARCH_CONSOLE_SCAN_LIMIT);
+  const priorityRows = scannedQueries
+    .filter((row) => row.impressions > 0 && (
+      (row.position >= 4 && row.position <= 30)
+      || hasCtrOpportunity(row)
+      || Boolean(row.page)
+      || businessScore(row.query)
+    ))
+    .sort((a, b) => {
+      const scoreA = (hasCtrOpportunity(a) ? 100000 : 0) + (a.position >= 4 && a.position <= 30 ? 50000 : 0) + a.impressions + a.clicks * 20;
+      const scoreB = (hasCtrOpportunity(b) ? 100000 : 0) + (b.position >= 4 && b.position <= 30 ? 50000 : 0) + b.impressions + b.clicks * 20;
+      return scoreB - scoreA;
+    });
+  const byKey = new Map<string, SearchConsoleQuery>();
+  priorityRows.forEach((row) => {
+    const key = stripAccent(row.query) + '|' + cleanPath(row.page);
+    if (!byKey.has(key)) byKey.set(key, row);
+  });
+  scannedQueries
+    .sort((a, b) => b.impressions - a.impressions || b.clicks - a.clicks || a.position - b.position)
+    .forEach((row) => {
+      if (byKey.size >= PLAN_SEARCH_CONSOLE_TASK_LIMIT) return;
+      const key = stripAccent(row.query) + '|' + cleanPath(row.page);
+      if (!byKey.has(key)) byKey.set(key, row);
+    });
+
+  return {
+    ...data,
+    queries: Array.from(byKey.values()).slice(0, PLAN_SEARCH_CONSOLE_TASK_LIMIT),
+    pages: (data.pages || []).slice(0, PLAN_SEARCH_CONSOLE_PAGE_LIMIT),
+  };
+}
+
+function summarizeGoogleAdsForPlan(data: GoogleAdsImportData | null): GoogleAdsImportData | null {
+  if (!data) return null;
+  const rows = [...(data.rows || [])]
+    .sort((a, b) => Number(b.avg_monthly_searches || 0) - Number(a.avg_monthly_searches || 0))
+    .slice(0, PLAN_GOOGLE_ADS_ROW_LIMIT);
+  return { ...data, rows };
+}
+
 function timeByTask(score: number, type: ProfessionalSeoTaskType): ProfessionalSeoTask['estimatedTime'] {
   if (type === 'Gắn URL chính cho keyword' || type === 'Thêm internal link') return '10 phút';
   if (type === 'Viết bài mới') return '60 phút';
@@ -820,29 +868,34 @@ function balancedTodayTasks(tasks: ProfessionalSeoTask[]) {
 }
 
 export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): ProfessionalSeoPlan {
-  const scKeywords = new Set((input.searchConsole?.queries || []).map((row) => stripAccent(row.query)).filter(Boolean));
-  const scTasks = buildSearchConsoleTasks(input);
-  const adsTasks = buildAdsOnlyTasks(input, scKeywords);
-  const supabaseTasks = buildSupabaseTasks(input);
-  const workLogFollowUps = buildWorkLogFollowUpTasks(input);
-  const allTasks = uniqueTasks(enrichTasksWithWorkLogs([...workLogFollowUps, ...scTasks, ...supabaseTasks, ...adsTasks], input));
+  const planInput: BuildProfessionalSeoPlanInput = {
+    ...input,
+    searchConsole: summarizeSearchConsoleForPlan(input.searchConsole),
+    googleAds: summarizeGoogleAdsForPlan(input.googleAds),
+  };
+  const scKeywords = new Set((planInput.searchConsole?.queries || []).map((row) => stripAccent(row.query)).filter(Boolean));
+  const scTasks = buildSearchConsoleTasks(planInput);
+  const adsTasks = buildAdsOnlyTasks(planInput, scKeywords);
+  const supabaseTasks = buildSupabaseTasks(planInput);
+  const workLogFollowUps = buildWorkLogFollowUpTasks(planInput);
+  const allTasks = uniqueTasks(enrichTasksWithWorkLogs([...workLogFollowUps, ...scTasks, ...supabaseTasks, ...adsTasks], planInput));
   const today = balancedTodayTasks(allTasks);
   const week = allTasks.filter((task) => !today.some((item) => item.id === task.id)).slice(0, 7);
   const watch = uniqueTasks([
     ...allTasks.filter((task) => task.priority !== 'Cao' || task.type === 'Theo dõi cơ hội SEO'),
     ...adsTasks,
   ]).slice(0, 5);
-  const scKeywordCount = new Set((input.searchConsole?.queries || []).map((row) => stripAccent(row.query)).filter(Boolean)).size;
+  const scKeywordCount = new Set((planInput.searchConsole?.queries || []).map((row) => stripAccent(row.query)).filter(Boolean)).size;
   const scUrlCount = new Set([
-    ...(input.searchConsole?.pages || []).map((row) => cleanPath(row.page)),
-    ...(input.searchConsole?.queries || []).map((row) => cleanPath(row.page)),
+    ...(planInput.searchConsole?.pages || []).map((row) => cleanPath(row.page)),
+    ...(planInput.searchConsole?.queries || []).map((row) => cleanPath(row.page)),
   ].filter(Boolean)).size;
   const latestByType = latestSearchConsoleImports(input.searchConsole);
-  const scDateRanges = Array.from(new Set((input.searchConsole?.imports || []).map((item) => item.dateRangeLabel).filter(Boolean)));
-  const scImportTypes = Array.from(new Set((input.searchConsole?.imports || []).map((item) => item.type).filter(Boolean)));
+  const scDateRanges = Array.from(new Set((planInput.searchConsole?.imports || []).map((item) => item.dateRangeLabel).filter(Boolean)));
+  const scImportTypes = Array.from(new Set((planInput.searchConsole?.imports || []).map((item) => item.type).filter(Boolean)));
   const workLogStats = summarizeWorkLogs(input.workLogs || []);
   const hasQueryPage = scImportTypes.includes('query-page');
-  const hasUsefulSearchConsole = Boolean(input.searchConsole?.overview.connected && (scKeywordCount || scUrlCount));
+  const hasUsefulSearchConsole = Boolean(planInput.searchConsole?.overview.connected && (scKeywordCount || scUrlCount));
   const onlyShortSearchConsole = hasUsefulSearchConsole
     && scDateRanges.length > 0
     && scDateRanges.every(isShortSearchConsoleRange)
@@ -853,37 +906,37 @@ export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): 
       ? 'Queries mới nhất'
       : scUrlCount
         ? 'Pages mới nhất'
-        : input.searchConsole?.trend?.length
+        : planInput.searchConsole?.trend?.length
           ? 'Dates trend'
           : 'Chưa có GSC chi tiết';
   const alerts: string[] = [];
-  if (!input.searchConsole?.overview.connected) alerts.push('Chưa có dữ liệu Search Console mới, AI chỉ dùng Supabase và Keyword Planner để gợi ý tạm.');
-  if (input.searchConsole?.overview.connected && !scKeywordCount) alerts.push('Search Console đã import nhưng chưa thấy query chi tiết.');
+  if (!planInput.searchConsole?.overview.connected) alerts.push('Chưa có dữ liệu Search Console mới, AI chỉ dùng Supabase và Keyword Planner để gợi ý tạm.');
+  if (planInput.searchConsole?.overview.connected && !scKeywordCount) alerts.push('Search Console đã import nhưng chưa thấy query chi tiết.');
   if (onlyShortSearchConsole) alerts.push('Search Console hiện chỉ có dữ liệu ngắn hạn. Nên import thêm 3/6/12/16 tháng để AI đọc xu hướng và ưu tiên bền hơn.');
-  if (input.searchConsole?.overview.connected && !hasQueryPage) alerts.push('Nên import Query+Page để chọn URL chính chính xác hơn. Trước khi có Query+Page, AI chỉ cho tối đa 2 việc gán URL chính trong hôm nay.');
-  const weakDevice = (input.searchConsole?.devices || [])
-    .filter((item) => item.impressions >= 50 && item.ctr > 0 && item.ctr < Math.max(1, (input.searchConsole?.overview.ctr || 0) * 0.75))
+  if (planInput.searchConsole?.overview.connected && !hasQueryPage) alerts.push('Nên import Query+Page để chọn URL chính chính xác hơn. Trước khi có Query+Page, AI chỉ cho tối đa 2 việc gán URL chính trong hôm nay.');
+  const weakDevice = (planInput.searchConsole?.devices || [])
+    .filter((item) => item.impressions >= 50 && item.ctr > 0 && item.ctr < Math.max(1, (planInput.searchConsole?.overview.ctr || 0) * 0.75))
     .sort((a, b) => b.impressions - a.impressions)[0];
   if (weakDevice) alerts.push(`Thiết bị ${weakDevice.device} có ${weakDevice.impressions} impression nhưng CTR thấp (${weakDevice.ctr.toFixed(2)}%). Nên kiểm tra title/meta và trải nghiệm mobile/desktop theo thiết bị này.`);
-  const topCountry = [...(input.searchConsole?.countries || [])].sort((a, b) => b.impressions - a.impressions)[0];
+  const topCountry = [...(planInput.searchConsole?.countries || [])].sort((a, b) => b.impressions - a.impressions)[0];
   if (topCountry && !includesAny(topCountry.country, ['viet nam', 'vietnam', 'việt nam'])) {
     alerts.push(`Quốc gia có impression cao nhất là ${topCountry.country}. Nên kiểm tra lại target thị trường nếu khách chính vẫn là Việt Nam.`);
   }
-  if (!input.googleAds?.summary.keywordCount) alerts.push('Chưa có dữ liệu Keyword Planner thật.');
+  if (!planInput.googleAds?.summary.keywordCount) alerts.push('Chưa có dữ liệu Keyword Planner thật.');
   if (workLogStats.needFix) alerts.push(`Nhật ký SEO có ${workLogStats.needFix} việc cần sửa tiếp, AI ưu tiên xử lý trước khi tạo việc mới.`);
   if (workLogStats.dueToday || workLogStats.overdue) alerts.push(`Nhật ký SEO có ${workLogStats.dueToday} việc đến hạn hôm nay và ${workLogStats.overdue} việc quá hạn kiểm tra.`);
 
   return {
     sourceSummary: {
-      searchConsoleUpdatedAt: input.searchConsole?.overview.lastUpdated || null,
+      searchConsoleUpdatedAt: planInput.searchConsole?.overview.lastUpdated || null,
       searchConsoleKeywordCount: scKeywordCount,
       searchConsoleUrlCount: scUrlCount,
       searchConsoleDateRanges: scDateRanges,
       searchConsoleImportTypes: scImportTypes,
       searchConsoleLatestByType: latestByType,
       activeSearchConsoleSource,
-      googleAdsUpdatedAt: input.googleAds?.lastUpdated || input.googleAds?.summary.lastUpdated || null,
-      googleAdsKeywordCount: input.googleAds?.summary.keywordCount || 0,
+      googleAdsUpdatedAt: planInput.googleAds?.lastUpdated || planInput.googleAds?.summary.lastUpdated || null,
+      googleAdsKeywordCount: planInput.googleAds?.summary.keywordCount || 0,
       workLogTotal: workLogStats.total,
       workLogWatching: workLogStats.watching,
       workLogNeedFix: workLogStats.needFix,
@@ -892,15 +945,15 @@ export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): 
       workLogOverdue: workLogStats.overdue,
       usingSources: [
         hasUsefulSearchConsole ? `Search Console ${activeSearchConsoleSource}` : '',
-        input.searchConsole?.trend?.length ? 'Search Console Dates trend' : '',
-        input.searchConsole?.devices?.length ? 'Search Console Devices' : '',
-        input.searchConsole?.countries?.length ? 'Search Console Countries' : '',
-        input.googleAds?.summary.keywordCount ? 'Keyword Planner import' : '',
+        planInput.searchConsole?.trend?.length ? 'Search Console Dates trend' : '',
+        planInput.searchConsole?.devices?.length ? 'Search Console Devices' : '',
+        planInput.searchConsole?.countries?.length ? 'Search Console Countries' : '',
+        planInput.googleAds?.summary.keywordCount ? 'Keyword Planner import' : '',
         input.workLogs?.length ? 'Nhật ký SEO v11' : '',
         'Supabase products/blog_posts/categories/seo_*',
         'seo_dashboard_store',
       ].filter(Boolean).join(' + '),
-      warning: !input.searchConsole?.overview.connected
+      warning: !planInput.searchConsole?.overview.connected
         ? 'Chưa có dữ liệu Search Console mới'
         : onlyShortSearchConsole
           ? 'Search Console đang chỉ có range ngắn'

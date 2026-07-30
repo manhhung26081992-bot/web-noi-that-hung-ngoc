@@ -131,17 +131,29 @@ type GscSummaryNumbers = {
   source: 'pages' | 'queries' | 'none';
 };
 
+type GscQueryPageStoppedReason = 'completed' | 'max_pages_reached' | 'empty_response' | 'api_error';
+
+type GscApiQueryPageMeta = {
+  source: 'api';
+  updatedAt: string;
+  importedAt?: string;
+  dateRangeLabel: string;
+  startDate?: string;
+  endDate?: string;
+  rowCount: number;
+  partial?: boolean;
+  rowLimit?: number;
+  maxPages?: number;
+  pagesFetched?: number;
+  fetchedRows?: number;
+  maxPagesReached?: boolean;
+  stoppedReason?: GscQueryPageStoppedReason;
+};
+
 type GscApiStatus = {
   connected: boolean;
   siteUrl: string;
-  latestQueryPageSync?: {
-    updatedAt: string;
-    dateRangeLabel: string;
-    startDate?: string;
-    endDate?: string;
-    rowCount: number;
-    source: 'api';
-  } | null;
+  latestQueryPageSync?: GscApiQueryPageMeta | null;
 };
 
 type GscApiSyncResponse = {
@@ -155,7 +167,15 @@ type GscApiSyncResponse = {
   endDate: string;
   rowCount: number;
   updatedAt: string;
-  data: SearchConsoleV7Data;
+  partial: boolean;
+  rowLimit: number;
+  maxPages: number;
+  pagesFetched: number;
+  fetchedRows: number;
+  maxPagesReached: boolean;
+  stoppedReason: GscQueryPageStoppedReason;
+  overview?: SearchConsoleV7Data['overview'];
+  topRows?: SearchConsoleQuery[];
 };
 
 
@@ -1041,37 +1061,82 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
   };
 
   const applyApiQueryPageData = (result: GscApiSyncResponse) => {
-    const nextData = result.data;
-    const latestMeta = latestImport(nextData.imports);
     const now = result.updatedAt || new Date().toISOString();
+    const apiMeta: SearchConsoleImportMeta = {
+      id: 'gsc-api-query-page-' + result.dateRangeLabel + '-' + now,
+      source: 'search-console-api',
+      type: 'query-page',
+      dateRangeLabel: result.dateRangeLabel,
+      startDate: result.startDate,
+      endDate: result.endDate,
+      importedAt: now,
+      updatedAt: now,
+      rowCount: result.rowCount,
+      columns: ['query', 'page', 'clicks', 'impressions', 'ctr', 'position'],
+      dimensions: ['query', 'page'],
+      partial: result.partial,
+      rowLimit: result.rowLimit,
+      maxPages: result.maxPages,
+      pagesFetched: result.pagesFetched,
+      fetchedRows: result.fetchedRows,
+      maxPagesReached: result.maxPagesReached,
+      stoppedReason: result.stoppedReason,
+      fileName: 'Google Search Console API',
+      storeKey: SEARCH_CONSOLE_STORE_KEYS['query-page'],
+    };
+    const nextData: SearchConsoleV7Data = {
+      source: 'api',
+      selectedType: 'overview',
+      overview: result.overview || data?.overview || {
+        connected: true,
+        reason: 'api_sync',
+        message: 'Đã đồng bộ Query+Page từ Google Search Console API.',
+        siteUrl: result.siteUrl,
+        range: result.dateRangeLabel,
+        clicks: 0,
+        impressions: 0,
+        ctr: 0,
+        position: 0,
+        lastUpdated: now,
+      },
+      imports: mergeImportMeta(data?.imports, [apiMeta]),
+      queries: data?.queries || [],
+      pages: data?.pages || [],
+      devices: data?.devices || [],
+      countries: data?.countries || [],
+      trend: data?.trend || [],
+      searchAppearances: data?.searchAppearances || [],
+      opportunities: data?.opportunities || [],
+    };
+
     setData(nextData);
     setRawText('');
     setFileName('Google Search Console API');
     setRowCount(result.rowCount);
-    setDateRangeLabel(latestMeta?.dateRangeLabel || result.dateRangeLabel);
+    setDateRangeLabel(result.dateRangeLabel);
     setRawTextByType((current) => ({ ...current, 'query-page': '' }));
     setFileNames((current) => ({ ...current, 'query-page': 'Google Search Console API' }));
     setRowCounts((current) => ({ ...current, 'query-page': result.rowCount }));
-    setApiStatus({ connected: true, siteUrl: result.siteUrl, latestQueryPageSync: { updatedAt: now, dateRangeLabel: result.dateRangeLabel, startDate: result.startDate, endDate: result.endDate, rowCount: result.rowCount, source: 'api' } });
+    setApiStatus({
+      connected: true,
+      siteUrl: result.siteUrl,
+      latestQueryPageSync: {
+        updatedAt: now,
+        dateRangeLabel: result.dateRangeLabel,
+        startDate: result.startDate,
+        endDate: result.endDate,
+        rowCount: result.rowCount,
+        source: 'api',
+        partial: result.partial,
+        rowLimit: result.rowLimit,
+        maxPages: result.maxPages,
+        pagesFetched: result.pagesFetched,
+        fetchedRows: result.fetchedRows,
+        maxPagesReached: result.maxPagesReached,
+        stoppedReason: result.stoppedReason,
+      },
+    });
     onData?.(nextData);
-
-    const aggregateRaw = JSON.stringify({
-      version: 2,
-      rawText: '',
-      data: nextData,
-      fileName: 'Google Search Console API',
-      rowCount: result.rowCount,
-      rawTextByType: { ...rawTextByType, 'query-page': '' },
-      fileNames: { ...fileNames, 'query-page': 'Google Search Console API' },
-      rowCounts: { ...rowCounts, 'query-page': result.rowCount },
-      imports: nextData.imports || [],
-      lastUpdated: now,
-    } satisfies SearchConsoleImportStore);
-    try {
-      localStorage.setItem(STORAGE_KEY, aggregateRaw);
-    } catch {
-      setApiMessage('Đã lưu Supabase store; cache trình duyệt không lưu đủ vì dữ liệu Query+Page lớn.');
-    }
   };
 
   const syncQueryPageFromApi = async (force = false) => {
@@ -1085,7 +1150,7 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
         body: JSON.stringify({ range: apiRange, force }),
       });
       const body = await response.json().catch(() => ({})) as Partial<GscApiSyncResponse> & { message?: string; detail?: string };
-      if (!response.ok || !body.data) throw new Error(body.detail || body.message || 'Không đồng bộ được Query+Page từ API.');
+      if (!response.ok || !body.ok) throw new Error(body.detail || body.message || 'Không đồng bộ được Query+Page từ API.');
       applyApiQueryPageData(body as GscApiSyncResponse);
       setApiMessage(body.message || 'Đã đồng bộ Query+Page từ API.');
     } catch (error) {
@@ -1356,11 +1421,7 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
           </div>
           <p className={styles.fileImportMeta}>Chọn 1 CSV/TSV, nhiều CSV/TSV hoặc 1 ZIP. Dashboard chỉ parse khi bạn chọn file import.</p>
           <div className={styles.scV7Status}>
-            API: {apiStatus?.connected ? 'Đã kết nối Search Console' : 'Chưa kết nối Search Console'}{apiStatus?.siteUrl ? ' - ' + apiStatus.siteUrl : ''}{apiStatus?.latestQueryPageSync ? ' - Query+Page API: ' + formatNumber(apiStatus.latestQueryPageSync.rowCount) + ' dòng, ' + new Date(apiStatus.latestQueryPageSync.updatedAt).toLocaleString('vi-VN') : ''}
-          </div>
-          {apiMessage ? <div className={styles.scV7Status}>{apiMessage}</div> : null}
-          <div className={styles.scV7Status}>
-            API: {apiStatus?.connected ? 'Đã kết nối Search Console' : 'Chưa kết nối Search Console'}{apiStatus?.siteUrl ? ' - ' + apiStatus.siteUrl : ''}{apiStatus?.latestQueryPageSync ? ' - Query+Page API: ' + formatNumber(apiStatus.latestQueryPageSync.rowCount) + ' dòng, ' + new Date(apiStatus.latestQueryPageSync.updatedAt).toLocaleString('vi-VN') : ''}
+            API: {apiStatus?.connected ? 'Đã kết nối Search Console' : 'Chưa kết nối Search Console'}{apiStatus?.siteUrl ? ' - ' + apiStatus.siteUrl : ''}{apiStatus?.latestQueryPageSync ? ' - Query+Page API: ' + formatNumber(apiStatus.latestQueryPageSync.rowCount) + ' dòng, ' + (apiStatus.latestQueryPageSync.partial ? 'partial' : 'full') + ', ' + (apiStatus.latestQueryPageSync.stoppedReason || 'completed') + ', ' + new Date(apiStatus.latestQueryPageSync.updatedAt).toLocaleString('vi-VN') : ''}
           </div>
           {apiMessage ? <div className={styles.scV7Status}>{apiMessage}</div> : null}
           <div className={styles.importCompactTypes}>

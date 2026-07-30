@@ -465,6 +465,17 @@ export interface SearchConsoleV7Data {
 }
 
 
+export interface SearchConsoleManualSummary {
+  range: string;
+  clicks: number | null;
+  impressions: number | null;
+  ctr: number | null;
+  position: number | null;
+  checkedAt: string;
+  note: string;
+  updatedAt: string;
+}
+
 export interface IndexSummaryManual {
   indexedUrls: number | null;
   notIndexedUrls: number | null;

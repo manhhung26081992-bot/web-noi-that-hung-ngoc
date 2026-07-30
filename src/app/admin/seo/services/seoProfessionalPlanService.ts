@@ -2,6 +2,7 @@ import type {
   GoogleAdsImportData,
   InternalLinkSuggestion,
   ProductSeoItem,
+  SearchConsoleManualSummary,
   SearchConsoleQuery,
   SearchConsoleV7Data,
   SeoBlogQualityItem,
@@ -46,6 +47,7 @@ export interface ProfessionalSeoTask {
   latestHistory?: string;
   shouldRedo: 'Có' | 'Không';
   historyReason: string;
+  sourceSignal: string;
 }
 
 export interface ProfessionalSeoPlan {
@@ -57,6 +59,15 @@ export interface ProfessionalSeoPlan {
     searchConsoleImportTypes: string[];
     searchConsoleLatestByType: Array<{ type: string; dateRangeLabel: string; updatedAt: string; rowCount: number }>;
     activeSearchConsoleSource: string;
+    performanceOverviewSource: string;
+    performanceClicks: number | null;
+    performanceImpressions: number | null;
+    performanceCtr: number | null;
+    performancePosition: number | null;
+    performanceUpdatedAt: string | null;
+    manualGscSummary: { hasData: boolean; range: string; clicks: number | null; impressions: number | null; ctr: number | null; position: number | null; updatedAt: string | null };
+    apiQueryPageSummary: { hasData: boolean; rowCount: number; updatedAt: string | null };
+    csvSummary: { hasData: boolean; source: string; clicks: number; impressions: number; ctr: number; position: number };
     googleAdsUpdatedAt: string | null;
     googleAdsKeywordCount: number;
     workLogTotal: number;
@@ -84,6 +95,7 @@ export interface BuildProfessionalSeoPlanInput {
   tasks: TodayTask[];
   internalLinks: InternalLinkSuggestion[];
   workLogs?: SeoWorkLogItem[];
+  manualSearchConsoleSummary?: SearchConsoleManualSummary | null;
 }
 
 const BUSINESS_GROUPS = [
@@ -280,6 +292,7 @@ function taskCopyText(task: Omit<ProfessionalSeoTask, 'copyText'>) {
     `Hành động: ${task.action}`,
     `Kết quả kỳ vọng: ${task.expectedResult}`,
     `Index lại GSC: ${task.reindex}`,
+    `Nguồn tín hiệu: ${task.sourceSignal}`,
     `Nguồn: ${task.source}`,
     `Lịch sử: ${task.historyStatus}`,
     task.latestHistory ? `Nhật ký gần nhất: ${task.latestHistory}` : '',
@@ -289,8 +302,8 @@ function taskCopyText(task: Omit<ProfessionalSeoTask, 'copyText'>) {
   ].filter(Boolean).join('\n');
 }
 
-type ProfessionalSeoTaskDraft = Omit<ProfessionalSeoTask, 'copyText' | 'historyStatus' | 'latestHistory' | 'shouldRedo' | 'historyReason'>
-  & Partial<Pick<ProfessionalSeoTask, 'historyStatus' | 'latestHistory' | 'shouldRedo' | 'historyReason'>>;
+type ProfessionalSeoTaskDraft = Omit<ProfessionalSeoTask, 'copyText' | 'historyStatus' | 'latestHistory' | 'shouldRedo' | 'historyReason' | 'sourceSignal'>
+  & Partial<Pick<ProfessionalSeoTask, 'historyStatus' | 'latestHistory' | 'shouldRedo' | 'historyReason' | 'sourceSignal'>>;
 
 function buildTask(task: ProfessionalSeoTaskDraft): ProfessionalSeoTask {
   const enriched = {
@@ -299,6 +312,7 @@ function buildTask(task: ProfessionalSeoTaskDraft): ProfessionalSeoTask {
     latestHistory: task.latestHistory,
     shouldRedo: task.shouldRedo || 'Có',
     historyReason: task.historyReason || 'Chưa thấy nhật ký SEO v11 trùng URL/keyword.',
+    sourceSignal: task.sourceSignal || 'Tổng quan: chưa có dữ liệu GSC · Chi tiết: Supabase hiện có',
   } satisfies Omit<ProfessionalSeoTask, 'copyText'>;
   return { ...enriched, copyText: taskCopyText(enriched) };
 }
@@ -450,6 +464,74 @@ function importTimestamp(value: { updatedAt?: string; importedAt?: string }) {
   return String(value.updatedAt || value.importedAt || '');
 }
 
+function csvOverviewSummary(data: SearchConsoleV7Data | null) {
+  if (!data) return { hasData: false, source: 'chưa có', clicks: 0, impressions: 0, ctr: 0, position: 0 };
+  const rows = data.pages.length ? data.pages : data.queries;
+  const source = data.pages.length ? 'Pages.csv' : data.queries.length ? 'Queries.csv' : 'chưa có';
+  const clicks = rows.reduce((sum, row) => sum + row.clicks, 0);
+  const impressions = rows.reduce((sum, row) => sum + row.impressions, 0);
+  const positionBase = rows.reduce((sum, row) => sum + Math.max(row.impressions, 1), 0);
+  const weightedPosition = rows.reduce((sum, row) => sum + row.position * Math.max(row.impressions, 1), 0);
+  return {
+    hasData: Boolean(rows.length),
+    source,
+    clicks,
+    impressions,
+    ctr: impressions ? Number(((clicks / impressions) * 100).toFixed(2)) : 0,
+    position: positionBase ? Number((weightedPosition / positionBase).toFixed(1)) : 0,
+  };
+}
+
+function apiQueryPageMeta(data: SearchConsoleV7Data | null) {
+  return (data?.imports || [])
+    .filter((item) => item.type === 'query-page' && item.source === 'search-console-api')
+    .sort((a, b) => importTimestamp(b).localeCompare(importTimestamp(a)))[0];
+}
+
+function choosePerformanceOverview(input: BuildProfessionalSeoPlanInput, data: SearchConsoleV7Data | null) {
+  const apiMeta = apiQueryPageMeta(data);
+  const manual = input.manualSearchConsoleSummary || null;
+  const csv = csvOverviewSummary(data);
+  if (apiMeta && data?.overview) {
+    return { source: 'API overview', clicks: data.overview.clicks, impressions: data.overview.impressions, ctr: data.overview.ctr, position: data.overview.position, updatedAt: data.overview.lastUpdated || apiMeta.updatedAt || apiMeta.importedAt || null, csv, apiMeta };
+  }
+  if (manual && (manual.clicks !== null || manual.impressions !== null || manual.ctr !== null || manual.position !== null)) {
+    return { source: 'GSC nhập tay', clicks: manual.clicks, impressions: manual.impressions, ctr: manual.ctr, position: manual.position, updatedAt: manual.updatedAt || manual.checkedAt || null, csv, apiMeta };
+  }
+  if (csv.hasData) return { source: 'CSV summary', clicks: csv.clicks, impressions: csv.impressions, ctr: csv.ctr, position: csv.position, updatedAt: data?.overview.lastUpdated || null, csv, apiMeta };
+  return { source: 'chưa có dữ liệu tổng quan', clicks: null, impressions: null, ctr: null, position: null, updatedAt: null, csv, apiMeta };
+}
+
+function detailSourceLabel(data: SearchConsoleV7Data | null, googleAds: GoogleAdsImportData | null) {
+  const hasApiQueryPage = Boolean(apiQueryPageMeta(data));
+  const hasQueryPage = (data?.imports || []).some((item) => item.type === 'query-page');
+  if (hasApiQueryPage) return 'Chi tiết: Search Console API Query+Page';
+  if (hasQueryPage) return 'Chi tiết: Search Console CSV Query+Page';
+  if (data?.queries.length || data?.pages.length) return 'Chi tiết: Search Console CSV';
+  if (googleAds?.summary.keywordCount) return 'Thị trường: Google Ads Keyword Planner';
+  return 'Chi tiết: Supabase products/blog/work log';
+}
+
+function sourceSignal(input: BuildProfessionalSeoPlanInput) {
+  const overview = choosePerformanceOverview(input, input.searchConsole);
+  const overviewLabel = overview.source === 'GSC nhập tay'
+    ? `Tổng quan: GSC nhập tay (${overview.clicks ?? '-'} click, ${overview.impressions ?? '-'} impression, CTR ${overview.ctr ?? '-'}%, position ${overview.position ?? '-'})`
+    : overview.source === 'API overview'
+      ? `Tổng quan: API overview (${overview.clicks ?? '-'} click, ${overview.impressions ?? '-'} impression, CTR ${overview.ctr ?? '-'}%, position ${overview.position ?? '-'})`
+      : overview.source === 'CSV summary'
+        ? `Tổng quan: CSV summary ${overview.csv.source}`
+        : 'Tổng quan: chưa có dữ liệu GSC';
+  return [overviewLabel, detailSourceLabel(input.searchConsole, input.googleAds), input.workLogs?.length ? 'Lịch sử: Nhật ký SEO v11' : 'Lịch sử: chưa có nhật ký'].join(' · ');
+}
+
+function overviewContextText(input: BuildProfessionalSeoPlanInput) {
+  const overview = choosePerformanceOverview(input, input.searchConsole);
+  if (overview.source === 'GSC nhập tay') return `Tổng quan GSC nhập tay đang là ${overview.clicks ?? '-'} click, ${overview.impressions ?? '-'} impression, CTR ${overview.ctr ?? '-'}%, position ${overview.position ?? '-'}; AI không lấy click 0 từ Pages.csv làm tổng toàn site. `;
+  if (overview.source === 'API overview') return `Tổng quan API đang là ${overview.clicks ?? '-'} click, ${overview.impressions ?? '-'} impression, CTR ${overview.ctr ?? '-'}%, position ${overview.position ?? '-'}. `;
+  if (overview.source === 'CSV summary') return `Tổng quan tạm từ ${overview.csv.source}; nếu đây là Pages.csv thì chỉ xem là dữ liệu chi tiết theo URL. `;
+  return '';
+}
+
 function latestSearchConsoleImports(data: SearchConsoleV7Data | null) {
   const map = new Map<string, { type: string; dateRangeLabel: string; updatedAt: string; rowCount: number }>();
   (data?.imports || []).forEach((item) => {
@@ -593,6 +675,7 @@ function buildWorkLogFollowUpTasks(input: BuildProfessionalSeoPlanInput) {
         url: cleanPath(log.url),
         keyword,
         secondaryKeywords: [],
+        sourceSignal: sourceSignal(input),
         reason: signal
           ? `Nhật ký ${log.date}: ${log.type}, trạng thái ${log.status}.${keywordReason} Search Console mới: ${signal.impressions} impression, CTR ${signal.ctr.toFixed(2)}%, vị trí ${signal.position.toFixed(1)}.`
           : `Nhật ký ${log.date}: ${log.type}, trạng thái ${log.status}.${keywordReason} ${log.nextCheckDate ? 'Ngày kiểm tra lại: ' + log.nextCheckDate + '. ' : ''}Chưa thấy tín hiệu Search Console mới cho URL/keyword này.`,
@@ -630,6 +713,8 @@ function summarizeWorkLogs(logs: SeoWorkLogItem[]) {
 function buildSearchConsoleTasks(input: BuildProfessionalSeoPlanInput) {
   const data = input.searchConsole;
   if (!data?.queries.length && !data?.pages.length) return [];
+  const taskSourceSignal = sourceSignal(input);
+  const overviewContext = overviewContextText(input);
   const duplicateMap = duplicateQueries(data.queries);
   const hasQueryPage = (data.imports || []).some((item) => item.type === 'query-page');
   const tasks: ProfessionalSeoTask[] = [];
@@ -648,7 +733,8 @@ function buildSearchConsoleTasks(input: BuildProfessionalSeoPlanInput) {
       url: cleanPath(main.page) || fallbackUrl(main.query),
       keyword: main.query,
       secondaryKeywords: rows.map((row) => row.query).filter((value, index, arr) => arr.indexOf(value) === index).slice(1, 4),
-      reason: `Search Console cho thấy cùng query đang xuất hiện ở ${uniquePages.length} URL. URL có tín hiệu tốt nhất hiện là ${cleanPath(main.page)} với ${main.impressions} impression, ${main.clicks} click, vị trí ${main.position.toFixed(1)} (${opportunity.label}).`,
+      sourceSignal: taskSourceSignal,
+      reason: overviewContext + `Search Console cho thấy cùng query đang xuất hiện ở ${uniquePages.length} URL. URL có tín hiệu tốt nhất hiện là ${cleanPath(main.page)} với ${main.impressions} impression, ${main.clicks} click, vị trí ${main.position.toFixed(1)} (${opportunity.label}).`,
       priority: priority(score),
       score,
       estimatedTime: timeByTask(score, 'Kiểm tra trùng từ khóa'),
@@ -735,7 +821,8 @@ function buildSearchConsoleTasks(input: BuildProfessionalSeoPlanInput) {
       url,
       keyword: row.query,
       secondaryKeywords: data.queries.filter((item) => cleanPath(item.page) === url && item.query !== row.query).map((item) => item.query).slice(0, 3),
-      reason: `Search Console: ${row.impressions} impression, ${row.clicks} click, CTR ${row.ctr.toFixed(2)}%, vị trí ${row.position.toFixed(1)} (${opportunity.label}). ${ctrLow ? 'CTR thấp và vị trí đang đủ gần để tối ưu title/meta. ' : rawCtrLow && farPosition ? 'CTR thấp chưa phải vấn đề chính vì vị trí còn trên 50. ' : ''}${nearTop ? 'Đang ở vùng 10-30 nên ưu tiên internal link/FAQ/nội dung. ' : ''}${missingUrl && !hasQueryPage ? 'Chưa có Query+Page nên chỉ gán URL chính có kiểm soát và cần import thêm để xác nhận. ' : ''}${missingInternalLink && !farPosition ? 'Chưa thấy internal link phù hợp trong gợi ý hiện có. ' : ''}`,
+      sourceSignal: taskSourceSignal,
+      reason: overviewContext + `Search Console: ${row.impressions} impression, ${row.clicks} click, CTR ${row.ctr.toFixed(2)}%, vị trí ${row.position.toFixed(1)} (${opportunity.label}). ${ctrLow ? 'CTR thấp và vị trí đang đủ gần để tối ưu title/meta. ' : rawCtrLow && farPosition ? 'CTR thấp chưa phải vấn đề chính vì vị trí còn trên 50. ' : ''}${nearTop ? 'Đang ở vùng 10-30 nên ưu tiên internal link/FAQ/nội dung. ' : ''}${missingUrl && !hasQueryPage ? 'Chưa có Query+Page nên chỉ gán URL chính có kiểm soát và cần import thêm để xác nhận. ' : ''}${missingInternalLink && !farPosition ? 'Chưa thấy internal link phù hợp trong gợi ý hiện có. ' : ''}`,
       priority: priority(score),
       score,
       estimatedTime: timeByTask(score, type),
@@ -766,6 +853,7 @@ function buildAdsOnlyTasks(input: BuildProfessionalSeoPlanInput, existingKeyword
         url,
         keyword: row.keyword,
         secondaryKeywords: [],
+        sourceSignal: sourceSignal(input),
         reason: `Keyword Planner có volume ${volume || 'chưa rõ'}, cạnh tranh ${row.competition || 'chưa rõ'}, nhưng chưa thấy impression trong Search Console import mới nhất.`,
         priority: priority(score),
         score,
@@ -789,6 +877,7 @@ function buildSupabaseTasks(input: BuildProfessionalSeoPlanInput) {
       url: product.slug ? `/san-pham/${product.slug}/` : '',
       keyword: product.name,
       secondaryKeywords: [product.category || '', product.parent_slug || ''].filter(Boolean),
+      sourceSignal: sourceSignal(input),
       reason: `Supabase cho thấy sản phẩm còn thiếu: ${product.issues.slice(0, 3).join(', ') || 'cần rà soát nội dung'}.`,
       priority: priority(score),
       score,
@@ -809,6 +898,7 @@ function buildSupabaseTasks(input: BuildProfessionalSeoPlanInput) {
       url: blog.slug ? `/tin-tuc/${blog.slug}/` : '',
       keyword: blog.title,
       secondaryKeywords: [],
+      sourceSignal: sourceSignal(input),
       reason: `Bài viết đạt ${blog.score}/100, còn thiếu: ${blog.issues.slice(0, 3).join(', ') || 'cần rà soát'}.`,
       priority: priority(score),
       score,
@@ -873,6 +963,7 @@ export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): 
     searchConsole: summarizeSearchConsoleForPlan(input.searchConsole),
     googleAds: summarizeGoogleAdsForPlan(input.googleAds),
   };
+  const performanceOverview = choosePerformanceOverview(input, planInput.searchConsole);
   const scKeywords = new Set((planInput.searchConsole?.queries || []).map((row) => stripAccent(row.query)).filter(Boolean));
   const scTasks = buildSearchConsoleTasks(planInput);
   const adsTasks = buildAdsOnlyTasks(planInput, scKeywords);
@@ -913,6 +1004,8 @@ export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): 
   if (!planInput.searchConsole?.overview.connected) alerts.push('Chưa có dữ liệu Search Console mới, AI chỉ dùng Supabase và Keyword Planner để gợi ý tạm.');
   if (planInput.searchConsole?.overview.connected && !scKeywordCount) alerts.push('Search Console đã import nhưng chưa thấy query chi tiết.');
   if (onlyShortSearchConsole) alerts.push('Search Console hiện chỉ có dữ liệu ngắn hạn. Nên import thêm 3/6/12/16 tháng để AI đọc xu hướng và ưu tiên bền hơn.');
+  if (performanceOverview.source === 'GSC nhập tay' && Number(performanceOverview.impressions || 0) > 0 && Number(performanceOverview.ctr || 0) < 1.5) alerts.push('Tổng quan GSC nhập tay cho thấy impression có nhưng CTR thấp; AI ưu tiên sửa title/meta, FAQ và rich content trên URL có tín hiệu chi tiết.');
+  if (performanceOverview.source === 'GSC nhập tay' && Number(performanceOverview.position || 0) > 30) alerts.push('Tổng quan GSC nhập tay cho thấy position trung bình còn yếu; AI ưu tiên internal link, nội dung hỗ trợ và cụm danh mục.');
   if (planInput.searchConsole?.overview.connected && !hasQueryPage) alerts.push('Nên import Query+Page để chọn URL chính chính xác hơn. Trước khi có Query+Page, AI chỉ cho tối đa 2 việc gán URL chính trong hôm nay.');
   const weakDevice = (planInput.searchConsole?.devices || [])
     .filter((item) => item.impressions >= 50 && item.ctr > 0 && item.ctr < Math.max(1, (planInput.searchConsole?.overview.ctr || 0) * 0.75))
@@ -935,6 +1028,27 @@ export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): 
       searchConsoleImportTypes: scImportTypes,
       searchConsoleLatestByType: latestByType,
       activeSearchConsoleSource,
+      performanceOverviewSource: performanceOverview.source,
+      performanceClicks: performanceOverview.clicks,
+      performanceImpressions: performanceOverview.impressions,
+      performanceCtr: performanceOverview.ctr,
+      performancePosition: performanceOverview.position,
+      performanceUpdatedAt: performanceOverview.updatedAt,
+      manualGscSummary: {
+        hasData: Boolean(input.manualSearchConsoleSummary),
+        range: input.manualSearchConsoleSummary?.range || '',
+        clicks: input.manualSearchConsoleSummary?.clicks ?? null,
+        impressions: input.manualSearchConsoleSummary?.impressions ?? null,
+        ctr: input.manualSearchConsoleSummary?.ctr ?? null,
+        position: input.manualSearchConsoleSummary?.position ?? null,
+        updatedAt: input.manualSearchConsoleSummary?.updatedAt || input.manualSearchConsoleSummary?.checkedAt || null,
+      },
+      apiQueryPageSummary: {
+        hasData: Boolean(performanceOverview.apiMeta),
+        rowCount: performanceOverview.apiMeta?.rowCount || 0,
+        updatedAt: performanceOverview.apiMeta ? importTimestamp(performanceOverview.apiMeta) : null,
+      },
+      csvSummary: performanceOverview.csv,
       googleAdsUpdatedAt: planInput.googleAds?.lastUpdated || planInput.googleAds?.summary.lastUpdated || null,
       googleAdsKeywordCount: planInput.googleAds?.summary.keywordCount || 0,
       workLogTotal: workLogStats.total,
@@ -944,6 +1058,7 @@ export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): 
       workLogDueToday: workLogStats.dueToday,
       workLogOverdue: workLogStats.overdue,
       usingSources: [
+        `Tổng quan: ${performanceOverview.source}`,
         hasUsefulSearchConsole ? `Search Console ${activeSearchConsoleSource}` : '',
         planInput.searchConsole?.trend?.length ? 'Search Console Dates trend' : '',
         planInput.searchConsole?.devices?.length ? 'Search Console Devices' : '',

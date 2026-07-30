@@ -8,6 +8,7 @@ import type {
   SearchConsoleDatePoint,
   SearchConsoleDevice,
   SearchConsoleImportMeta,
+  SearchConsoleManualSummary,
   SearchConsoleOpportunity,
   SearchConsolePage,
   SearchConsoleQuery,
@@ -27,6 +28,8 @@ type Props = {
   onData?: (data: SearchConsoleV7Data | null) => void;
   compact?: boolean;
   externalData?: SearchConsoleV7Data | null;
+  externalManualSummary?: SearchConsoleManualSummary | null;
+  onManualSummary?: (summary: SearchConsoleManualSummary | null) => void;
   onOpenDetails?: () => void;
 };
 
@@ -102,16 +105,7 @@ type SearchConsoleBatchSummary = {
   statuses: SearchConsoleImportStatus[];
 };
 
-type GscManualSummary = {
-  range: string;
-  clicks: number | null;
-  impressions: number | null;
-  ctr: number | null;
-  position: number | null;
-  checkedAt: string;
-  note: string;
-  updatedAt: string;
-};
+type GscManualSummary = SearchConsoleManualSummary;
 
 type GscManualSummaryDraft = {
   range: string;
@@ -919,7 +913,7 @@ function updateImportStore(
   };
 }
 
-function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, externalData, onOpenDetails }: Props) {
+function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, externalData, externalManualSummary, onManualSummary, onOpenDetails }: Props) {
   const [activeTab, setActiveTab] = useState<SearchConsoleRequestType>('overview');
   const [rawText, setRawText] = useState('');
   const [data, setData] = useState<SearchConsoleV7Data | null>(null);
@@ -955,11 +949,18 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
         const parsedManual = JSON.parse(savedManual) as GscManualSummary;
         setManualSummary(parsedManual);
         setManualDraft(manualSummaryToDraft(parsedManual));
+        onManualSummary?.(parsedManual);
       }
     } catch {
       localStorage.removeItem(GSC_MANUAL_SUMMARY_KEY);
     }
-  }, []);
+  }, [onManualSummary]);
+
+  useEffect(() => {
+    if (externalManualSummary === undefined) return;
+    setManualSummary(externalManualSummary);
+    setManualDraft(manualSummaryToDraft(externalManualSummary || null));
+  }, [externalManualSummary]);
 
   useEffect(() => {
     try {
@@ -1037,6 +1038,7 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
     };
     setManualSummary(summary);
     setManualDraft(manualSummaryToDraft(summary));
+    onManualSummary?.(summary);
     localStorage.setItem(GSC_MANUAL_SUMMARY_KEY, JSON.stringify(summary));
     saveOneSeoKeyToSupabase(GSC_MANUAL_SUMMARY_KEY).catch(() => null);
   };
@@ -1044,6 +1046,7 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
   const clearManualSummary = () => {
     setManualSummary(null);
     setManualDraft(defaultManualDraft());
+    onManualSummary?.(null);
     localStorage.removeItem(GSC_MANUAL_SUMMARY_KEY);
   };
 
@@ -1585,15 +1588,16 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
             <article className={styles.gscSummaryCard}>
               <strong>Số liệu từ CSV import</strong>
               <ul>
-                <li><span>Nguồn tổng quan</span><b>{csvSummary.source === 'pages' ? 'Pages.csv' : csvSummary.source === 'queries' ? 'Queries.csv' : 'Chưa có dữ liệu'}</b></li>
-                <li><span>Tổng lượt nhấp</span><b>{formatNumber(csvSummary.clicks)}</b></li>
+                <li><span>Nguồn chi tiết</span><b>{csvSummary.source === 'pages' ? 'Pages.csv' : csvSummary.source === 'queries' ? 'Queries.csv' : 'Chưa có dữ liệu'}</b></li>
+                {csvSummary.source === 'pages' ? <li><span>Lưu ý</span><b>Pages.csv chỉ là dữ liệu chi tiết theo URL, không phải tổng GSC đầy đủ</b></li> : null}
+                <li><span>Lượt nhấp trong CSV</span><b>{formatNumber(csvSummary.clicks)}</b></li>
                 <li><span>Tổng lượt hiển thị</span><b>{formatNumber(csvSummary.impressions)}</b></li>
                 <li><span>CTR trung bình</span><b>{formatCtr(csvSummary.ctr)}</b></li>
                 <li><span>Vị trí trung bình</span><b>{formatPosition(csvSummary.position)}</b></li>
               </ul>
             </article>
             <article className={styles.gscSummaryCard}>
-              <strong>Số liệu GSC nhập tay</strong>
+              <strong>Số liệu GSC nhập tay (tổng quan chính nếu chưa có API)</strong>
               {manualSummary ? (
                 <ul>
                   <li><span>Khoảng thời gian</span><b>{manualSummary.range}</b></li>

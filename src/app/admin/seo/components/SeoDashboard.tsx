@@ -13,7 +13,7 @@ import { useSeoDashboard } from '../hooks/useSeoDashboard';
 import styles from '../seo-dashboard.module.css';
 import { SEO_DASHBOARD_RESTORED_EVENT } from '../lib/seoDashboardSupabaseSync';
 import { loadSeoWorkLogs } from '../lib/seoWorkLogStorage';
-import type { GoogleAdsImportData, IndexSummaryManual, SearchConsoleV7Data } from '../types/seo';
+import type { GoogleAdsImportData, IndexSummaryManual, SearchConsoleManualSummary, SearchConsoleV7Data } from '../types/seo';
 import type { SeoWorkLogItem } from '../types/seoV11';
 
 const SeoDashboardLowerModules = lazy(() => import('./SeoDashboardLowerModules'));
@@ -22,6 +22,7 @@ const GoogleAdsV8ImportCenter = lazy(() => import('./GoogleAdsV8ImportCenter'));
 const SeoV10Workbench = lazy(() => import('./SeoV10Workbench'));
 const SeoWorkLogV11 = lazy(() => import('./SeoWorkLogV11'));
 const SeoNextActionsV11 = lazy(() => import('./SeoNextActionsV11'));
+const GSC_MANUAL_SUMMARY_KEY = 'noithathungngoc-gsc-manual-summary-v11';
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat('vi-VN').format(value || 0);
@@ -79,6 +80,7 @@ export default function SeoDashboard() {
   const [filters, setFilters] = useState<DashboardSeoFilters>(defaultFilters);
   const [searchConsoleV7, setSearchConsoleV7] = useState<SearchConsoleV7Data | null>(null);
   const [googleAdsV8, setGoogleAdsV8] = useState<GoogleAdsImportData | null>(null);
+  const [gscManualSummary, setGscManualSummary] = useState<SearchConsoleManualSummary | null>(null);
   const [indexSummary, setIndexSummary] = useState<IndexSummaryManual | null>(null);
   const [seoWorkLogsV11, setSeoWorkLogsV11] = useState<SeoWorkLogItem[]>([]);
   const [workbenchEnabled, setWorkbenchEnabled] = useState(false);
@@ -90,6 +92,12 @@ export default function SeoDashboard() {
     const handleRestore = () => {
       setRestoreVersion((value) => value + 1);
       setSeoWorkLogsV11(loadSeoWorkLogs());
+      try {
+        const savedManual = localStorage.getItem(GSC_MANUAL_SUMMARY_KEY);
+        setGscManualSummary(savedManual ? JSON.parse(savedManual) as SearchConsoleManualSummary : null);
+      } catch {
+        setGscManualSummary(null);
+      }
     };
 
     window.addEventListener(SEO_DASHBOARD_RESTORED_EVENT, handleRestore);
@@ -98,6 +106,12 @@ export default function SeoDashboard() {
 
   useEffect(() => {
     setSeoWorkLogsV11(loadSeoWorkLogs());
+    try {
+      const savedManual = localStorage.getItem(GSC_MANUAL_SUMMARY_KEY);
+      setGscManualSummary(savedManual ? JSON.parse(savedManual) as SearchConsoleManualSummary : null);
+    } catch {
+      setGscManualSummary(null);
+    }
   }, []);
 
   function openWorkbench() {
@@ -250,7 +264,8 @@ export default function SeoDashboard() {
     tasks: filteredTasks,
     internalLinks: dashboard.internalLinkSuggestions,
     workLogs: seoWorkLogsV11,
-  }), [dashboard.blogSeoItems, dashboard.internalLinkSuggestions, dashboard.productSeoItems, dashboard.seoClusters, dashboard.seoKeywords, filteredTasks, googleAdsV8, searchConsoleV7, seoWorkLogsV11]);
+    manualSearchConsoleSummary: gscManualSummary,
+  }), [dashboard.blogSeoItems, dashboard.internalLinkSuggestions, dashboard.productSeoItems, dashboard.seoClusters, dashboard.seoKeywords, filteredTasks, googleAdsV8, searchConsoleV7, seoWorkLogsV11, gscManualSummary]);
 
   if (loading) {
     return (
@@ -296,6 +311,7 @@ export default function SeoDashboard() {
         <MetricCard label="Tổng bài viết" value={formatNumber(overview?.blogPosts || 0)} />
         <MetricCard label="Tổng danh mục" value={formatNumber(overview?.categories || 0)} hint={overview?.categorySource === 'supabase' ? 'Lấy từ Supabase' : 'Fallback từ menu'} />
         <MetricCard label="URL tạo từ website" value={formatNumber(overview?.generatedUrls || 0)} hint={`${overview?.activeCategoryUrls || 0} danh mục có sản phẩm, ${overview?.staticUrls || 0} trang tĩnh`} />
+        <MetricCard label="Tổng quan GSC" value={professionalPlan.sourceSummary.performanceOverviewSource} hint={formatOptionalDate(professionalPlan.sourceSummary.performanceUpdatedAt)} />
         <MetricCard label="GSC cập nhật" value={formatOptionalDate(professionalPlan.sourceSummary.searchConsoleUpdatedAt)} hint={`${professionalPlan.sourceSummary.searchConsoleKeywordCount} keyword, ${professionalPlan.sourceSummary.searchConsoleUrlCount} URL có impression - ${professionalPlan.sourceSummary.searchConsoleDateRanges.join(', ') || 'chưa có range'}`} />
         <MetricCard label="Keyword Planner" value={professionalPlan.sourceSummary.googleAdsKeywordCount ? formatNumber(professionalPlan.sourceSummary.googleAdsKeywordCount) : 'Chưa có dữ liệu'} hint={formatOptionalDate(professionalPlan.sourceSummary.googleAdsUpdatedAt)} />
         <MetricCard label="Việc SEO đã làm" value={formatNumber(professionalPlan.sourceSummary.workLogTotal)} hint="Đọc từ Nhật ký SEO v11" />
@@ -319,8 +335,14 @@ export default function SeoDashboard() {
       <section id="ke-hoach-seo">
         <ModuleCard title="Kế hoạch SEO chuyên nghiệp" description="AI ưu tiên Search Console mới nhất trước, sau đó mới xét Keyword Planner và dữ liệu Supabase.">
           <div className={styles.v61PlanSource}>
+            <strong>Dữ liệu AI đang dùng</strong>
+            <span>Tổng quan GSC: {professionalPlan.sourceSummary.performanceOverviewSource} - {professionalPlan.sourceSummary.performanceClicks ?? '-'} click, {professionalPlan.sourceSummary.performanceImpressions ?? '-'} impression, CTR {professionalPlan.sourceSummary.performanceCtr ?? '-'}%, position {professionalPlan.sourceSummary.performancePosition ?? '-'}</span>
+            <span>GSC nhập tay: {professionalPlan.sourceSummary.manualGscSummary.hasData ? 'đã có' : 'chưa có'}{professionalPlan.sourceSummary.manualGscSummary.hasData ? ` - ${professionalPlan.sourceSummary.manualGscSummary.clicks ?? '-'} click, ${professionalPlan.sourceSummary.manualGscSummary.impressions ?? '-'} impression, CTR ${professionalPlan.sourceSummary.manualGscSummary.ctr ?? '-'}%, position ${professionalPlan.sourceSummary.manualGscSummary.position ?? '-'}, cập nhật ${formatOptionalDate(professionalPlan.sourceSummary.manualGscSummary.updatedAt)}` : ''}</span>
+            <span>Search Console API Query+Page: {professionalPlan.sourceSummary.apiQueryPageSummary.hasData ? `đã có - ${formatNumber(professionalPlan.sourceSummary.apiQueryPageSummary.rowCount)} dòng, cập nhật ${formatOptionalDate(professionalPlan.sourceSummary.apiQueryPageSummary.updatedAt)}` : 'chưa có'}</span>
+            <span>Search Console CSV: {professionalPlan.sourceSummary.csvSummary.hasData ? `đã có - ${professionalPlan.sourceSummary.csvSummary.source}; type: ${professionalPlan.sourceSummary.searchConsoleImportTypes.join(', ') || 'chưa rõ'}` : 'chưa có'}</span>
+            <span>Google Ads Keyword Planner: {professionalPlan.sourceSummary.googleAdsKeywordCount ? formatNumber(professionalPlan.sourceSummary.googleAdsKeywordCount) + ' keyword' : 'chưa có'} · Nhật ký SEO v11: {formatNumber(professionalPlan.sourceSummary.workLogTotal)} log · Supabase: {formatNumber(overview?.products || 0)} sản phẩm, {formatNumber(overview?.blogPosts || 0)} bài viết</span>
             <span>Dữ liệu AI đang dùng: {professionalPlan.sourceSummary.usingSources}</span>
-            <span>GSC ưu tiên: {professionalPlan.sourceSummary.activeSearchConsoleSource}. Type đã nhập: {professionalPlan.sourceSummary.searchConsoleImportTypes.join(', ') || 'chưa có'}.</span>
+            <span>GSC ưu tiên chi tiết: {professionalPlan.sourceSummary.activeSearchConsoleSource}. Type đã nhập: {professionalPlan.sourceSummary.searchConsoleImportTypes.join(', ') || 'chưa có'}.</span>
             {professionalPlan.sourceSummary.warning ? <strong>{professionalPlan.sourceSummary.warning}</strong> : null}
           </div>
           {professionalPlan.alerts.length ? (
@@ -337,6 +359,7 @@ export default function SeoDashboard() {
                   <p><b>URL:</b> {task.url || 'Chưa có URL chính'}</p>
                   <p><b>Keyword:</b> {task.keyword || 'Chưa xác định'}</p>
                   <p>{task.reason}</p>
+                  <p><b>Nguồn tín hiệu:</b> {task.sourceSignal}</p>
                   <p><b>Lịch sử:</b> {task.historyStatus} · <b>Cần làm lại:</b> {task.shouldRedo}</p>
                   <p><b>Nhật ký gần nhất:</b> {task.latestHistory || 'Chưa có'}</p>
                   <p>{task.historyReason}</p>
@@ -381,6 +404,8 @@ export default function SeoDashboard() {
               keywords={dashboard.seoKeywords}
               clusters={dashboard.seoClusters}
               externalData={searchConsoleV7}
+              externalManualSummary={gscManualSummary}
+              onManualSummary={setGscManualSummary}
               onData={setSearchConsoleV7}
               onOpenDetails={() => openAdvancedSection('search-console')}
             />

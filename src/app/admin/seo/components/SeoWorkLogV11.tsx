@@ -5,11 +5,13 @@ import styles from '../seo-dashboard.module.css';
 import type { TodayTask } from '../types/seo';
 import type { SeoWorkLogItem, SeoWorkPriority, SeoWorkStatus } from '../types/seoV11';
 import { seoTargetGroups, seoWorkPriorities, seoWorkStatuses, seoWorkTypes } from '../types/seoV11';
-import { createSeoWorkLogDraft, loadSeoWorkLogs, resetSeoWorkLogDemo, saveSeoWorkLogs } from '../lib/seoWorkLogStorage';
+import { createSeoWorkLogDraft, loadSeoWorkLogs, resetSeoWorkLogDemo, saveSeoWorkLogs, SEO_WORK_LOG_V11_KEY } from '../lib/seoWorkLogStorage';
+import { saveOneSeoKeyToSupabase } from '../lib/seoDashboardSupabaseSync';
 
 interface SeoWorkLogV11Props {
   tasks?: TodayTask[];
   noteContent?: string;
+  onLogsChange?: (logs: SeoWorkLogItem[]) => void;
 }
 
 const emptyForm = createSeoWorkLogDraft();
@@ -43,7 +45,7 @@ function guessType(text: string) {
   return 'Khác';
 }
 
-export default function SeoWorkLogV11({ tasks = [], noteContent = '' }: SeoWorkLogV11Props) {
+export default function SeoWorkLogV11({ tasks = [], noteContent = '', onLogsChange }: SeoWorkLogV11Props) {
   const [logs, setLogs] = useState<SeoWorkLogItem[]>([]);
   const [form, setForm] = useState<SeoWorkLogItem>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -54,8 +56,10 @@ export default function SeoWorkLogV11({ tasks = [], noteContent = '' }: SeoWorkL
   const [noteDraft, setNoteDraft] = useState(noteContent);
 
   useEffect(() => {
-    setLogs(loadSeoWorkLogs());
-  }, []);
+    const loaded = loadSeoWorkLogs();
+    setLogs(loaded);
+    onLogsChange?.(loaded);
+  }, [onLogsChange]);
 
   useEffect(() => {
     setNoteDraft(noteContent);
@@ -65,6 +69,8 @@ export default function SeoWorkLogV11({ tasks = [], noteContent = '' }: SeoWorkL
     const sorted = [...nextLogs].sort((a, b) => new Date(b.date || b.updatedAt).getTime() - new Date(a.date || a.updatedAt).getTime());
     setLogs(sorted);
     saveSeoWorkLogs(sorted);
+    onLogsChange?.(sorted);
+    saveOneSeoKeyToSupabase(SEO_WORK_LOG_V11_KEY).catch(() => null);
   }
 
   function updateForm(field: keyof SeoWorkLogItem, value: string) {
@@ -170,7 +176,10 @@ export default function SeoWorkLogV11({ tasks = [], noteContent = '' }: SeoWorkL
         </div>
         <button className={styles.secondaryButton} type="button" onClick={() => {
           if (window.confirm('Tải lại dữ liệu mẫu v11? Dữ liệu nhật ký hiện tại sẽ được thay bằng demo.')) {
-            setLogs(resetSeoWorkLogDemo());
+            const demo = resetSeoWorkLogDemo();
+            setLogs(demo);
+            onLogsChange?.(demo);
+            saveOneSeoKeyToSupabase(SEO_WORK_LOG_V11_KEY).catch(() => null);
           }
         }}>Tải lại dữ liệu mẫu</button>
       </div>

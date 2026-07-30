@@ -9,6 +9,7 @@ import type {
   SeoKeyword,
   TodayTask,
 } from '../types/seo';
+import type { SeoWorkLogItem } from '../types/seoV11';
 
 export type ProfessionalSeoTaskType =
   | 'Sửa title/meta/description'
@@ -41,6 +42,10 @@ export interface ProfessionalSeoTask {
   source: ProfessionalSeoSource;
   internalLink?: { from: string; to: string; anchor: string };
   copyText: string;
+  historyStatus: 'Đã làm' | 'Chưa làm' | 'Đang theo dõi' | 'Cần sửa tiếp';
+  latestHistory?: string;
+  shouldRedo: 'Có' | 'Không';
+  historyReason: string;
 }
 
 export interface ProfessionalSeoPlan {
@@ -54,6 +59,12 @@ export interface ProfessionalSeoPlan {
     activeSearchConsoleSource: string;
     googleAdsUpdatedAt: string | null;
     googleAdsKeywordCount: number;
+    workLogTotal: number;
+    workLogWatching: number;
+    workLogNeedFix: number;
+    workLogGoodSignal: number;
+    workLogDueToday: number;
+    workLogOverdue: number;
     usingSources: string;
     warning?: string;
   };
@@ -72,6 +83,7 @@ export interface BuildProfessionalSeoPlanInput {
   keywords: SeoKeyword[];
   tasks: TodayTask[];
   internalLinks: InternalLinkSuggestion[];
+  workLogs?: SeoWorkLogItem[];
 }
 
 const BUSINESS_GROUPS = [
@@ -134,6 +146,65 @@ function priority(score: number): ProfessionalSeoPriority {
   return 'Thấp';
 }
 
+function positionOpportunity(position: number) {
+  if (!Number.isFinite(position) || position <= 0) {
+    return {
+      band: 'unknown' as const,
+      score: 0,
+      maxTodayScore: 60,
+      label: 'chưa rõ vị trí',
+      todayFit: false,
+    };
+  }
+  if (position >= 4 && position <= 10) {
+    return {
+      band: 'ctr' as const,
+      score: 28,
+      maxTodayScore: 92,
+      label: 'vị trí 4-10, cơ hội tối ưu CTR/title/meta',
+      todayFit: true,
+    };
+  }
+  if (position > 10 && position <= 30) {
+    return {
+      band: 'growth' as const,
+      score: 32,
+      maxTodayScore: 90,
+      label: 'vị trí 10-30, cơ hội thêm internal link/FAQ/nội dung',
+      todayFit: true,
+    };
+  }
+  if (position > 30 && position <= 50) {
+    return {
+      band: 'medium' as const,
+      score: 10,
+      maxTodayScore: 68,
+      label: 'vị trí 31-50, ưu tiên trung bình',
+      todayFit: false,
+    };
+  }
+  if (position > 50) {
+    return {
+      band: 'far' as const,
+      score: -18,
+      maxTodayScore: 42,
+      label: 'vị trí trên 50, chỉ nên theo dõi trước',
+      todayFit: false,
+    };
+  }
+  return {
+    band: 'top' as const,
+    score: 6,
+    maxTodayScore: 72,
+    label: 'đang gần top đầu, ưu tiên giữ tín hiệu',
+    todayFit: false,
+  };
+}
+
+function hasCtrOpportunity(row: Pick<SearchConsoleQuery, 'impressions' | 'ctr' | 'position'>) {
+  return row.impressions >= 50 && row.ctr < 2 && row.position >= 4 && row.position <= 30;
+}
+
 function timeByTask(score: number, type: ProfessionalSeoTaskType): ProfessionalSeoTask['estimatedTime'] {
   if (type === 'Gắn URL chính cho keyword' || type === 'Thêm internal link') return '10 phút';
   if (type === 'Viết bài mới') return '60 phút';
@@ -162,12 +233,26 @@ function taskCopyText(task: Omit<ProfessionalSeoTask, 'copyText'>) {
     `Kết quả kỳ vọng: ${task.expectedResult}`,
     `Index lại GSC: ${task.reindex}`,
     `Nguồn: ${task.source}`,
+    `Lịch sử: ${task.historyStatus}`,
+    task.latestHistory ? `Nhật ký gần nhất: ${task.latestHistory}` : '',
+    `Có cần làm lại không: ${task.shouldRedo}`,
+    `Lý do dựa trên nhật ký: ${task.historyReason}`,
     internal.trim(),
   ].filter(Boolean).join('\n');
 }
 
-function buildTask(task: Omit<ProfessionalSeoTask, 'copyText'>): ProfessionalSeoTask {
-  return { ...task, copyText: taskCopyText(task) };
+type ProfessionalSeoTaskDraft = Omit<ProfessionalSeoTask, 'copyText' | 'historyStatus' | 'latestHistory' | 'shouldRedo' | 'historyReason'>
+  & Partial<Pick<ProfessionalSeoTask, 'historyStatus' | 'latestHistory' | 'shouldRedo' | 'historyReason'>>;
+
+function buildTask(task: ProfessionalSeoTaskDraft): ProfessionalSeoTask {
+  const enriched = {
+    ...task,
+    historyStatus: task.historyStatus || 'Chưa làm',
+    latestHistory: task.latestHistory,
+    shouldRedo: task.shouldRedo || 'Có',
+    historyReason: task.historyReason || 'Chưa thấy nhật ký SEO v11 trùng URL/keyword.',
+  } satisfies Omit<ProfessionalSeoTask, 'copyText'>;
+  return { ...enriched, copyText: taskCopyText(enriched) };
 }
 
 function findKnownKeyword(keyword: string, keywords: SeoKeyword[]) {
@@ -190,6 +275,111 @@ function findRelatedBlog(url: string, keyword: string, blogs: SeoBlogQualityItem
 function findInternalLink(url: string, keyword: string, links: InternalLinkSuggestion[]) {
   const cleanUrl = cleanPath(url);
   return links.find((item) => cleanPath(item.target_url) === cleanUrl || stripAccent(item.detected_keyword) === stripAccent(keyword));
+}
+
+function meaningfulKeyword(value: unknown) {
+  const raw = String(value || '').trim();
+  const clean = stripAccent(raw);
+  if (!raw || clean === '-' || clean.includes('chua xac dinh') || clean.includes('khong ro')) return '';
+  return raw;
+}
+
+function slugFromUrl(url: string) {
+  const cleanUrl = cleanPath(url).replace(/\/+$/, '');
+  return cleanUrl.split('/').filter(Boolean).pop() || '';
+}
+
+function keywordFromSlug(url: string) {
+  const replacements: Record<string, string> = {
+    ban: 'bàn',
+    ghe: 'ghế',
+    chan: 'chân',
+    quy: 'quỳ',
+    luoi: 'lưới',
+    lung: 'lưng',
+    cao: 'cao',
+    thap: 'thấp',
+    sat: 'sắt',
+    go: 'gỗ',
+    tu: 'tủ',
+    locker: 'locker',
+    van: 'văn',
+    phong: 'phòng',
+    hoc: 'học',
+    sinh: 'sinh',
+    truong: 'trường',
+    tang: 'tầng',
+    lam: 'làm',
+    viec: 'việc',
+  };
+  const words = slugFromUrl(url)
+    .replace(/-?hn\d+$/i, '')
+    .split('-')
+    .filter((word) => word && !/^\d+$/.test(word));
+  return words.map((word) => replacements[word] || word).join(' ').trim();
+}
+
+function textMatchScore(needle: string, haystack: string) {
+  const terms = stripAccent(needle).split(/[^a-z0-9]+/).filter((term) => term.length >= 3);
+  const cleanHaystack = stripAccent(haystack);
+  if (!terms.length || !cleanHaystack) return 0;
+  return terms.reduce((total, term) => total + (cleanHaystack.includes(term) ? 1 : 0), 0) / terms.length;
+}
+
+function bestKeywordPlannerMatch(context: string, rows: GoogleAdsImportData['rows']) {
+  return [...rows]
+    .map((row) => ({
+      row,
+      score: textMatchScore(context, `${row.keyword} ${row.cluster || ''} ${row.parentCluster || ''} ${row.subCluster || ''}`),
+    }))
+    .filter((item) => item.score >= 0.55)
+    .sort((a, b) => b.score - a.score || (b.row.avg_monthly_searches || 0) - (a.row.avg_monthly_searches || 0))[0]?.row.keyword || '';
+}
+
+function inferKeywordForUrl(url: string, input: BuildProfessionalSeoPlanInput): { keyword: string; source: string } {
+  const cleanUrl = cleanPath(url);
+  if (!cleanUrl) return { keyword: '', source: '' };
+  const hasQueryPage = (input.searchConsole?.imports || []).some((item) => item.type === 'query-page');
+  const exactScRows = (input.searchConsole?.queries || [])
+    .filter((row) => meaningfulKeyword(row.query) && row.page && cleanPath(row.page) === cleanUrl)
+    .sort((a, b) => b.impressions - a.impressions || b.clicks - a.clicks);
+  if (hasQueryPage && exactScRows[0]) return { keyword: exactScRows[0].query, source: 'Search Console Query+Page' };
+  if (exactScRows[0]) return { keyword: exactScRows[0].query, source: 'Search Console Queries' };
+
+  const looseScRows = (input.searchConsole?.queries || [])
+    .filter((row) => meaningfulKeyword(row.query) && row.page && (cleanPath(row.page).includes(cleanUrl) || cleanUrl.includes(cleanPath(row.page))))
+    .sort((a, b) => b.impressions - a.impressions || b.clicks - a.clicks);
+  if (looseScRows[0]) return { keyword: looseScRows[0].query, source: 'Search Console URL match' };
+
+  const product = input.products.find((item) => cleanUrl.includes(`/san-pham/${item.slug}`));
+  if (product) return { keyword: meaningfulKeyword(product.name) || meaningfulKeyword(product.category) || keywordFromSlug(cleanUrl), source: 'Supabase products' };
+
+  const blog = input.blogs.find((item) => cleanUrl.includes(`/tin-tuc/${item.slug}`));
+  if (blog) return { keyword: meaningfulKeyword(blog.title) || keywordFromSlug(cleanUrl), source: 'Supabase blog_posts' };
+
+  const cluster = input.clusters.find((item) => {
+    const mainUrl = cleanPath(item.main_url);
+    return mainUrl && (cleanUrl === mainUrl || cleanUrl.includes(mainUrl) || mainUrl.includes(cleanUrl));
+  });
+  if (cluster) return { keyword: meaningfulKeyword(cluster.name) || keywordFromSlug(cleanUrl), source: 'Supabase category/cluster' };
+
+  const mappedKeyword = input.keywords.find((item) => {
+    const targetUrl = cleanPath(item.target_url);
+    return targetUrl && (cleanUrl === targetUrl || cleanUrl.includes(targetUrl) || targetUrl.includes(cleanUrl));
+  });
+  if (mappedKeyword?.keyword) return { keyword: mappedKeyword.keyword, source: 'Supabase seo_keywords' };
+
+  const slugKeyword = keywordFromSlug(cleanUrl);
+  const plannerKeyword = bestKeywordPlannerMatch(slugKeyword, input.googleAds?.rows || []);
+  if (plannerKeyword) return { keyword: plannerKeyword, source: 'Keyword Planner' };
+
+  return { keyword: slugKeyword, source: slugKeyword ? 'URL slug' : '' };
+}
+
+function resolveWorkLogKeyword(log: SeoWorkLogItem, input: BuildProfessionalSeoPlanInput) {
+  const direct = meaningfulKeyword(log.keyword);
+  if (direct) return { keyword: direct, source: 'Nhật ký SEO' };
+  return inferKeywordForUrl(log.url, input);
 }
 
 function duplicateQueries(queries: SearchConsoleQuery[]) {
@@ -233,17 +423,176 @@ function isShortSearchConsoleRange(range: string) {
   return clean.includes('7 ngay') || clean.includes('28 ngay') || clean === '7d' || clean === '28d';
 }
 
+function workLogTime(log: SeoWorkLogItem) {
+  return new Date(log.date || log.updatedAt || log.createdAt).getTime() || 0;
+}
+
+function latestWorkLog(logs: SeoWorkLogItem[], task: Pick<ProfessionalSeoTask, 'url' | 'keyword' | 'type'>) {
+  const url = cleanPath(task.url);
+  const keyword = stripAccent(task.keyword);
+  const type = stripAccent(task.type);
+  return [...logs]
+    .filter((log) => {
+      const logUrl = cleanPath(log.url);
+      const logKeyword = stripAccent(log.keyword || log.title || log.description);
+      const logType = stripAccent(log.type || log.title);
+      const urlMatch = Boolean(url && logUrl && (url === logUrl || url.includes(logUrl) || logUrl.includes(url)));
+      const keywordMatch = Boolean(keyword && logKeyword && (keyword === logKeyword || logKeyword.includes(keyword) || keyword.includes(logKeyword)));
+      const typeMatch = Boolean(type && logType && (type.includes(logType) || logType.includes(type) || includesAny(type + ' ' + logType, ['title', 'meta', 'faq', 'internal link', 'submit index', 'trung keyword'])));
+      return (urlMatch || keywordMatch) && typeMatch;
+    })
+    .sort((a, b) => workLogTime(b) - workLogTime(a))[0];
+}
+
+function latestWorkLogByTarget(logs: SeoWorkLogItem[], url: string, keyword: string) {
+  const cleanUrl = cleanPath(url);
+  const cleanKeyword = stripAccent(keyword);
+  return [...logs]
+    .filter((log) => {
+      const logUrl = cleanPath(log.url);
+      const logKeyword = stripAccent(log.keyword || log.title || log.description);
+      return Boolean(
+        (cleanUrl && logUrl && (cleanUrl === logUrl || cleanUrl.includes(logUrl) || logUrl.includes(cleanUrl)))
+        || (cleanKeyword && logKeyword && (cleanKeyword === logKeyword || logKeyword.includes(cleanKeyword) || cleanKeyword.includes(logKeyword))),
+      );
+    })
+    .sort((a, b) => workLogTime(b) - workLogTime(a))[0];
+}
+
+function workLogSummary(log: SeoWorkLogItem | undefined) {
+  if (!log) return undefined;
+  return `${log.date} - ${log.type} - ${log.status}`;
+}
+
+function taskHistoryStatus(log: SeoWorkLogItem | undefined): ProfessionalSeoTask['historyStatus'] {
+  if (!log) return 'Chưa làm';
+  if (log.status === 'Cần sửa tiếp') return 'Cần sửa tiếp';
+  if (log.status === 'Đang theo dõi' || log.status === 'Đã submit index' || log.status === 'Đã index') return 'Đang theo dõi';
+  return 'Đã làm';
+}
+
+function hasSearchConsoleSignal(data: SearchConsoleV7Data | null, url: string, keyword: string) {
+  const cleanUrl = cleanPath(url);
+  const cleanKeyword = stripAccent(keyword);
+  const row = [...(data?.queries || []), ...(data?.pages || [])].find((item) => {
+    const itemUrl = cleanPath('page' in item ? item.page : '');
+    const itemKeyword = stripAccent('query' in item ? item.query : '');
+    return Boolean((cleanUrl && itemUrl && cleanUrl === itemUrl) || (cleanKeyword && itemKeyword && cleanKeyword === itemKeyword));
+  });
+  return row ? { impressions: row.impressions, clicks: row.clicks, ctr: row.ctr, position: row.position } : null;
+}
+
+function enrichTasksWithWorkLogs(tasks: ProfessionalSeoTask[], input: BuildProfessionalSeoPlanInput) {
+  const logs = input.workLogs || [];
+  if (!logs.length) return tasks.map((task) => buildTask(task));
+
+  return tasks.map((task) => {
+    const exact = latestWorkLog(logs, task);
+    const target = exact || latestWorkLogByTarget(logs, task.url, task.keyword);
+    const signal = hasSearchConsoleSignal(input.searchConsole, task.url, task.keyword);
+    const completedSameWork = exact && ['Đã làm', 'Đã submit index', 'Đang theo dõi', 'Đã index', 'Có tín hiệu tốt'].includes(exact.status);
+    const completedSameTarget = target && ['Đã làm', 'Đã submit index', 'Đang theo dõi', 'Đã index', 'Có tín hiệu tốt'].includes(target.status);
+    const duplicateCreationTask = task.type === 'Viết bài mới' || task.type === 'Gắn URL chính cho keyword';
+    const signalNeedsOptimization = signal && (hasCtrOpportunity(signal) || (signal.position >= 10 && signal.position <= 30));
+    const shouldRedo: ProfessionalSeoTask['shouldRedo'] = exact?.status === 'Cần sửa tiếp'
+      || signalNeedsOptimization
+      ? 'Có'
+      : completedSameWork || (completedSameTarget && duplicateCreationTask)
+        ? 'Không'
+        : 'Có';
+    const historyReason = target
+      ? signal
+        ? `Nhật ký gần nhất là "${target.status}". Search Console hiện có ${signal.impressions} impression, CTR ${signal.ctr.toFixed(2)}%, vị trí ${signal.position.toFixed(1)} nên AI chỉ đề xuất bước phù hợp với tín hiệu mới.`
+        : target.status === 'Đã submit index'
+          ? 'URL/keyword đã submit index trong nhật ký nhưng chưa thấy tín hiệu Search Console trong dữ liệu import mới, nên ưu tiên theo dõi hoặc kiểm tra lại.'
+          : `Có nhật ký liên quan trạng thái "${target.status}", AI tránh lặp lại việc y hệt nếu không có tín hiệu mới.`
+      : 'Chưa thấy nhật ký SEO v11 trùng URL/keyword.';
+    return buildTask({
+      ...task,
+      historyStatus: taskHistoryStatus(target),
+      latestHistory: workLogSummary(target),
+      shouldRedo,
+      historyReason,
+    });
+  }).filter((task) => task.shouldRedo === 'Có' || task.historyStatus === 'Cần sửa tiếp' || task.id.startsWith('worklog-followup-'));
+}
+
+function buildWorkLogFollowUpTasks(input: BuildProfessionalSeoPlanInput) {
+  const logs = input.workLogs || [];
+  const today = new Date().toISOString().slice(0, 10);
+  return logs
+    .filter((log) => {
+      const due = log.nextCheckDate && log.nextCheckDate <= today;
+      return due || log.status === 'Đang theo dõi' || log.status === 'Cần sửa tiếp';
+    })
+    .sort((a, b) => {
+      const statusScore = (value: SeoWorkLogItem) => value.status === 'Cần sửa tiếp' ? 3 : value.nextCheckDate && value.nextCheckDate <= today ? 2 : 1;
+      return statusScore(b) - statusScore(a) || workLogTime(a) - workLogTime(b);
+    })
+    .slice(0, 8)
+    .map((log, index) => {
+      const inferredKeyword = resolveWorkLogKeyword(log, input);
+      const keyword = inferredKeyword.keyword;
+      const signal = hasSearchConsoleSignal(input.searchConsole, log.url, keyword);
+      const score = clamp((log.status === 'Cần sửa tiếp' ? 80 : 62) + businessScore(`${log.targetGroup} ${keyword} ${log.url}`));
+      const keywordReason = keyword && inferredKeyword.source !== 'Nhật ký SEO'
+        ? ` AI suy luận keyword "${keyword}" từ ${inferredKeyword.source}.`
+        : '';
+      return buildTask({
+        id: `worklog-followup-${index}-${slugify(log.id)}`,
+        type: log.status === 'Cần sửa tiếp' ? 'Theo dõi cơ hội SEO' : 'Theo dõi cơ hội SEO',
+        title: log.status === 'Cần sửa tiếp' ? `Sửa tiếp việc đã ghi: ${log.title}` : `Kiểm tra lại nhật ký SEO: ${log.title}`,
+        url: cleanPath(log.url),
+        keyword,
+        secondaryKeywords: [],
+        reason: signal
+          ? `Nhật ký ${log.date}: ${log.type}, trạng thái ${log.status}.${keywordReason} Search Console mới: ${signal.impressions} impression, CTR ${signal.ctr.toFixed(2)}%, vị trí ${signal.position.toFixed(1)}.`
+          : `Nhật ký ${log.date}: ${log.type}, trạng thái ${log.status}.${keywordReason} ${log.nextCheckDate ? 'Ngày kiểm tra lại: ' + log.nextCheckDate + '. ' : ''}Chưa thấy tín hiệu Search Console mới cho URL/keyword này.`,
+        priority: priority(score),
+        score,
+        estimatedTime: '20 phút',
+        action: log.status === 'Cần sửa tiếp'
+          ? 'Mở lại URL/keyword trong nhật ký, xử lý phần còn thiếu rồi cập nhật trạng thái nhật ký.'
+          : 'Kiểm tra Search Console, nếu có tín hiệu thì cập nhật nhật ký; nếu chưa có tín hiệu thì bổ sung internal link hoặc kiểm tra index.',
+        expectedResult: 'Không bỏ sót việc đang theo dõi/cần sửa tiếp và không tạo task trùng việc đã hoàn thành.',
+        reindex: log.status === 'Đã submit index' ? 'Theo dõi thêm' : 'Không cần',
+        source: 'Kết hợp',
+        historyStatus: taskHistoryStatus(log),
+        latestHistory: workLogSummary(log),
+        shouldRedo: 'Có',
+        historyReason: log.nextCheckDate && log.nextCheckDate <= today
+          ? 'Việc này đến hạn hoặc quá hạn kiểm tra lại trong Nhật ký SEO v11.'
+          : `Trạng thái nhật ký là "${log.status}", AI ưu tiên theo dõi/sửa tiếp trước khi tạo việc mới.`,
+      });
+    });
+}
+
+function summarizeWorkLogs(logs: SeoWorkLogItem[]) {
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    total: logs.length,
+    watching: logs.filter((item) => item.status === 'Đang theo dõi').length,
+    needFix: logs.filter((item) => item.status === 'Cần sửa tiếp').length,
+    goodSignal: logs.filter((item) => item.status === 'Có tín hiệu tốt').length,
+    dueToday: logs.filter((item) => item.nextCheckDate === today).length,
+    overdue: logs.filter((item) => item.nextCheckDate && item.nextCheckDate < today && item.status !== 'Có tín hiệu tốt').length,
+  };
+}
+
 function buildSearchConsoleTasks(input: BuildProfessionalSeoPlanInput) {
   const data = input.searchConsole;
   if (!data?.queries.length && !data?.pages.length) return [];
   const duplicateMap = duplicateQueries(data.queries);
+  const hasQueryPage = (data.imports || []).some((item) => item.type === 'query-page');
   const tasks: ProfessionalSeoTask[] = [];
 
   duplicateMap.forEach((rows, key) => {
     const uniquePages = Array.from(new Set(rows.map((row) => cleanPath(row.page)).filter(Boolean)));
     if (uniquePages.length < 2) return;
     const main = bestRow(rows);
-    const score = clamp(30 + 25 + businessScore(main.query) + Math.min(10, main.clicks) + Math.min(15, main.impressions / 50));
+    const opportunity = positionOpportunity(main.position);
+    let score = clamp(30 + opportunity.score + businessScore(main.query) + Math.min(10, main.clicks) + Math.min(15, main.impressions / 50));
+    score = Math.min(score, opportunity.maxTodayScore);
     tasks.push(buildTask({
       id: `sc-duplicate-${slugify(key)}`,
       type: 'Kiểm tra trùng từ khóa',
@@ -251,7 +600,7 @@ function buildSearchConsoleTasks(input: BuildProfessionalSeoPlanInput) {
       url: cleanPath(main.page) || fallbackUrl(main.query),
       keyword: main.query,
       secondaryKeywords: rows.map((row) => row.query).filter((value, index, arr) => arr.indexOf(value) === index).slice(1, 4),
-      reason: `Search Console cho thấy cùng query đang xuất hiện ở ${uniquePages.length} URL. URL có tín hiệu tốt nhất hiện là ${cleanPath(main.page)} với ${main.impressions} impression, ${main.clicks} click, vị trí ${main.position.toFixed(1)}.`,
+      reason: `Search Console cho thấy cùng query đang xuất hiện ở ${uniquePages.length} URL. URL có tín hiệu tốt nhất hiện là ${cleanPath(main.page)} với ${main.impressions} impression, ${main.clicks} click, vị trí ${main.position.toFixed(1)} (${opportunity.label}).`,
       priority: priority(score),
       score,
       estimatedTime: timeByTask(score, 'Kiểm tra trùng từ khóa'),
@@ -268,42 +617,53 @@ function buildSearchConsoleTasks(input: BuildProfessionalSeoPlanInput) {
     const product = findRelatedProduct(url, row.query, input.products);
     const blog = findRelatedBlog(url, row.query, input.blogs);
     const link = findInternalLink(url, row.query, input.internalLinks);
-    const ctrLow = row.impressions >= 50 && row.ctr < 2;
-    const nearTop = row.position >= 10 && row.position <= 30;
+    const opportunity = positionOpportunity(row.position);
+    const ctrLow = hasCtrOpportunity(row);
+    const rawCtrLow = row.impressions >= 50 && row.ctr < 2;
+    const topCtrOpportunity = row.position >= 4 && row.position <= 10;
+    const nearTop = row.position > 10 && row.position <= 30;
+    const mediumOpportunity = row.position > 30 && row.position <= 50;
+    const farPosition = row.position > 50;
     const hasClick = row.clicks > 0;
     const duplicateRisk = (duplicateMap.get(stripAccent(row.query)) || []).map((item) => cleanPath(item.page)).filter(Boolean).filter((value, i, arr) => arr.indexOf(value) === i).length > 1;
     const missingUrl = !row.page && !known?.target_url;
     const missingFaq = Boolean(product?.checks && !product.checks.faq);
     const missingMeta = Boolean(blog?.checks && !blog.checks.meta);
     const missingInternalLink = !link && Boolean(url);
-    let score = 30 + businessScore(`${row.query} ${url}`);
+    let score = 24 + businessScore(`${row.query} ${url}`) + opportunity.score;
     if (ctrLow) score += 20;
-    if (nearTop) score += 25;
-    if (hasClick) score += 10;
+    if (hasClick && !farPosition) score += 8;
     if (duplicateRisk) score += 20;
-    if (missingUrl) score += 20;
-    if (missingFaq || missingMeta || missingInternalLink) score += 10;
-    score += Math.min(15, row.impressions / 80);
+    if (missingUrl && !farPosition) score += hasQueryPage ? 12 : 6;
+    if ((missingFaq || missingMeta || missingInternalLink) && !farPosition) score += 10;
+    score += Math.min(farPosition ? 6 : 15, row.impressions / 80);
     score = clamp(score);
+    score = Math.min(score, opportunity.maxTodayScore);
 
     let type: ProfessionalSeoTaskType = 'Theo dõi cơ hội SEO';
     let action = 'Theo dõi thêm dữ liệu Search Console trước khi sửa mạnh.';
     let expectedResult = 'Có thêm dữ liệu chắc hơn để quyết định URL/keyword.';
     let reindex: ProfessionalSeoTask['reindex'] = 'Theo dõi thêm';
-    if (missingUrl) {
+    if (missingUrl && !farPosition) {
       type = 'Gắn URL chính cho keyword';
-      action = `Gắn URL chính cho "${row.query}" trong Keyword Map, ưu tiên ${fallbackUrl(row.query)} nếu chưa có landing page tốt hơn.`;
-      expectedResult = 'Keyword có URL đích rõ để AI không đề xuất trùng.';
+      action = hasQueryPage
+        ? `Gắn URL chính cho "${row.query}" trong Keyword Map theo URL có tín hiệu tốt nhất.`
+        : `Gắn URL chính tạm thời cho "${row.query}" trong Keyword Map, ưu tiên ${fallbackUrl(row.query)}, rồi kiểm tra lại sau khi import Query+Page.`;
+      expectedResult = hasQueryPage
+        ? 'Keyword có URL đích rõ để AI không đề xuất trùng.'
+        : 'Có URL tạm để quản lý keyword, nhưng không biến kế hoạch hôm nay thành hàng loạt việc gán URL.';
       reindex = 'Không cần';
     } else if (duplicateRisk) {
       type = 'Kiểm tra trùng từ khóa';
       action = `Chọn URL chính cho "${row.query}", sau đó thêm link nội bộ về ${url}.`;
       expectedResult = 'Giảm nhiều URL cùng bắt một query.';
       reindex = 'Không cần';
-    } else if (ctrLow) {
+    } else if (ctrLow && (topCtrOpportunity || nearTop)) {
       type = 'Sửa title/meta/description';
-      action = `Sửa title/meta của ${url} để nêu rõ sản phẩm, giá trị mua hàng và khu vực Hà Nội.`;
-      expectedResult = 'Tăng CTR cho query đã có impression.';
+      action = nearTop && missingInternalLink
+        ? `Sửa title/meta của ${url}, sau đó thêm 1 internal link với anchor "${row.query}" để đẩy query đang ở vùng 10-30.`
+        : `Sửa title/meta của ${url} để nêu rõ sản phẩm, giá trị mua hàng và khu vực Hà Nội.`;
+      expectedResult = nearTop ? 'Tăng CTR và hỗ trợ query tiến gần top 10.' : 'Tăng CTR cho query đã có impression.';
       reindex = 'Có';
     } else if (nearTop) {
       type = missingInternalLink ? 'Thêm internal link' : missingFaq ? 'Thêm FAQ' : product ? 'Tối ưu sản phẩm' : blog ? 'Sửa bài viết cũ' : 'Thêm FAQ';
@@ -312,6 +672,12 @@ function buildSearchConsoleTasks(input: BuildProfessionalSeoPlanInput) {
         : `Bổ sung FAQ, đoạn mô tả 150-200 chữ và liên kết nội bộ cho ${url}.`;
       expectedResult = 'Đẩy query vị trí 10-30 tiến gần top 10.';
       reindex = 'Có';
+    } else if (mediumOpportunity) {
+      action = `Đưa "${row.query}" vào danh sách theo dõi 7 ngày tới; chỉ tối ưu mạnh khi có thêm impression hoặc URL chính rõ hơn.`;
+      expectedResult = 'Không dồn nguồn lực hôm nay cho keyword chưa đủ gần top.';
+    } else if (farPosition) {
+      action = `Theo dõi "${row.query}" và ưu tiên import Query+Page/kiểm tra URL trước; chưa sửa title/meta chỉ vì CTR thấp khi vị trí còn trên 50.`;
+      expectedResult = 'Giữ kế hoạch hôm nay tập trung vào keyword có khả năng tăng trưởng thực tế hơn.';
     }
 
     tasks.push(buildTask({
@@ -321,7 +687,7 @@ function buildSearchConsoleTasks(input: BuildProfessionalSeoPlanInput) {
       url,
       keyword: row.query,
       secondaryKeywords: data.queries.filter((item) => cleanPath(item.page) === url && item.query !== row.query).map((item) => item.query).slice(0, 3),
-      reason: `Search Console: ${row.impressions} impression, ${row.clicks} click, CTR ${row.ctr.toFixed(2)}%, vị trí ${row.position.toFixed(1)}. ${ctrLow ? 'CTR thấp. ' : ''}${nearTop ? 'Đang ở vùng 10-30. ' : ''}${missingInternalLink ? 'Chưa thấy internal link phù hợp trong gợi ý hiện có. ' : ''}`,
+      reason: `Search Console: ${row.impressions} impression, ${row.clicks} click, CTR ${row.ctr.toFixed(2)}%, vị trí ${row.position.toFixed(1)} (${opportunity.label}). ${ctrLow ? 'CTR thấp và vị trí đang đủ gần để tối ưu title/meta. ' : rawCtrLow && farPosition ? 'CTR thấp chưa phải vấn đề chính vì vị trí còn trên 50. ' : ''}${nearTop ? 'Đang ở vùng 10-30 nên ưu tiên internal link/FAQ/nội dung. ' : ''}${missingUrl && !hasQueryPage ? 'Chưa có Query+Page nên chỉ gán URL chính có kiểm soát và cần import thêm để xác nhận. ' : ''}${missingInternalLink && !farPosition ? 'Chưa thấy internal link phù hợp trong gợi ý hiện có. ' : ''}`,
       priority: priority(score),
       score,
       estimatedTime: timeByTask(score, type),
@@ -418,14 +784,49 @@ function uniqueTasks(tasks: ProfessionalSeoTask[]) {
   return Array.from(map.values()).sort((a, b) => b.score - a.score);
 }
 
+function balancedTodayTasks(tasks: ProfessionalSeoTask[]) {
+  const sorted = [...tasks].sort((a, b) => b.score - a.score);
+  const selected: ProfessionalSeoTask[] = [];
+  const selectedIds = new Set<string>();
+  let mapUrlTasks = 0;
+
+  const add = (task: ProfessionalSeoTask | undefined) => {
+    if (!task || selected.length >= 5 || selectedIds.has(task.id)) return false;
+    if (task.type === 'Gắn URL chính cho keyword' && mapUrlTasks >= 2) return false;
+    selected.push(task);
+    selectedIds.add(task.id);
+    if (task.type === 'Gắn URL chính cho keyword') mapUrlTasks += 1;
+    return true;
+  };
+
+  const addBest = (predicate: (task: ProfessionalSeoTask) => boolean) => {
+    add(sorted.find((task) => !selectedIds.has(task.id) && predicate(task)));
+  };
+
+  addBest((task) => task.id.startsWith('worklog-followup-') || task.historyStatus === 'Cần sửa tiếp' || (task.historyStatus === 'Đang theo dõi' && task.shouldRedo === 'Có'));
+  addBest((task) => task.type === 'Sửa title/meta/description');
+  addBest((task) => task.type === 'Thêm internal link');
+  addBest((task) => task.type === 'Thêm FAQ' || task.type === 'Tối ưu sản phẩm' || task.type === 'Sửa bài viết cũ');
+  addBest((task) => task.type === 'Gắn URL chính cho keyword' && task.score >= 45);
+  addBest((task) => task.type === 'Kiểm tra trùng từ khóa');
+
+  sorted.forEach((task) => {
+    if (selected.length >= 5) return;
+    if (task.type === 'Gắn URL chính cho keyword' && mapUrlTasks >= 2) return;
+    add(task);
+  });
+
+  return selected;
+}
+
 export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): ProfessionalSeoPlan {
   const scKeywords = new Set((input.searchConsole?.queries || []).map((row) => stripAccent(row.query)).filter(Boolean));
   const scTasks = buildSearchConsoleTasks(input);
   const adsTasks = buildAdsOnlyTasks(input, scKeywords);
   const supabaseTasks = buildSupabaseTasks(input);
-  const allTasks = uniqueTasks([...scTasks, ...supabaseTasks, ...adsTasks]);
-  const highPriorityToday = allTasks.filter((task) => task.priority === 'Cao').slice(0, 5);
-  const today = highPriorityToday.length ? highPriorityToday : allTasks.slice(0, 5);
+  const workLogFollowUps = buildWorkLogFollowUpTasks(input);
+  const allTasks = uniqueTasks(enrichTasksWithWorkLogs([...workLogFollowUps, ...scTasks, ...supabaseTasks, ...adsTasks], input));
+  const today = balancedTodayTasks(allTasks);
   const week = allTasks.filter((task) => !today.some((item) => item.id === task.id)).slice(0, 7);
   const watch = uniqueTasks([
     ...allTasks.filter((task) => task.priority !== 'Cao' || task.type === 'Theo dõi cơ hội SEO'),
@@ -439,6 +840,7 @@ export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): 
   const latestByType = latestSearchConsoleImports(input.searchConsole);
   const scDateRanges = Array.from(new Set((input.searchConsole?.imports || []).map((item) => item.dateRangeLabel).filter(Boolean)));
   const scImportTypes = Array.from(new Set((input.searchConsole?.imports || []).map((item) => item.type).filter(Boolean)));
+  const workLogStats = summarizeWorkLogs(input.workLogs || []);
   const hasQueryPage = scImportTypes.includes('query-page');
   const hasUsefulSearchConsole = Boolean(input.searchConsole?.overview.connected && (scKeywordCount || scUrlCount));
   const onlyShortSearchConsole = hasUsefulSearchConsole
@@ -458,7 +860,7 @@ export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): 
   if (!input.searchConsole?.overview.connected) alerts.push('Chưa có dữ liệu Search Console mới, AI chỉ dùng Supabase và Keyword Planner để gợi ý tạm.');
   if (input.searchConsole?.overview.connected && !scKeywordCount) alerts.push('Search Console đã import nhưng chưa thấy query chi tiết.');
   if (onlyShortSearchConsole) alerts.push('Search Console hiện chỉ có dữ liệu ngắn hạn. Nên import thêm 3/6/12/16 tháng để AI đọc xu hướng và ưu tiên bền hơn.');
-  if (input.searchConsole?.overview.connected && !hasQueryPage) alerts.push('Nên import thêm Query+Page để AI chọn đúng URL chính cho từng keyword.');
+  if (input.searchConsole?.overview.connected && !hasQueryPage) alerts.push('Nên import Query+Page để chọn URL chính chính xác hơn. Trước khi có Query+Page, AI chỉ cho tối đa 2 việc gán URL chính trong hôm nay.');
   const weakDevice = (input.searchConsole?.devices || [])
     .filter((item) => item.impressions >= 50 && item.ctr > 0 && item.ctr < Math.max(1, (input.searchConsole?.overview.ctr || 0) * 0.75))
     .sort((a, b) => b.impressions - a.impressions)[0];
@@ -468,6 +870,8 @@ export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): 
     alerts.push(`Quốc gia có impression cao nhất là ${topCountry.country}. Nên kiểm tra lại target thị trường nếu khách chính vẫn là Việt Nam.`);
   }
   if (!input.googleAds?.summary.keywordCount) alerts.push('Chưa có dữ liệu Keyword Planner thật.');
+  if (workLogStats.needFix) alerts.push(`Nhật ký SEO có ${workLogStats.needFix} việc cần sửa tiếp, AI ưu tiên xử lý trước khi tạo việc mới.`);
+  if (workLogStats.dueToday || workLogStats.overdue) alerts.push(`Nhật ký SEO có ${workLogStats.dueToday} việc đến hạn hôm nay và ${workLogStats.overdue} việc quá hạn kiểm tra.`);
 
   return {
     sourceSummary: {
@@ -480,12 +884,19 @@ export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): 
       activeSearchConsoleSource,
       googleAdsUpdatedAt: input.googleAds?.lastUpdated || input.googleAds?.summary.lastUpdated || null,
       googleAdsKeywordCount: input.googleAds?.summary.keywordCount || 0,
+      workLogTotal: workLogStats.total,
+      workLogWatching: workLogStats.watching,
+      workLogNeedFix: workLogStats.needFix,
+      workLogGoodSignal: workLogStats.goodSignal,
+      workLogDueToday: workLogStats.dueToday,
+      workLogOverdue: workLogStats.overdue,
       usingSources: [
         hasUsefulSearchConsole ? `Search Console ${activeSearchConsoleSource}` : '',
         input.searchConsole?.trend?.length ? 'Search Console Dates trend' : '',
         input.searchConsole?.devices?.length ? 'Search Console Devices' : '',
         input.searchConsole?.countries?.length ? 'Search Console Countries' : '',
         input.googleAds?.summary.keywordCount ? 'Keyword Planner import' : '',
+        input.workLogs?.length ? 'Nhật ký SEO v11' : '',
         'Supabase products/blog_posts/categories/seo_*',
         'seo_dashboard_store',
       ].filter(Boolean).join(' + '),

@@ -12,7 +12,9 @@ import SeoV9Modules from './SeoV9Modules';
 import { useSeoDashboard } from '../hooks/useSeoDashboard';
 import styles from '../seo-dashboard.module.css';
 import { SEO_DASHBOARD_RESTORED_EVENT } from '../lib/seoDashboardSupabaseSync';
+import { loadSeoWorkLogs } from '../lib/seoWorkLogStorage';
 import type { GoogleAdsImportData, IndexSummaryManual, SearchConsoleV7Data } from '../types/seo';
+import type { SeoWorkLogItem } from '../types/seoV11';
 
 const SeoDashboardLowerModules = lazy(() => import('./SeoDashboardLowerModules'));
 const SearchConsoleV7Center = lazy(() => import('./SearchConsoleV7Center'));
@@ -78,6 +80,7 @@ export default function SeoDashboard() {
   const [searchConsoleV7, setSearchConsoleV7] = useState<SearchConsoleV7Data | null>(null);
   const [googleAdsV8, setGoogleAdsV8] = useState<GoogleAdsImportData | null>(null);
   const [indexSummary, setIndexSummary] = useState<IndexSummaryManual | null>(null);
+  const [seoWorkLogsV11, setSeoWorkLogsV11] = useState<SeoWorkLogItem[]>([]);
   const [workbenchEnabled, setWorkbenchEnabled] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(() => formatDateTime(new Date()));
@@ -86,10 +89,15 @@ export default function SeoDashboard() {
   useEffect(() => {
     const handleRestore = () => {
       setRestoreVersion((value) => value + 1);
+      setSeoWorkLogsV11(loadSeoWorkLogs());
     };
 
     window.addEventListener(SEO_DASHBOARD_RESTORED_EVENT, handleRestore);
     return () => window.removeEventListener(SEO_DASHBOARD_RESTORED_EVENT, handleRestore);
+  }, []);
+
+  useEffect(() => {
+    setSeoWorkLogsV11(loadSeoWorkLogs());
   }, []);
 
   function openWorkbench() {
@@ -241,7 +249,8 @@ export default function SeoDashboard() {
     keywords: dashboard.seoKeywords,
     tasks: filteredTasks,
     internalLinks: dashboard.internalLinkSuggestions,
-  }), [dashboard.blogSeoItems, dashboard.internalLinkSuggestions, dashboard.productSeoItems, dashboard.seoClusters, dashboard.seoKeywords, filteredTasks, googleAdsV8, searchConsoleV7]);
+    workLogs: seoWorkLogsV11,
+  }), [dashboard.blogSeoItems, dashboard.internalLinkSuggestions, dashboard.productSeoItems, dashboard.seoClusters, dashboard.seoKeywords, filteredTasks, googleAdsV8, searchConsoleV7, seoWorkLogsV11]);
 
   if (loading) {
     return (
@@ -277,6 +286,7 @@ export default function SeoDashboard() {
         <a href="#tong-quan">Tổng quan</a>
         <a href="#ke-hoach-seo">Kế hoạch SEO</a>
         <a href="#nhap-du-lieu-seo">Nhập dữ liệu SEO</a>
+        <a href="#nhat-ky-seo">Nhật ký SEO</a>
         <a href="#buoc-tiep-theo">Bước tiếp theo</a>
         <a href="#phan-tich-nang-cao">Phân tích nâng cao</a>
       </nav>
@@ -288,6 +298,10 @@ export default function SeoDashboard() {
         <MetricCard label="URL tạo từ website" value={formatNumber(overview?.generatedUrls || 0)} hint={`${overview?.activeCategoryUrls || 0} danh mục có sản phẩm, ${overview?.staticUrls || 0} trang tĩnh`} />
         <MetricCard label="GSC cập nhật" value={formatOptionalDate(professionalPlan.sourceSummary.searchConsoleUpdatedAt)} hint={`${professionalPlan.sourceSummary.searchConsoleKeywordCount} keyword, ${professionalPlan.sourceSummary.searchConsoleUrlCount} URL có impression - ${professionalPlan.sourceSummary.searchConsoleDateRanges.join(', ') || 'chưa có range'}`} />
         <MetricCard label="Keyword Planner" value={professionalPlan.sourceSummary.googleAdsKeywordCount ? formatNumber(professionalPlan.sourceSummary.googleAdsKeywordCount) : 'Chưa có dữ liệu'} hint={formatOptionalDate(professionalPlan.sourceSummary.googleAdsUpdatedAt)} />
+        <MetricCard label="Việc SEO đã làm" value={formatNumber(professionalPlan.sourceSummary.workLogTotal)} hint="Đọc từ Nhật ký SEO v11" />
+        <MetricCard label="Đang theo dõi" value={formatNumber(professionalPlan.sourceSummary.workLogWatching)} hint={`${professionalPlan.sourceSummary.workLogDueToday} việc đến hạn hôm nay`} />
+        <MetricCard label="Cần sửa tiếp" value={formatNumber(professionalPlan.sourceSummary.workLogNeedFix)} hint={`${professionalPlan.sourceSummary.workLogOverdue} việc quá hạn kiểm tra`} />
+        <MetricCard label="Có tín hiệu tốt" value={formatNumber(professionalPlan.sourceSummary.workLogGoodSignal)} />
       </section>
 
       <section id="hom-nay">
@@ -323,6 +337,9 @@ export default function SeoDashboard() {
                   <p><b>URL:</b> {task.url || 'Chưa có URL chính'}</p>
                   <p><b>Keyword:</b> {task.keyword || 'Chưa xác định'}</p>
                   <p>{task.reason}</p>
+                  <p><b>Lịch sử:</b> {task.historyStatus} · <b>Cần làm lại:</b> {task.shouldRedo}</p>
+                  <p><b>Nhật ký gần nhất:</b> {task.latestHistory || 'Chưa có'}</p>
+                  <p>{task.historyReason}</p>
                   <small>{task.action}</small>
                   <button className={styles.secondaryButton} type="button" onClick={() => copyTaskText(task)}>Copy việc cho Codex</button>
                 </article>
@@ -333,7 +350,7 @@ export default function SeoDashboard() {
               {professionalPlan.week.map((task) => (
                 <article className={styles.v61PlanMiniTask} key={task.id}>
                   <strong>{task.title}</strong>
-                  <span>{task.type} - {task.priority} - {task.estimatedTime}</span>
+                  <span>{task.type} - {task.priority} - {task.estimatedTime} - Lịch sử: {task.historyStatus}</span>
                 </article>
               ))}
             </div>
@@ -342,7 +359,7 @@ export default function SeoDashboard() {
               {professionalPlan.watch.map((task) => (
                 <article className={styles.v61PlanMiniTask} key={task.id}>
                   <strong>{task.keyword || task.title}</strong>
-                  <span>{task.source} - {task.score}/100</span>
+                  <span>{task.source} - {task.score}/100 - Lịch sử: {task.historyStatus}</span>
                 </article>
               ))}
             </div>
@@ -380,6 +397,12 @@ export default function SeoDashboard() {
         </div>
       </section>
 
+      <section id="nhat-ky-seo">
+        <Suspense fallback={<SkeletonGrid />}>
+          <SeoWorkLogV11 key={`work-log-main-${restoreVersion}`} tasks={filteredTasks} noteContent={dashboard.note?.content || ''} onLogsChange={setSeoWorkLogsV11} />
+        </Suspense>
+      </section>
+
       <section id="buoc-tiep-theo">
         <ModuleCard title="Bước tiếp theo" description="Các việc nên làm sau khi cập nhật dữ liệu, giữ gọn để màn hình chính không thành bảng phân tích.">
           <div className={styles.v61PlanSource}>
@@ -390,7 +413,7 @@ export default function SeoDashboard() {
             {[...professionalPlan.week, ...professionalPlan.watch].slice(0, 4).map((task) => (
               <article className={styles.v61PlanMiniTask} key={'next-step-' + task.id}>
                 <strong>{task.title}</strong>
-                <span>{task.type} - {task.priority} - {task.estimatedTime}</span>
+                <span>{task.type} - {task.priority} - {task.estimatedTime} - Lịch sử: {task.historyStatus}</span>
               </article>
             ))}
           </div>
@@ -486,12 +509,6 @@ export default function SeoDashboard() {
             <div id="bai-viet">
               <AiBlogRanking blogs={filteredV6BlogRanking} />
             </div>
-          </section>
-
-          <section id="seo-work-log-v11">
-            <Suspense fallback={<SkeletonGrid />}>
-              <SeoWorkLogV11 key={`work-log-${restoreVersion}`} tasks={filteredTasks} noteContent={dashboard.note?.content || ''} />
-            </Suspense>
           </section>
 
           <Suspense fallback={<SkeletonGrid />}>

@@ -24,6 +24,9 @@ const SeoWorkLogV11 = lazy(() => import('./SeoWorkLogV11'));
 const SeoNextActionsV11 = lazy(() => import('./SeoNextActionsV11'));
 const GSC_MANUAL_SUMMARY_KEY = 'noithathungngoc-gsc-manual-summary-v11';
 
+type GscDashboardRangeStatus = { rangeKey?: string; label?: string; exists?: boolean; hasData?: boolean; rowCount?: number; updatedAt?: string | null; storeKey?: string; partial?: boolean; stoppedReason?: string };
+type GscDashboardApiStatus = { latestQueryPageSync?: GscDashboardRangeStatus | null; ranges?: Record<string, GscDashboardRangeStatus>; rangeQueryPageSyncs?: GscDashboardRangeStatus[] };
+
 function formatNumber(value: number) {
   return new Intl.NumberFormat('vi-VN').format(value || 0);
 }
@@ -122,6 +125,16 @@ function dailySourceRows(plan: AiSeoDailyPlan | null) {
   return Array.isArray(plan?.dataSources) ? plan.dataSources : [];
 }
 
+function queryPageRowsFromStatus(status: GscDashboardApiStatus | null) {
+  const rangeRows = Object.values(status?.ranges || {}).reduce((sum, item) => sum + Number(item?.rowCount || 0), 0);
+  const listRows = (status?.rangeQueryPageSyncs || []).reduce((sum, item) => sum + Number(item?.rowCount || 0), 0);
+  return Math.max(rangeRows, listRows, Number(status?.latestQueryPageSync?.rowCount || 0));
+}
+
+function hasQueryPageStatus(status: GscDashboardApiStatus | null) {
+  return queryPageRowsFromStatus(status) > 0 || Boolean(status?.latestQueryPageSync?.exists || status?.latestQueryPageSync?.hasData || Object.values(status?.ranges || {}).some((item) => item.exists || item.hasData));
+}
+
 const defaultFilters: DashboardSeoFilters = {
   search: '',
   priority: 'all',
@@ -144,6 +157,7 @@ export default function SeoDashboard() {
   const [lastUpdated, setLastUpdated] = useState(() => formatDateTime(new Date()));
   const [restoreVersion, setRestoreVersion] = useState(0);
   const [dailyAiPlan, setDailyAiPlan] = useState<AiSeoDailyPlan | null>(null);
+  const [gscApiStatus, setGscApiStatus] = useState<GscDashboardApiStatus | null>(null);
   const [dailyAiLoading, setDailyAiLoading] = useState(false);
   const [dailyAiMessage, setDailyAiMessage] = useState('');
 
@@ -164,6 +178,7 @@ export default function SeoDashboard() {
   }, []);
 
   useEffect(() => {
+    loadGscApiStatus();
     loadDailyAiPlan();
     setSeoWorkLogsV11(loadSeoWorkLogs());
     try {
@@ -194,6 +209,22 @@ export default function SeoDashboard() {
     setLastUpdated(formatDateTime(new Date()));
   }
 
+  async function loadGscApiStatus() {
+    try {
+      const response = await fetch('/api/admin/search-console/status', { headers: { Accept: 'application/json' }, cache: 'no-store' });
+      const body = await response.json().catch(() => ({})) as GscDashboardApiStatus & { ok?: boolean };
+      if (response.ok && body.ok) {
+        setGscApiStatus({
+          latestQueryPageSync: body.latestQueryPageSync || null,
+          ranges: body.ranges || {},
+          rangeQueryPageSyncs: Array.isArray(body.rangeQueryPageSyncs) ? body.rangeQueryPageSyncs : [],
+        });
+      }
+    } catch {
+      setGscApiStatus(null);
+    }
+  }
+
   async function loadDailyAiPlan() {
     try {
       const response = await fetch('/api/admin/seo-daily/run', { headers: { Accept: 'application/json' } });
@@ -217,6 +248,7 @@ export default function SeoDashboard() {
       const body = await response.json().catch(() => ({})) as { ok?: boolean; plan?: AiSeoDailyPlan; message?: string; error?: string; warnings?: string[] };
       if (!response.ok || !body.plan) throw new Error(body.message || body.error || 'Không chạy được AI SEO hôm nay.');
       setDailyAiPlan(body.plan);
+      loadGscApiStatus();
       setDailyAiMessage((body.message || 'Đã chạy AI SEO hôm nay.') + (body.warnings?.length ? ' ' + body.warnings.join(' ') : ''));
     } catch (err) {
       setDailyAiMessage(err instanceof Error ? err.message : 'Không chạy được AI SEO hôm nay.');
@@ -358,6 +390,10 @@ export default function SeoDashboard() {
     manualSearchConsoleSummary: gscManualSummary,
   }), [dashboard.blogSeoItems, dashboard.internalLinkSuggestions, dashboard.productSeoItems, dashboard.seoClusters, dashboard.seoKeywords, filteredTasks, googleAdsV8, searchConsoleV7, seoWorkLogsV11, gscManualSummary]);
 
+  const queryPageRowsFromDaily = dailySourceRows(dailyAiPlan).filter((item) => item.id.startsWith('query-page-api-')).reduce((sum, item) => sum + Number(item.count || 0), 0) || Number(dailySourceRows(dailyAiPlan).find((item) => item.id === 'query-page-api')?.count || 0);
+  const queryPageRowsForUi = queryPageRowsFromStatus(gscApiStatus) || queryPageRowsFromDaily || Number(professionalPlan?.sourceSummary?.apiQueryPageSummary?.rowCount || 0);
+  const hasAnySeoDataForUi = hasQueryPageStatus(gscApiStatus) || queryPageRowsForUi > 0 || Boolean(gscManualSummary) || Boolean(professionalPlan.sourceSummary.googleAdsKeywordCount);
+
   if (loading) {
     return (
       <main className={styles.dashboard} data-admin-seo="true">
@@ -432,8 +468,8 @@ export default function SeoDashboard() {
         >
           <div className={styles.aiDailyStatusGrid}>
             <MetricCard label="Lần phân tích gần nhất" value={formatOptionalDate(dailyAiPlan?.generatedAt)} hint={dailyAiPlan?.source === 'auto-daily' ? 'Chạy tự động/cron' : dailyAiPlan ? 'Chạy thủ công' : 'Chưa có plan đã lưu'} />
-            <MetricCard label="Trạng thái dữ liệu" value={dailyAiPlan?.dataFreshness.status === 'fresh' ? 'Dữ liệu mới' : dailyAiPlan?.dataFreshness.status === 'stale' ? 'Dữ liệu cũ' : 'Thiếu dữ liệu'} hint={dailyAiPlan?.dataFreshness.newestUpdatedAt ? formatOptionalDate(dailyAiPlan.dataFreshness.newestUpdatedAt) : 'Chưa có nguồn mới'} />
-            <MetricCard label="Query+Page rows" value={formatNumber(dailySourceRows(dailyAiPlan).filter((item) => item.id.startsWith('query-page-api-')).reduce((sum, item) => sum + Number(item.count || 0), 0) || dailySourceRows(dailyAiPlan).find((item) => item.id === 'query-page-api')?.count || 0)} hint="Tong cac moc 7d/28d/3m/6m/12m, khong tu sync khi mo trang" />
+            <MetricCard label="Trạng thái dữ liệu" value={dailyAiPlan?.dataFreshness.status === 'fresh' ? 'Dữ liệu mới' : dailyAiPlan?.dataFreshness.status === 'stale' ? 'Dữ liệu cũ' : hasAnySeoDataForUi ? 'Có dữ liệu' : 'Thiếu dữ liệu'} hint={dailyAiPlan?.dataFreshness.newestUpdatedAt ? formatOptionalDate(dailyAiPlan.dataFreshness.newestUpdatedAt) : hasAnySeoDataForUi ? 'Đã đọc metadata từ Supabase/status API' : 'Chưa có nguồn mới'} />
+            <MetricCard label="Query+Page rows" value={formatNumber(queryPageRowsForUi)} hint="Từ status API/range/latest, không tự sync khi mở trang" />
             <MetricCard label="Google Ads" value={formatNumber(dailySourceRows(dailyAiPlan).find((item) => item.id === 'google-ads')?.count || professionalPlan.sourceSummary.googleAdsKeywordCount || 0)} hint="Keyword Planner đã import" />
             <MetricCard label="Supabase đã đọc" value={`${formatNumber(overview?.products || 0)} / ${formatNumber(overview?.blogPosts || 0)}`} hint="Sản phẩm / bài viết" />
             <MetricCard label="Nhật ký SEO v11" value={formatNumber(dailyAiPlan?.workLogSummary.total || professionalPlan.sourceSummary.workLogTotal)} hint={`${dailyAiPlan?.workLogSummary.needFix ?? professionalPlan.sourceSummary.workLogNeedFix} cần sửa tiếp`} />

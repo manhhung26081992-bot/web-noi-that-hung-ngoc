@@ -1519,10 +1519,17 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
     }
   };
 
+  const hasApiQueryPageData = Boolean(
+    apiStatus?.latestQueryPageSync?.exists ||
+    apiStatus?.latestQueryPageSync?.hasData ||
+    Number(apiStatus?.latestQueryPageSync?.rowCount || 0) > 0 ||
+    Object.values(apiStatus?.ranges || {}).some((item) => item.exists || item.hasData || Number(item.rowCount || 0) > 0) ||
+    (apiStatus?.rangeQueryPageSyncs || []).some((item) => item.exists || item.hasData || Number(item.rowCount || 0) > 0)
+  );
   const gscTypeStatus: Array<{ type: SearchConsoleImportKind; label: string; present: boolean }> = [
     { type: 'queries', label: 'Queries', present: Boolean(data?.queries.length || data?.imports?.some((item) => item.type === 'queries')) },
     { type: 'pages', label: 'Pages', present: Boolean(data?.pages.length || data?.imports?.some((item) => item.type === 'pages')) },
-    { type: 'query-page', label: 'Query+Page', present: Boolean(data?.imports?.some((item) => item.type === 'query-page') || data?.queries.some((item) => item.page)) },
+    { type: 'query-page', label: 'Query+Page', present: Boolean(hasApiQueryPageData || data?.imports?.some((item) => item.type === 'query-page') || data?.queries.some((item) => item.page)) },
     { type: 'dates', label: 'Dates', present: Boolean(data?.trend.length || data?.imports?.some((item) => item.type === 'dates')) },
     { type: 'devices', label: 'Devices', present: Boolean(data?.devices.length || data?.imports?.some((item) => item.type === 'devices')) },
     { type: 'countries', label: 'Countries', present: Boolean(data?.countries.length || data?.imports?.some((item) => item.type === 'countries')) },
@@ -1546,7 +1553,7 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
         };
       });
   }, [apiStatus]);
-  const totalApiRangeRows = apiRangeStatuses.reduce((sum, item) => sum + Number(item.rowCount || 0), 0);
+  const totalApiRangeRows = apiRangeStatuses.reduce((sum, item) => sum + Number(item.rowCount || 0), 0) || Number(apiStatus?.latestQueryPageSync?.rowCount || 0);
   const latestApiRangeUpdate = apiRangeStatuses
     .map((item) => item.updatedAt || item.importedAt || '')
     .filter(Boolean)

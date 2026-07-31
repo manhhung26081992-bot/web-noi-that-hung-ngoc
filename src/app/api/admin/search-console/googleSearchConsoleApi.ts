@@ -35,8 +35,8 @@ type StorePayload = {
   updatedAt?: string;
   version?: string;
   chunkIndex?: number;
-  data?: string;
-  metadata?: GscQueryPageSyncMeta | null;
+  data?: unknown;
+  metadata?: Partial<GscQueryPageSyncMeta> | null;
 };
 
 type StoreItem = {
@@ -207,12 +207,69 @@ function getSupabase() {
   return getSupabaseAdminClient();
 }
 
+
+function safeJsonParse(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
+function normalizeStorePayloadValue(value: unknown, depth = 0): unknown {
+  if (depth > 6 || value == null) return value;
+  if (typeof value === 'string') {
+    const parsed = safeJsonParse(value);
+    return parsed === value ? value : normalizeStorePayloadValue(parsed, depth + 1);
+  }
+  if (typeof value !== 'object' || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  if (typeof record.raw === 'string' && record.raw.trim()) {
+    return normalizeStorePayloadValue(record.raw, depth + 1);
+  }
+  if (Object.prototype.hasOwnProperty.call(record, 'value')) {
+    return normalizeStorePayloadValue(record.value, depth + 1);
+  }
+  if (typeof record.data === 'string' && record.data.trim()) {
+    return normalizeStorePayloadValue(record.data, depth + 1);
+  }
+  if (record.data && typeof record.data === 'object' && !Array.isArray(record.data)) {
+    const nested = record.data as Record<string, unknown>;
+    if (
+      Object.prototype.hasOwnProperty.call(nested, 'raw') ||
+      Object.prototype.hasOwnProperty.call(nested, 'value') ||
+      typeof nested.data === 'string' ||
+      Object.prototype.hasOwnProperty.call(nested, 'aggregateData')
+    ) {
+      return normalizeStorePayloadValue(nested, depth + 1);
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(record, 'aggregateData')) {
+    return normalizeStorePayloadValue(record.aggregateData, depth + 1);
+  }
+  return value;
+}
+
 function parseStoreValue(item: StoreItem | null | undefined) {
   if (!item?.payload) return null;
-  if (item.payload.raw && typeof item.payload.raw === 'string') {
-    return JSON.parse(item.payload.raw);
-  }
-  return item.payload.value ?? item.payload;
+  return normalizeStorePayloadValue(item.payload);
+}
+
+function countQueryPageRows(value: unknown): number {
+  const normalized = normalizeStorePayloadValue(value);
+  if (!normalized || typeof normalized !== 'object' || Array.isArray(normalized)) return 0;
+  const record = normalized as Record<string, unknown>;
+  const directRowCount = Number(record.rowCount || record.fetchedRows || 0);
+  if (Number.isFinite(directRowCount) && directRowCount > 0) return directRowCount;
+  const queryRows = Array.isArray(record.queries) ? record.queries.length : 0;
+  if (queryRows > 0) return queryRows;
+  const rows = Array.isArray(record.rows) ? record.rows.length : 0;
+  if (rows > 0) return rows;
+  const items = Array.isArray(record.items) ? record.items.length : 0;
+  if (items > 0) return items;
+  if (record.data && typeof record.data === 'object') return countQueryPageRows(record.data);
+  if (record.apiPayload && typeof record.apiPayload === 'object') return countQueryPageRows(record.apiPayload);
+  return 0;
 }
 
 async function readStoreRows(storeKey: string) {
@@ -234,23 +291,31 @@ async function readStoreMain(storeKey: string) {
   return data as StoreItem | null;
 }
 
-function latestMetaFromStoreValue(value: unknown): GscQueryPageSyncMeta | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  const typed = value as { imports?: Array<Partial<GscQueryPageSyncMeta> & { type?: string; source?: string }>; queryPageApi?: GscQueryPageSyncMeta };
+function latestMetaFromStoreValue(value: unknown): Partial<GscQueryPageSyncMeta> | null {
+  const normalized = normalizeStorePayloadValue(value);
+  if (!normalized || typeof normalized !== 'object' || Array.isArray(normalized)) return null;
+  const typed = normalized as Record<string, unknown> & { imports?: Array<Partial<GscQueryPageSyncMeta> & { type?: string; source?: string }>; queryPageApi?: GscQueryPageSyncMeta; metadata?: Partial<GscQueryPageSyncMeta> };
   if (typed.queryPageApi) return typed.queryPageApi;
-  const latest = [...(Array.isArray(typed.imports) ? typed.imports : [])]
+  if (typed.metadata && typeof typed.metadata === 'object') return typed.metadata;
+  const latestImport = [...(Array.isArray(typed.imports) ? typed.imports : [])]
     .filter((item) => item.type === 'query-page')
     .sort((a, b) => String(b.updatedAt || b.importedAt || '').localeCompare(String(a.updatedAt || a.importedAt || '')))[0];
-  return latest ? latest as GscQueryPageSyncMeta : null;
+  if (latestImport) return latestImport as Partial<GscQueryPageSyncMeta>;
+  const latestItem = [...(Array.isArray(typed.items) ? typed.items as Array<Partial<GscQueryPageSyncMeta> & { type?: string }> : [])]
+    .filter((item) => !item.type || item.type === 'query-page')
+    .sort((a, b) => String(b.updatedAt || b.importedAt || '').localeCompare(String(a.updatedAt || a.importedAt || '')))[0];
+  if (latestItem) return latestItem;
+  const rowCount = countQueryPageRows(normalized);
+  return rowCount > 0 ? { rowCount } : null;
 }
 
 function rangeStatusFromMainRow(rangeKey: string, main: StoreItem | null, historyLatest?: SearchConsoleUpdateHistoryEntry) {
   const fallback = resolveDateRange(rangeKey);
   const payload = main?.payload || null;
   const storeValue = payload && !payload.isChunked ? parseStoreValue(main || undefined) : null;
-  const metadata = (payload?.metadata || latestMetaFromStoreValue(storeValue) || null) as Partial<GscQueryPageSyncMeta> | null;
+  const metadata = (payload?.metadata || latestMetaFromStoreValue(storeValue) || latestMetaFromStoreValue(payload) || null) as Partial<GscQueryPageSyncMeta> | null;
   const hasData = Boolean(main || historyLatest);
-  const rowCount = Number(historyLatest?.rowCount || metadata?.rowCount || 0);
+  const rowCount = Number(historyLatest?.rowCount || metadata?.rowCount || countQueryPageRows(storeValue) || countQueryPageRows(payload) || 0);
   const updatedAt = historyLatest?.updatedAt || metadata?.updatedAt || main?.updated_at || payload?.updatedAt || null;
   const importedAt = historyLatest?.importedAt || metadata?.importedAt || null;
   const stoppedReason = historyLatest?.stoppedReason || metadata?.stoppedReason || (hasData ? 'completed' : '');
@@ -291,8 +356,8 @@ async function readStoreValue<T>(storeKey: string): Promise<T | null> {
     if (typeof chunk?.payload?.data !== 'string') return null;
     chunks.push(chunk.payload.data);
   }
-  const payload = JSON.parse(chunks.join('')) as StorePayload;
-  return parseStoreValue({ store_key: storeKey, payload }) as T | null;
+  const parsed = safeJsonParse(chunks.join('')) as StorePayload;
+  return normalizeStorePayloadValue(parsed) as T | null;
 }
 
 function chunkText(text: string) {
@@ -680,7 +745,7 @@ export async function getApiStatus() {
     });
   const rangeMainRows = await Promise.all(GSC_QUERY_PAGE_RANGE_KEYS.map((rangeKey) => readStoreMain(getQueryPageRangeStoreKey(rangeKey))));
   const rangeQueryPageSyncs = GSC_QUERY_PAGE_RANGE_KEYS.map((rangeKey, index) => rangeStatusFromMainRow(rangeKey, rangeMainRows[index], latestByRange.get(rangeKey)));
-  const aggregateLatest = aggregateStore?.queryPageApi;
+  const aggregateLatest = aggregateStore?.queryPageApi || latestMetaFromStoreValue(aggregateStore);
   const historyLatest = history
     .filter((item) => item.source === 'api' && item.type === 'query-page')
     .sort((a, b) => String(b.updatedAt || b.importedAt).localeCompare(String(a.updatedAt || a.importedAt)))[0];
@@ -719,7 +784,7 @@ export async function getApiStatus() {
       dateRangeLabel: latest.dateRangeLabel,
       startDate: latest.startDate,
       endDate: latest.endDate,
-      rowCount: latest.rowCount,
+      rowCount: Number(latest.rowCount || 0),
       source: 'api',
       partial: latest.partial,
       rowLimit: latest.rowLimit,

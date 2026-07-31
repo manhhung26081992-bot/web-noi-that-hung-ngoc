@@ -50,7 +50,7 @@ type StorePayload = {
   updatedAt?: string;
   version?: string;
   chunkIndex?: number;
-  data?: string;
+  data?: unknown;
 };
 
 type StoreRow = {
@@ -85,12 +85,74 @@ async function authorize(request: NextRequest) {
   return null;
 }
 
+
+function safeJsonParse(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
+function normalizeStorePayloadValue(value: unknown, depth = 0): unknown {
+  if (depth > 6 || value == null) return value;
+  if (typeof value === 'string') {
+    const parsed = safeJsonParse(value);
+    return parsed === value ? value : normalizeStorePayloadValue(parsed, depth + 1);
+  }
+  if (typeof value !== 'object' || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  if (typeof record.raw === 'string' && record.raw.trim()) {
+    return normalizeStorePayloadValue(record.raw, depth + 1);
+  }
+  if (Object.prototype.hasOwnProperty.call(record, 'value')) {
+    return normalizeStorePayloadValue(record.value, depth + 1);
+  }
+  if (typeof record.data === 'string' && record.data.trim()) {
+    return normalizeStorePayloadValue(record.data, depth + 1);
+  }
+  if (record.data && typeof record.data === 'object' && !Array.isArray(record.data)) {
+    const nested = record.data as Record<string, unknown>;
+    if (
+      Object.prototype.hasOwnProperty.call(nested, 'raw') ||
+      Object.prototype.hasOwnProperty.call(nested, 'value') ||
+      typeof nested.data === 'string' ||
+      Object.prototype.hasOwnProperty.call(nested, 'aggregateData')
+    ) {
+      return normalizeStorePayloadValue(nested, depth + 1);
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(record, 'aggregateData')) {
+    return normalizeStorePayloadValue(record.aggregateData, depth + 1);
+  }
+  return value;
+}
+
 function parseStoreValue<T>(row: StoreRow | null | undefined): T | null {
   if (!row?.payload) return null;
-  if (typeof row.payload.raw === 'string' && row.payload.raw) {
-    return JSON.parse(row.payload.raw) as T;
+  return normalizeStorePayloadValue(row.payload) as T | null;
+}
+
+function extractSearchConsoleData(value: unknown): SearchConsoleV7Data | null {
+  const normalized = normalizeStorePayloadValue(value);
+  if (!normalized || typeof normalized !== 'object' || Array.isArray(normalized)) return null;
+  const record = normalized as Record<string, unknown>;
+  if (Array.isArray(record.queries) || Array.isArray(record.pages)) return normalized as SearchConsoleV7Data;
+  if (record.data) return extractSearchConsoleData(record.data);
+  if (record.aggregateData) return extractSearchConsoleData(record.aggregateData);
+  return null;
+}
+
+function countSearchConsoleRows(value: unknown, data?: SearchConsoleV7Data | null) {
+  const normalized = normalizeStorePayloadValue(value);
+  if (normalized && typeof normalized === 'object' && !Array.isArray(normalized)) {
+    const record = normalized as Record<string, unknown>;
+    const direct = Number(record.rowCount || record.fetchedRows || 0);
+    if (Number.isFinite(direct) && direct > 0) return direct;
+    if (Array.isArray(record.rows) && record.rows.length) return record.rows.length;
+    if (Array.isArray(record.items) && record.items.length) return record.items.length;
   }
-  return (row.payload.value ?? row.payload) as T;
+  return Array.isArray(data?.queries) ? data.queries.length : 0;
 }
 
 async function readStoreEntry<T>(supabase: SupabaseClient, storeKey: string): Promise<StoreEntry<T>> {
@@ -112,8 +174,8 @@ async function readStoreEntry<T>(supabase: SupabaseClient, storeKey: string): Pr
     if (typeof chunk?.payload?.data !== 'string') return { value: null, updatedAt: main.updated_at || null };
     chunks.push(chunk.payload.data);
   }
-  const payload = JSON.parse(chunks.join('')) as StorePayload;
-  return { value: parseStoreValue<T>({ store_key: storeKey, payload }), updatedAt: main.updated_at || null };
+  const payload = safeJsonParse(chunks.join('')) as StorePayload;
+  return { value: normalizeStorePayloadValue(payload) as T | null, updatedAt: main.updated_at || null };
 }
 
 function chunkText(text: string) {
@@ -345,18 +407,18 @@ async function loadDashboardInput(supabase: SupabaseClient, apiSummary: unknown)
     entry: await readStoreEntry<{ data?: SearchConsoleV7Data; lastUpdated?: string }>(supabase, getQueryPageRangeStoreKey(rangeKey)),
   })));
   const aggregateValue = aggregateStore.value;
-  const aggregateData = ((aggregateValue as { data?: SearchConsoleV7Data })?.data || aggregateValue || null) as SearchConsoleV7Data | null;
-  const legacyQueryPageData = queryPageStore.value?.data || null;
+  const aggregateData = extractSearchConsoleData(aggregateValue);
+  const legacyQueryPageData = extractSearchConsoleData(queryPageStore.value);
   const queryPageRanges: SearchConsoleQueryPageRangeSummary[] = rangeStores.map((item) => {
-    const data = item.entry.value?.data || null;
+    const data = extractSearchConsoleData(item.entry.value);
     const meta = latestImportMeta(data);
     const fallback = resolveDateRange(item.rangeKey);
     return {
       rangeKey: item.rangeKey,
       label: fallback.dateRangeLabel,
       storeKey: item.storeKey,
-      hasData: Boolean(data?.queries?.length || meta),
-      rowCount: Number(meta?.rowCount || data?.queries?.length || 0),
+      hasData: Boolean(data?.queries?.length || meta || item.entry.updatedAt),
+      rowCount: Number(meta?.rowCount || countSearchConsoleRows(item.entry.value, data) || 0),
       updatedAt: item.entry.updatedAt || meta?.updatedAt || data?.overview?.lastUpdated || null,
       dateRangeLabel: meta?.dateRangeLabel || fallback.dateRangeLabel,
       startDate: meta?.startDate,

@@ -412,7 +412,3 @@ const allImages = useMemo(() => {
     </main>
   );
 }
-
-
-
-

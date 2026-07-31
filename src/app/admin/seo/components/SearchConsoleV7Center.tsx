@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import JSZip from 'jszip';
 import { Badge, EmptyState, MetricCard, MiniBarChart, ModuleCard } from './Ui';
 import type {
@@ -129,6 +129,10 @@ type GscQueryPageStoppedReason = 'completed' | 'max_pages_reached' | 'empty_resp
 
 type GscApiQueryPageMeta = {
   source: 'api';
+  rangeKey?: string;
+  storeKey?: string;
+  hasData?: boolean;
+  exists?: boolean;
   updatedAt: string;
   importedAt?: string;
   dateRangeLabel: string;
@@ -148,7 +152,12 @@ type GscApiStatus = {
   connected: boolean;
   siteUrl: string;
   latestQueryPageSync?: GscApiQueryPageMeta | null;
+  rangeQueryPageSyncs?: GscApiQueryPageMeta[];
+  ranges?: Record<string, GscApiQueryPageMeta>;
+  historySummary?: Array<Partial<GscApiQueryPageMeta> & { type?: string }>;
 };
+
+const API_RANGE_LABELS: Record<string, string> = { '7d': '7 ngày', '28d': '28 ngày', '3m': '3 tháng', '6m': '6 tháng', '12m': '12 tháng' };
 
 type GscApiSyncResponse = {
   ok: boolean;
@@ -1014,14 +1023,28 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
   const [apiSyncing, setApiSyncing] = useState(false);
   const [apiMessage, setApiMessage] = useState('');
 
-  useEffect(() => {
-    fetch('/api/admin/search-console/status', { headers: { Accept: 'application/json' }, cache: 'no-store' })
-      .then((response) => response.json())
-      .then((body) => {
-        if (body?.ok) setApiStatus({ connected: Boolean(body.connected), siteUrl: body.siteUrl || '', latestQueryPageSync: body.latestQueryPageSync || null });
-      })
-      .catch(() => null);
+  const refreshApiStatus = useCallback(async () => {
+    try {
+      const response = await fetch('/api/admin/search-console/status', { headers: { Accept: 'application/json' }, cache: 'no-store' });
+      const body = await response.json().catch(() => ({}));
+      if (body?.ok) {
+        setApiStatus({
+          connected: Boolean(body.connected),
+          siteUrl: body.siteUrl || '',
+          latestQueryPageSync: body.latestQueryPageSync || null,
+          rangeQueryPageSyncs: Array.isArray(body.rangeQueryPageSyncs) ? body.rangeQueryPageSyncs : [],
+          ranges: body.ranges && typeof body.ranges === 'object' && !Array.isArray(body.ranges) ? body.ranges : {},
+          historySummary: Array.isArray(body.historySummary) ? body.historySummary : [],
+        });
+      }
+    } catch {
+      // Status API only controls compact metadata; failed status must not break imports.
+    }
   }, []);
+
+  useEffect(() => {
+    refreshApiStatus();
+  }, [refreshApiStatus]);
 
   useEffect(() => {
     try {
@@ -1204,16 +1227,19 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
     setRawTextByType((current) => ({ ...current, 'query-page': '' }));
     setFileNames((current) => ({ ...current, 'query-page': 'Google Search Console API' }));
     setRowCounts((current) => ({ ...current, 'query-page': result.rowCount }));
-    setApiStatus({
-      connected: true,
-      siteUrl: result.siteUrl,
-      latestQueryPageSync: {
+    setApiStatus((current) => {
+      const nextRange = {
+        ...(current?.ranges?.[result.rangeKey || apiRange] || {}),
+        rangeKey: result.rangeKey || apiRange,
+        storeKey: result.storeKey || queryPageRangeStoreKey(result.rangeKey || apiRange),
+        hasData: true,
+        exists: true,
         updatedAt: now,
         dateRangeLabel: result.dateRangeLabel,
         startDate: result.startDate,
         endDate: result.endDate,
         rowCount: result.rowCount,
-        source: 'api',
+        source: 'api' as const,
         partial: result.partial,
         rowLimit: result.rowLimit,
         maxPages: result.maxPages,
@@ -1221,9 +1247,28 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
         fetchedRows: result.fetchedRows,
         maxPagesReached: result.maxPagesReached,
         stoppedReason: result.stoppedReason,
-      },
+      };
+      const ranges = { ...(current?.ranges || {}), [result.rangeKey || apiRange]: nextRange };
+      return {
+        connected: true,
+        siteUrl: result.siteUrl,
+        latestQueryPageSync: nextRange,
+        ranges,
+        rangeQueryPageSyncs: apiDateRangeOptions.filter((item) => item.value !== '16m').map((item) => ranges[item.value] || {
+          source: 'api',
+          rangeKey: item.value,
+          storeKey: queryPageRangeStoreKey(item.value),
+          dateRangeLabel: item.label,
+          rowCount: 0,
+          updatedAt: '',
+          hasData: false,
+          exists: false,
+        }),
+        historySummary: current?.historySummary || [],
+      };
     });
     onData?.(nextData);
+    refreshApiStatus();
   };
 
   const syncQueryPageFromApi = async (force = false) => {
@@ -1482,7 +1527,31 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
     { type: 'devices', label: 'Devices', present: Boolean(data?.devices.length || data?.imports?.some((item) => item.type === 'devices')) },
     { type: 'countries', label: 'Countries', present: Boolean(data?.countries.length || data?.imports?.some((item) => item.type === 'countries')) },
   ];
-  const totalSavedRows = (data?.imports || []).reduce((sum, item) => sum + Number(item.rowCount || 0), 0);
+  const apiRangeStatuses = useMemo(() => {
+    const fromList = Array.isArray(apiStatus?.rangeQueryPageSyncs) ? apiStatus.rangeQueryPageSyncs : [];
+    return apiDateRangeOptions
+      .filter((option) => option.value !== '16m')
+      .map((option) => {
+        const fromMap = apiStatus?.ranges?.[option.value];
+        const fromArray = fromList.find((item) => item.rangeKey === option.value);
+        return fromMap || fromArray || {
+          source: 'api' as const,
+          rangeKey: option.value,
+          storeKey: queryPageRangeStoreKey(option.value),
+          dateRangeLabel: option.label,
+          updatedAt: '',
+          rowCount: 0,
+          hasData: false,
+          exists: false,
+        };
+      });
+  }, [apiStatus]);
+  const totalApiRangeRows = apiRangeStatuses.reduce((sum, item) => sum + Number(item.rowCount || 0), 0);
+  const latestApiRangeUpdate = apiRangeStatuses
+    .map((item) => item.updatedAt || item.importedAt || '')
+    .filter(Boolean)
+    .sort((a, b) => String(b).localeCompare(String(a)))[0] || '';
+  const totalSavedRows = (data?.imports || []).reduce((sum, item) => sum + Number(item.rowCount || 0), 0) + totalApiRangeRows;
   const missingImportantGsc = [
     !gscTypeStatus.find((item) => item.type === 'query-page')?.present ? 'Nên import thêm Query+Page 3-6 tháng để AI chống trùng URL chính xác hơn.' : '',
     !gscTypeStatus.find((item) => item.type === 'pages')?.present ? 'Nên import Pages 3 tháng để AI biết URL nào có impression.' : '',

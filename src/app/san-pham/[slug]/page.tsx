@@ -67,6 +67,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const cleanSlug = String(slug || '').trim();
+
+  if (cleanSlug.toLowerCase().includes('.webp')) {
+    notFound();
+  }
+
   const currentPath = addTrailingSlash(`/san-pham/${cleanSlug}`);
   const manualRedirect = productRedirects[currentPath];
 

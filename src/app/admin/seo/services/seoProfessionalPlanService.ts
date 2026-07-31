@@ -100,7 +100,7 @@ export interface BuildProfessionalSeoPlanInput {
 
 const BUSINESS_GROUPS = [
   { name: 'Giường sắt', terms: ['giường', 'giuong', 'giường sắt', 'giuong sat', 'giường tầng', 'giuong tang'], url: '/giuong-tang-sat/' },
-  { name: 'Bàn làm việc', terms: ['bàn làm việc', 'ban lam viec', 'bàn văn phòng', 'ban van phong', 'bàn nhân viên', 'ban nhan vien', 'bàn chân sắt', 'ban chan sat'], url: '/ban-lam-viec/' },
+  { name: 'Bàn làm việc', terms: ['bàn làm việc', 'ban lam viec', 'bàn văn phòng', 'ban van phong', 'bàn nhân viên', 'ban nhan vien', 'bàn chân sắt', 'ban chan sat'], url: '/ban-van-phong/' },
   { name: 'Bàn giám đốc', terms: ['bàn giám đốc', 'ban giam doc'], url: '/ban-giam-doc/' },
   { name: 'Trường học', terms: ['bàn học sinh', 'ban hoc sinh', 'bàn ghế học sinh', 'ban ghe hoc sinh', 'trường học', 'truong hoc', 'bảng từ', 'bang tu'], url: '/truong-hoc/' },
   { name: 'Tủ locker', terms: ['tủ locker', 'tu locker', 'locker', 'tủ văn phòng', 'tu van phong', 'tủ tài liệu', 'tu tai lieu'], url: '/tu-locker/' },

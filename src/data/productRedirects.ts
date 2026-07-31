@@ -14,6 +14,8 @@ const redirects: Record<string, string> = {
   "/san-pham/ban-an-thong-minh/": "/ban-an-thong-minh/",
   "/san-pham/ban-an-mat-da/": "/ban-an-mat-da/",
   "/san-pham/ban-ghe-cafe/": "/ban-ghe-cafe/",
+  "/san-pham/ghe-bar/": "/ban-ghe-cafe/",
+  "/san-pham/ban-an-mat-da-cafe/": "/ban-ghe-cafe/",
   "/san-pham/sofa/": "/sofa/",
   "/san-pham/sofa-vang/": "/sofa-vang/",
   "/san-pham/sofa-van-phong/": "/sofa-van-phong/",
@@ -39,6 +41,7 @@ const redirects: Record<string, string> = {
 
   // Tu van phong.
   "/san-pham/tu-locker/": "/tu-locker/",
+  "/san-pham/tu-locker-sat/": "/tu-locker/",
   "/san-pham/tu-tai-lieu-go/": "/tu-tai-lieu-go/",
   "/san-pham/tu-tai-lieu-sat/": "/tu-tai-lieu-sat/",
   "/san-pham/hoc-tu-tu-phu/": "/hoc-tu-tu-phu/",

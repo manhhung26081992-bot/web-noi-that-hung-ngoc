@@ -1,5 +1,36 @@
 import type { NextConfig } from "next";
 
+type LegacyRedirect = { source: string; destination: string; permanent: true };
+
+const legacySemanticRedirects: LegacyRedirect[] = [
+  { source: '/tin-tuc/ghe-xoay', destination: '/ghe-xoay/', permanent: true },
+  { source: '/san-pham/ban-chan-sat', destination: '/ban-chan-sat/', permanent: true },
+  { source: '/san-pham/sofa-da', destination: '/sofa-da/', permanent: true },
+  { source: '/san-pham/ban-hop', destination: '/ban-hop/', permanent: true },
+  { source: '/san-pham/cum-ban', destination: '/cum-ban/', permanent: true },
+  { source: '/san-pham/ke-sach', destination: '/ke-sach/', permanent: true },
+  { source: '/san-pham/tu-giay', destination: '/tu-giay/', permanent: true },
+  { source: '/san-pham/ghe-bar', destination: '/ban-ghe-cafe/', permanent: true },
+  { source: '/san-pham/ban-an-mat-da-cafe', destination: '/ban-ghe-cafe/', permanent: true },
+  { source: '/san-pham/ban-lam-viec', destination: '/ban-nhan-vien/', permanent: true },
+  { source: '/ban-lam-viec', destination: '/ban-nhan-vien/', permanent: true },
+  { source: '/ghe-bar', destination: '/ban-ghe-cafe/', permanent: true },
+  { source: '/ban-an-mat-da-cafe', destination: '/ban-ghe-cafe/', permanent: true },
+  { source: '/san-pham/ke-tivi', destination: '/ke-ti-vi/', permanent: true },
+  { source: '/san-pham/tu-locker-sat', destination: '/tu-locker/', permanent: true },
+  { source: '/ke-tivi', destination: '/ke-ti-vi/', permanent: true },
+  { source: '/tu-locker-sat', destination: '/tu-locker/', permanent: true },
+  { source: '/danh-muc/ban-sofa', destination: '/ban-sofa/', permanent: true },
+];
+
+function withSlashVariants(redirect: LegacyRedirect): LegacyRedirect[] {
+  const source = redirect.source.endsWith('/') ? redirect.source.slice(0, -1) : redirect.source;
+  return [
+    { ...redirect, source },
+    { ...redirect, source: `${source}/` },
+  ];
+}
+
 const nextConfig: NextConfig = {
   /* 1. Tối ưu hóa hình ảnh */
   images: {
@@ -28,6 +59,7 @@ const nextConfig: NextConfig = {
   /* 4. Thêm Header bảo mật */
   async redirects() {
     return [
+      ...legacySemanticRedirects.flatMap(withSlashVariants),
       {
         source: '/:path*',
         has: [

@@ -160,7 +160,7 @@ function productUrl(product: ProductSeoItem) {
 function keywordUrl(keyword: string) {
   const cluster = detectCluster(keyword);
   if (cluster === 'Giường sắt') return '/giuong-tang-sat/';
-  if (cluster === 'Bàn làm việc') return '/ban-lam-viec/';
+  if (cluster === 'Bàn làm việc') return '/ban-van-phong/';
   if (cluster === 'Trường học') return '/truong-hoc/';
   if (cluster === 'Ghế chân quỳ') return '/ghe-chan-quy/';
   if (cluster === 'Ghế giám đốc') return '/ghe-giam-doc/';

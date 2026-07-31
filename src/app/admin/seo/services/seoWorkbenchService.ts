@@ -130,7 +130,7 @@ const CORE_GROUPS = [
   },
   {
     name: 'Bàn làm việc',
-    url: '/ban-lam-viec/',
+    url: '/ban-van-phong/',
     words: ['ban lam viec', 'ban van phong', 'ban nhan vien', 'ban chan sat', 'ban fami', 'ban hop'],
     anchors: ['bàn làm việc giá xưởng', 'bàn văn phòng tại Hà Nội', 'bàn chân sắt văn phòng'],
   },
@@ -176,7 +176,7 @@ const SPECIFIC_GROUP_RULES = [
   { name: 'Ban ghe giao vien', url: '/ban-ghe-giao-vien/', words: ['ban ghe giao vien', 'ban giao vien', 'ghe giao vien'], exclude: ['ban hoc sinh'] },
   { name: 'Bang tu', url: '/bang-tu/', words: ['bang tu', 'bang trang', 'bang viet but long'], exclude: ['ban ', 'ghe ', 'tu '] },
   { name: 'Ban trang diem', url: '/ban-trang-diem/', words: ['ban trang diem', 'ban phan'], exclude: ['ban nhan vien', 'ban giam doc', 'ban hop'] },
-  { name: 'Ke tivi', url: '/ke-tivi/', words: ['ke tivi', 'ke tivi go'], exclude: ['ke sach', 'ke de hang'] },
+  { name: 'Ke tivi', url: '/ke-ti-vi/', words: ['ke tivi', 'ke tivi go'], exclude: ['ke sach', 'ke de hang'] },
   { name: 'Ke sach', url: '/ke-sach/', words: ['ke sach', 'gia sach', 'ke sach van phong'], exclude: ['ke tivi', 'ke de hang'] },
   { name: 'Ke treo quan ao', url: '/ke-treo-quan-ao/', words: ['ke treo quan ao', 'gia treo quan ao'], exclude: ['ke tivi', 'ke sach'] },
   { name: 'Ke de hang', url: '/ke-de-hang/', words: ['ke de hang', 'ke kho', 'ke sat de hang'], exclude: ['ke tivi', 'ke sach'] },

@@ -337,7 +337,7 @@ export const SEO_CLUSTER_GROUPS: SeoClusterGroupConfig[] = [
         id: 'ke-tivi',
         name: 'Kệ tivi',
         priority: 4,
-        mainUrl: '/ke-tivi/',
+        mainUrl: '/ke-ti-vi/',
         categorySlug: 'ke-tivi',
         matchKeywords: ['kệ tivi', 'ke tivi'],
         trackedKeywords: ['kệ tivi'],

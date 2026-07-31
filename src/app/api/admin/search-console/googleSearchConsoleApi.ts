@@ -36,6 +36,7 @@ type StorePayload = {
   version?: string;
   chunkIndex?: number;
   data?: string;
+  metadata?: GscQueryPageSyncMeta | null;
 };
 
 type StoreItem = {
@@ -224,6 +225,58 @@ async function readStoreRows(storeKey: string) {
   return (data || []) as StoreItem[];
 }
 
+async function readStoreMain(storeKey: string) {
+  const { data } = await getSupabase()
+    .from('seo_dashboard_store')
+    .select('store_key,payload,version,updated_at')
+    .eq('store_key', storeKey)
+    .maybeSingle();
+  return data as StoreItem | null;
+}
+
+function latestMetaFromStoreValue(value: unknown): GscQueryPageSyncMeta | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const typed = value as { imports?: Array<Partial<GscQueryPageSyncMeta> & { type?: string; source?: string }>; queryPageApi?: GscQueryPageSyncMeta };
+  if (typed.queryPageApi) return typed.queryPageApi;
+  const latest = [...(Array.isArray(typed.imports) ? typed.imports : [])]
+    .filter((item) => item.type === 'query-page')
+    .sort((a, b) => String(b.updatedAt || b.importedAt || '').localeCompare(String(a.updatedAt || a.importedAt || '')))[0];
+  return latest ? latest as GscQueryPageSyncMeta : null;
+}
+
+function rangeStatusFromMainRow(rangeKey: string, main: StoreItem | null, historyLatest?: SearchConsoleUpdateHistoryEntry) {
+  const fallback = resolveDateRange(rangeKey);
+  const payload = main?.payload || null;
+  const storeValue = payload && !payload.isChunked ? parseStoreValue(main || undefined) : null;
+  const metadata = (payload?.metadata || latestMetaFromStoreValue(storeValue) || null) as Partial<GscQueryPageSyncMeta> | null;
+  const hasData = Boolean(main || historyLatest);
+  const rowCount = Number(historyLatest?.rowCount || metadata?.rowCount || 0);
+  const updatedAt = historyLatest?.updatedAt || metadata?.updatedAt || main?.updated_at || payload?.updatedAt || null;
+  const importedAt = historyLatest?.importedAt || metadata?.importedAt || null;
+  const stoppedReason = historyLatest?.stoppedReason || metadata?.stoppedReason || (hasData ? 'completed' : '');
+  return {
+    rangeKey,
+    storeKey: getQueryPageRangeStoreKey(rangeKey),
+    exists: Boolean(main),
+    hasData,
+    updatedAt,
+    importedAt,
+    dateRangeLabel: historyLatest?.dateRangeLabel || metadata?.dateRangeLabel || fallback.dateRangeLabel,
+    startDate: historyLatest?.startDate || metadata?.startDate || '',
+    endDate: historyLatest?.endDate || metadata?.endDate || '',
+    rowCount,
+    source: 'api',
+    full: hasData ? !Boolean(historyLatest?.partial || metadata?.partial) : false,
+    partial: Boolean(historyLatest?.partial || metadata?.partial),
+    rowLimit: Number(historyLatest?.rowLimit || metadata?.rowLimit || 0),
+    maxPages: Number(historyLatest?.maxPages || metadata?.maxPages || 0),
+    pagesFetched: Number(historyLatest?.pagesFetched || metadata?.pagesFetched || 0),
+    fetchedRows: Number(metadata?.fetchedRows || rowCount || 0),
+    maxPagesReached: stoppedReason === 'max_pages_reached' || Boolean(metadata?.maxPagesReached),
+    stoppedReason,
+  };
+}
+
 async function readStoreValue<T>(storeKey: string): Promise<T | null> {
   const rows = await readStoreRows(storeKey);
   const main = rows.find((item) => item.store_key === storeKey);
@@ -272,6 +325,7 @@ async function upsertStoreValue(storeKey: string, value: unknown) {
         originalStoreKey: storeKey,
         updatedAt: now,
         version: 'v11.2.3',
+        metadata: latestMetaFromStoreValue(value),
       },
     });
     chunks.forEach((data, index) => {
@@ -624,28 +678,8 @@ export async function getApiStatus() {
     .forEach((item) => {
       if (item.rangeKey && !latestByRange.has(item.rangeKey)) latestByRange.set(item.rangeKey, item);
     });
-  const rangeQueryPageSyncs = GSC_QUERY_PAGE_RANGE_KEYS.map((rangeKey) => {
-    const latest = latestByRange.get(rangeKey);
-    return {
-      rangeKey,
-      storeKey: getQueryPageRangeStoreKey(rangeKey),
-      hasData: Boolean(latest),
-      updatedAt: latest?.updatedAt || null,
-      importedAt: latest?.importedAt || null,
-      dateRangeLabel: latest?.dateRangeLabel || resolveDateRange(rangeKey).dateRangeLabel,
-      startDate: latest?.startDate || '',
-      endDate: latest?.endDate || '',
-      rowCount: Number(latest?.rowCount || 0),
-      source: 'api',
-      partial: Boolean(latest?.partial),
-      rowLimit: Number(latest?.rowLimit || 0),
-      maxPages: Number(latest?.maxPages || 0),
-      pagesFetched: Number(latest?.pagesFetched || 0),
-      fetchedRows: Number(latest?.rowCount || 0),
-      maxPagesReached: latest?.stoppedReason === 'max_pages_reached',
-      stoppedReason: latest?.stoppedReason || '',
-    };
-  });
+  const rangeMainRows = await Promise.all(GSC_QUERY_PAGE_RANGE_KEYS.map((rangeKey) => readStoreMain(getQueryPageRangeStoreKey(rangeKey))));
+  const rangeQueryPageSyncs = GSC_QUERY_PAGE_RANGE_KEYS.map((rangeKey, index) => rangeStatusFromMainRow(rangeKey, rangeMainRows[index], latestByRange.get(rangeKey)));
   const aggregateLatest = aggregateStore?.queryPageApi;
   const historyLatest = history
     .filter((item) => item.source === 'api' && item.type === 'query-page')
@@ -663,7 +697,20 @@ export async function getApiStatus() {
     connected: Boolean(token?.connected),
     siteUrl: token?.siteUrl || getConfiguredSiteUrl(),
     scope: token?.scope || GSC_SCOPE,
+    ranges: Object.fromEntries(rangeQueryPageSyncs.map((item) => [item.rangeKey, item])),
     rangeQueryPageSyncs,
+    historySummary: history.slice(0, 12).map((item) => ({
+      source: item.source,
+      type: item.type,
+      rangeKey: item.rangeKey,
+      dateRangeLabel: item.dateRangeLabel,
+      rowCount: item.rowCount,
+      updatedAt: item.updatedAt,
+      importedAt: item.importedAt,
+      storeKey: item.storeKey,
+      partial: item.partial,
+      stoppedReason: item.stoppedReason,
+    })),
     latestQueryPageSync: latest ? {
       rangeKey: latest.rangeKey,
       storeKey: latest.storeKey || GSC_QUERY_PAGE_STORE_KEY,

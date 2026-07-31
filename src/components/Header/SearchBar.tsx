@@ -190,6 +190,7 @@ export default function SearchBar({
                 <li key={item.id} className={styles.suggestionRow}>
                   <Link
                     href={addTrailingSlash(`/san-pham/${item.slug}`)}
+                    prefetch={false}
                     className={styles.suggestionItem}
                     role="option"
                     aria-selected="false"

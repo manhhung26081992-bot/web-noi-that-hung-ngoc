@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { MENU_ITEMS } from '@/components/Header/menuData';
 import { siteUrl } from '@/lib/url';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 86400;
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

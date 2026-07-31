@@ -4,7 +4,7 @@ import { getBlogBySlug } from "@/lib/blog";
 import BlogViewTracker from "@/components/BlogViewTracker";
 import { siteUrl } from "@/lib/url";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

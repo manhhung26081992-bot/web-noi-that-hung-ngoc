@@ -44,6 +44,7 @@ export default function ProductList({ title, products, categorySlugs, limit, vie
         {limit && (
           <Link 
             href={viewAllLink ? addTrailingSlash(viewAllLink) : (categorySlugs ? addTrailingSlash(`/${categorySlugs[0]}`) : '#')} 
+            prefetch={false}
             className={styles.viewAll}
           >
             + Xem tất cả

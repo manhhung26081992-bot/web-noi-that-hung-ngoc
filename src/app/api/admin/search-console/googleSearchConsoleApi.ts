@@ -1,14 +1,20 @@
-import 'server-only';
+﻿import 'server-only';
 import crypto from 'crypto';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { ADMIN_SESSION_COOKIE, getAdminSessionValue } from '@/lib/adminAuth';
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin';
-import type { SearchConsoleImportMeta, SearchConsolePage, SearchConsoleQuery, SearchConsoleV7Data } from '@/app/admin/seo/types/seo';
+import type { SearchConsoleImportMeta, SearchConsolePage, SearchConsoleQuery, SearchConsoleUpdateHistoryEntry, SearchConsoleV7Data } from '@/app/admin/seo/types/seo';
 
 export const GSC_OAUTH_STORE_KEY = 'noithathungngoc-search-console-oauth-v1';
 export const GSC_QUERY_PAGE_STORE_KEY = 'noithathungngoc-search-console-query-pages-v1';
+export const GSC_QUERY_PAGE_HISTORY_STORE_KEY = 'noithathungngoc-search-console-query-pages-history-v1';
+export const GSC_QUERY_PAGE_RANGE_KEYS = ['7d', '28d', '3m', '6m', '12m'] as const;
 export const GSC_AGGREGATE_STORE_KEY = 'noithathungngoc-search-console-import-v1';
+
+export function getQueryPageRangeStoreKey(rangeKey: string) {
+  return GSC_QUERY_PAGE_STORE_KEY + '__range__' + String(rangeKey || '').trim();
+}
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -59,7 +65,7 @@ type SearchAnalyticsRow = {
   position?: number;
 };
 
-type QueryPageRange = '28d' | '3m' | '6m' | '12m' | '16m';
+type QueryPageRange = '7d' | '28d' | '3m' | '6m' | '12m' | '16m';
 
 export type QueryPageSyncOptions = {
   rowLimit?: number;
@@ -72,6 +78,7 @@ export type GscQueryPageSyncMeta = {
   source: 'search-console-api';
   type: 'query-page';
   storeKey: string;
+  rangeKey: string;
   siteUrl: string;
   dateRangeLabel: string;
   startDate: string;
@@ -95,6 +102,9 @@ export type QueryPageSyncResponse = {
   skipped?: boolean;
   message: string;
   storeKey: string;
+  latestStoreKey?: string;
+  historyStoreKey?: string;
+  rangeKey: string;
   siteUrl: string;
   dateRangeLabel: string;
   startDate: string;
@@ -129,7 +139,7 @@ export function jsonError(status: number, message: string, detail?: string) {
 }
 
 export function unauthorized() {
-  return jsonError(401, 'Bạn cần đăng nhập quản trị để dùng Search Console API.');
+  return jsonError(401, 'Báº¡n cáº§n Ä‘Äƒng nháº­p quáº£n trá»‹ Ä‘á»ƒ dÃ¹ng Search Console API.');
 }
 
 function env(name: string) {
@@ -138,7 +148,7 @@ function env(name: string) {
 
 function requiredEnv(name: string) {
   const value = env(name);
-  if (!value) throw new Error('Thiếu biến môi trường ' + name + '.');
+  if (!value) throw new Error('Thiáº¿u biáº¿n mÃ´i trÆ°á»ng ' + name + '.');
   return value;
 }
 
@@ -179,20 +189,20 @@ function signState(payload: Record<string, unknown>) {
 }
 
 function verifyState(state: string | null) {
-  if (!state) throw new Error('Thiếu OAuth state.');
+  if (!state) throw new Error('Thiáº¿u OAuth state.');
   const [body, signature] = state.split('.');
-  if (!body || !signature) throw new Error('OAuth state không hợp lệ.');
+  if (!body || !signature) throw new Error('OAuth state khÃ´ng há»£p lá»‡.');
   const expected = crypto.createHmac('sha256', requiredEnv('GSC_TOKEN_ENCRYPTION_KEY')).update(body).digest('base64url');
   if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
-    throw new Error('OAuth state không khớp.');
+    throw new Error('OAuth state khÃ´ng khá»›p.');
   }
   const payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8')) as { exp?: number };
-  if (!payload.exp || payload.exp < Date.now()) throw new Error('OAuth state đã hết hạn.');
+  if (!payload.exp || payload.exp < Date.now()) throw new Error('OAuth state Ä‘Ã£ háº¿t háº¡n.');
   return payload;
 }
 
 function getSupabase() {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) throw new Error('Thiếu SUPABASE_SERVICE_ROLE_KEY.');
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) throw new Error('Thiáº¿u SUPABASE_SERVICE_ROLE_KEY.');
   return getSupabaseAdminClient();
 }
 
@@ -311,7 +321,7 @@ async function exchangeCodeForTokens(code: string) {
   });
   const body = await response.json().catch(() => ({})) as { refresh_token?: string; error?: string; error_description?: string };
   if (!response.ok || !body.refresh_token) {
-    throw new Error(body.error_description || body.error || 'Google không trả refresh_token. Hãy thử kết nối lại với prompt consent.');
+    throw new Error(body.error_description || body.error || 'Google khÃ´ng tráº£ refresh_token. HÃ£y thá»­ káº¿t ná»‘i láº¡i vá»›i prompt consent.');
   }
   return body.refresh_token;
 }
@@ -329,7 +339,7 @@ async function refreshAccessToken(refreshToken: string) {
   });
   const body = await response.json().catch(() => ({})) as { access_token?: string; error?: string; error_description?: string };
   if (!response.ok || !body.access_token) {
-    throw new Error(body.error_description || body.error || 'Không lấy được access_token mới từ Google.');
+    throw new Error(body.error_description || body.error || 'KhÃ´ng láº¥y Ä‘Æ°á»£c access_token má»›i tá»« Google.');
   }
   return body.access_token;
 }
@@ -361,8 +371,8 @@ function dateInput(value: Date) {
 
 export function resolveDateRange(range: string | null | undefined) {
   const key = String(range || '3m') as QueryPageRange;
-  const daysByRange: Record<QueryPageRange, number> = { '28d': 28, '3m': 90, '6m': 180, '12m': 365, '16m': 480 };
-  const labelByRange: Record<QueryPageRange, string> = { '28d': '28 ngày', '3m': '3 tháng', '6m': '6 tháng', '12m': '12 tháng', '16m': '16 tháng' };
+  const daysByRange: Record<QueryPageRange, number> = { '7d': 7, '28d': 28, '3m': 90, '6m': 180, '12m': 365, '16m': 480 };
+  const labelByRange: Record<QueryPageRange, string> = { '7d': '7 ngay', '28d': '28 ngay', '3m': '3 thang', '6m': '6 thang', '12m': '12 thang', '16m': '16 thang' };
   const safeKey = key in daysByRange ? key : '3m';
   const end = new Date();
   end.setDate(end.getDate() - 1);
@@ -487,7 +497,7 @@ function buildApiData(rows: SearchConsoleQuery[], meta: SearchConsoleImportMeta,
     overview: {
       connected: true,
       reason: 'api_sync',
-      message: 'Đang dùng dữ liệu Query+Page từ Google Search Console API.',
+      message: 'Äang dÃ¹ng dá»¯ liá»‡u Query+Page tá»« Google Search Console API.',
       siteUrl,
       range: meta.dateRangeLabel,
       clicks,
@@ -577,6 +587,26 @@ function mergeTypedStore(previous: SearchConsoleTypedStore | null, incoming: Sea
   };
 }
 
+function latestQueryPageMeta(store: SearchConsoleTypedStore | null | undefined) {
+  return [...(store?.imports || [])]
+    .filter((item) => item.type === 'query-page')
+    .sort((a, b) => String(b.updatedAt || b.importedAt).localeCompare(String(a.updatedAt || a.importedAt)))[0] || null;
+}
+
+async function appendQueryPageHistory(entry: SearchConsoleUpdateHistoryEntry) {
+  const current = await readStoreValue<{ items?: SearchConsoleUpdateHistoryEntry[]; history?: SearchConsoleUpdateHistoryEntry[] } | SearchConsoleUpdateHistoryEntry[]>(GSC_QUERY_PAGE_HISTORY_STORE_KEY);
+  const previous = Array.isArray(current) ? current : Array.isArray(current?.items) ? current.items : Array.isArray(current?.history) ? current.history : [];
+  const history = [entry, ...previous.filter((item) => item.id !== entry.id)]
+    .sort((a, b) => String(b.updatedAt || b.importedAt).localeCompare(String(a.updatedAt || a.importedAt)))
+    .slice(0, 160);
+  await upsertStoreValue(GSC_QUERY_PAGE_HISTORY_STORE_KEY, {
+    version: 1,
+    source: 'search-console-api',
+    items: history,
+    lastUpdated: entry.updatedAt || entry.importedAt || new Date().toISOString(),
+  });
+}
+
 function extractDataFromAggregateStore(value: unknown): SearchConsoleV7Data | null {
   const maybe = value as { data?: SearchConsoleV7Data };
   return maybe?.data || null;
@@ -584,14 +614,59 @@ function extractDataFromAggregateStore(value: unknown): SearchConsoleV7Data | nu
 
 export async function getApiStatus() {
   const token = await getTokenStore();
-  const typed = await readStoreValue<SearchConsoleTypedStore>(GSC_QUERY_PAGE_STORE_KEY);
-  const latest = typed?.imports?.find((item) => item.type === 'query-page');
+  const historyStore = await readStoreValue<{ items?: SearchConsoleUpdateHistoryEntry[] } | SearchConsoleUpdateHistoryEntry[]>(GSC_QUERY_PAGE_HISTORY_STORE_KEY);
+  const aggregateStore = await readStoreValue<{ queryPageApi?: GscQueryPageSyncMeta }>(GSC_AGGREGATE_STORE_KEY);
+  const history = Array.isArray(historyStore) ? historyStore : Array.isArray(historyStore?.items) ? historyStore.items : [];
+  const latestByRange = new Map<string, SearchConsoleUpdateHistoryEntry>();
+  history
+    .filter((item) => item.source === 'api' && item.type === 'query-page' && item.rangeKey)
+    .sort((a, b) => String(b.updatedAt || b.importedAt).localeCompare(String(a.updatedAt || a.importedAt)))
+    .forEach((item) => {
+      if (item.rangeKey && !latestByRange.has(item.rangeKey)) latestByRange.set(item.rangeKey, item);
+    });
+  const rangeQueryPageSyncs = GSC_QUERY_PAGE_RANGE_KEYS.map((rangeKey) => {
+    const latest = latestByRange.get(rangeKey);
+    return {
+      rangeKey,
+      storeKey: getQueryPageRangeStoreKey(rangeKey),
+      hasData: Boolean(latest),
+      updatedAt: latest?.updatedAt || null,
+      importedAt: latest?.importedAt || null,
+      dateRangeLabel: latest?.dateRangeLabel || resolveDateRange(rangeKey).dateRangeLabel,
+      startDate: latest?.startDate || '',
+      endDate: latest?.endDate || '',
+      rowCount: Number(latest?.rowCount || 0),
+      source: 'api',
+      partial: Boolean(latest?.partial),
+      rowLimit: Number(latest?.rowLimit || 0),
+      maxPages: Number(latest?.maxPages || 0),
+      pagesFetched: Number(latest?.pagesFetched || 0),
+      fetchedRows: Number(latest?.rowCount || 0),
+      maxPagesReached: latest?.stoppedReason === 'max_pages_reached',
+      stoppedReason: latest?.stoppedReason || '',
+    };
+  });
+  const aggregateLatest = aggregateStore?.queryPageApi;
+  const historyLatest = history
+    .filter((item) => item.source === 'api' && item.type === 'query-page')
+    .sort((a, b) => String(b.updatedAt || b.importedAt).localeCompare(String(a.updatedAt || a.importedAt)))[0];
+  const latest = historyLatest || (aggregateLatest ? {
+    ...aggregateLatest,
+    source: 'api' as const,
+    rowCount: aggregateLatest.rowCount,
+    updatedAt: aggregateLatest.updatedAt,
+    importedAt: aggregateLatest.importedAt,
+    storeKey: aggregateLatest.storeKey,
+  } : null);
   return {
     ok: true,
     connected: Boolean(token?.connected),
     siteUrl: token?.siteUrl || getConfiguredSiteUrl(),
     scope: token?.scope || GSC_SCOPE,
+    rangeQueryPageSyncs,
     latestQueryPageSync: latest ? {
+      rangeKey: latest.rangeKey,
+      storeKey: latest.storeKey || GSC_QUERY_PAGE_STORE_KEY,
       updatedAt: latest.updatedAt,
       importedAt: latest.importedAt,
       dateRangeLabel: latest.dateRangeLabel,
@@ -603,8 +678,8 @@ export async function getApiStatus() {
       rowLimit: latest.rowLimit,
       maxPages: latest.maxPages,
       pagesFetched: latest.pagesFetched,
-      fetchedRows: latest.fetchedRows,
-      maxPagesReached: latest.maxPagesReached,
+      fetchedRows: 'fetchedRows' in latest ? latest.fetchedRows : latest.rowCount,
+      maxPagesReached: 'maxPagesReached' in latest ? latest.maxPagesReached : latest.stoppedReason === 'max_pages_reached',
       stoppedReason: latest.stoppedReason,
     } : null,
   };
@@ -616,19 +691,16 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
 
   const siteUrl = token.siteUrl || getConfiguredSiteUrl();
   const resolved = resolveDateRange(range);
-  const typed = await readStoreValue<SearchConsoleTypedStore>(GSC_QUERY_PAGE_STORE_KEY);
-  const existing = typed?.imports?.find((item) =>
-    item.type === 'query-page'
-    && item.dateRangeLabel === resolved.dateRangeLabel
-    && item.startDate === resolved.startDate
-    && item.endDate === resolved.endDate
-  );
+  const rangeStoreKey = getQueryPageRangeStoreKey(resolved.key);
+  const typed = await readStoreValue<SearchConsoleTypedStore>(rangeStoreKey);
+  const existing = latestQueryPageMeta(typed);
   const today = new Date().toISOString().slice(0, 10);
   if (!force && existing?.updatedAt?.startsWith(today) && typed?.data) {
     const metadata: GscQueryPageSyncMeta = {
       source: 'search-console-api',
       type: 'query-page',
-      storeKey: GSC_QUERY_PAGE_STORE_KEY,
+      storeKey: rangeStoreKey,
+      rangeKey: resolved.key,
       siteUrl,
       dateRangeLabel: resolved.dateRangeLabel,
       startDate: resolved.startDate,
@@ -650,7 +722,10 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
       ok: true,
       skipped: true,
       message: 'Query+Page da duoc dong bo trong hom nay. Bam Lay lai du lieu neu muon ep dong bo.',
-      storeKey: GSC_QUERY_PAGE_STORE_KEY,
+      storeKey: rangeStoreKey,
+      latestStoreKey: GSC_QUERY_PAGE_STORE_KEY,
+      historyStoreKey: GSC_QUERY_PAGE_HISTORY_STORE_KEY,
+      rangeKey: resolved.key,
       siteUrl,
       dateRangeLabel: resolved.dateRangeLabel,
       startDate: resolved.startDate,
@@ -680,6 +755,7 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
     source: 'search-console-api',
     type: 'query-page',
     dateRangeLabel: resolved.dateRangeLabel,
+    rangeKey: resolved.key,
     startDate: resolved.startDate,
     endDate: resolved.endDate,
     importedAt: now,
@@ -695,13 +771,14 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
     maxPagesReached: fetchResult.maxPagesReached,
     stoppedReason: fetchResult.stoppedReason,
     fileName: 'Google Search Console API',
-    storeKey: GSC_QUERY_PAGE_STORE_KEY,
+    storeKey: rangeStoreKey,
   };
   const apiData = buildApiData(rows, meta, siteUrl);
   const apiPayload = {
     source: 'search-console-api',
     type: 'query-page',
     siteUrl,
+    rangeKey: resolved.key,
     dateRangeLabel: resolved.dateRangeLabel,
     startDate: resolved.startDate,
     endDate: resolved.endDate,
@@ -720,7 +797,29 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
     data: rows,
   };
   const nextTyped = mergeTypedStore(typed || null, apiData, apiPayload, now);
+  await upsertStoreValue(rangeStoreKey, nextTyped);
   await upsertStoreValue(GSC_QUERY_PAGE_STORE_KEY, nextTyped);
+
+  const historyEntry: SearchConsoleUpdateHistoryEntry = {
+    id: meta.id,
+    source: 'api',
+    type: 'query-page',
+    dateRangeLabel: resolved.dateRangeLabel,
+    rangeKey: resolved.key,
+    startDate: resolved.startDate,
+    endDate: resolved.endDate,
+    rowCount: rows.length,
+    full: !fetchResult.partial,
+    partial: fetchResult.partial,
+    updatedAt: now,
+    importedAt: now,
+    storeKey: rangeStoreKey,
+    stoppedReason: fetchResult.stoppedReason,
+    pagesFetched: fetchResult.pagesFetched,
+    maxPages: fetchResult.maxPages,
+    rowLimit: fetchResult.rowLimit,
+  };
+  await appendQueryPageHistory(historyEntry);
 
   const aggregateStore = await readStoreValue<unknown>(GSC_AGGREGATE_STORE_KEY);
   const previousAggregate = extractDataFromAggregateStore(aggregateStore);
@@ -733,7 +832,8 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
   const metadata: GscQueryPageSyncMeta = {
     source: 'search-console-api',
     type: 'query-page',
-    storeKey: GSC_QUERY_PAGE_STORE_KEY,
+    storeKey: rangeStoreKey,
+    rangeKey: resolved.key,
     siteUrl,
     dateRangeLabel: resolved.dateRangeLabel,
     startDate: resolved.startDate,
@@ -762,6 +862,7 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
     rowCounts: { ...(previousStore.rowCounts || {}), 'query-page': rows.length },
     imports: aggregateData.imports || [],
     queryPageApi: metadata,
+    queryPageApiHistoryStoreKey: GSC_QUERY_PAGE_HISTORY_STORE_KEY,
     lastUpdated: now,
   };
   await upsertStoreValue(GSC_AGGREGATE_STORE_KEY, nextAggregate);
@@ -769,7 +870,10 @@ export async function syncQueryPage(range: string | null | undefined, force: boo
   return {
     ok: true,
     message: 'Da dong bo Query+Page tu Google Search Console API.',
-    storeKey: GSC_QUERY_PAGE_STORE_KEY,
+    storeKey: rangeStoreKey,
+    latestStoreKey: GSC_QUERY_PAGE_STORE_KEY,
+    historyStoreKey: GSC_QUERY_PAGE_HISTORY_STORE_KEY,
+    rangeKey: resolved.key,
     siteUrl,
     dateRangeLabel: resolved.dateRangeLabel,
     startDate: resolved.startDate,

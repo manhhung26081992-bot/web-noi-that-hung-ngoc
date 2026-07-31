@@ -62,7 +62,7 @@ const updateCartCount = () => {
       <span className={styles.phoneSubtext}>Tư vấn online 24/7</span>
       </div>
       {/* Link giỏ hàng: Giữ nguyên class của bạn và thêm badge đỏ */}
-      <Link href="/gio-hang" className={styles.cartBtn} title="Giỏ hàng của bạn">
+      <Link href="/gio-hang" prefetch={false} className={styles.cartBtn} title="Giỏ hàng của bạn">
         <div className={styles.cartWrapper}>
           <span className={styles.cartIcon}>
             <svg 

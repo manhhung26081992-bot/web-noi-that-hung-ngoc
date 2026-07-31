@@ -14,7 +14,7 @@ interface Props {
   params: Promise<{ categorySlug: string }>;
 }
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 const CATEGORY_GROUPS: { [key: string]: string[] } = {
   'sofa': ['sofa', 'ban-sofa', 'sofa-giuong', 'sofa-da', 'sofa-ni', 'sofa-vang'],
@@ -323,7 +323,7 @@ export default async function CategoryPage({ params }: Props) {
               <h3>Danh mục liên quan</h3>
               <div className={styles.relatedLinks}>
                 {internalLinks.map((link) => (
-                  <Link key={link.slug} href={addTrailingSlash(`/${link.slug}`)} className={styles.relatedLink}>
+                  <Link key={link.slug} href={addTrailingSlash(`/${link.slug}`)} prefetch={false} className={styles.relatedLink}>
                     {link.name}
                   </Link>
                 ))}

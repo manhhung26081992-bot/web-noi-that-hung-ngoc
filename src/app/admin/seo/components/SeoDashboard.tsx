@@ -70,8 +70,56 @@ function copyDailyTaskText(task: AiSeoDailyTask) {
   navigator.clipboard?.writeText(task.copyPrompt);
 }
 
+function safeArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? value as T[] : [];
+}
+
+function normalizeAiDailyPlanPayload(value: unknown): AiSeoDailyPlan | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const plan = value as Partial<AiSeoDailyPlan> & Record<string, unknown>;
+  const dataFreshness = plan.dataFreshness && typeof plan.dataFreshness === 'object' && !Array.isArray(plan.dataFreshness)
+    ? plan.dataFreshness as AiSeoDailyPlan['dataFreshness']
+    : { status: 'missing' as const, newestUpdatedAt: null, staleSources: [], missingSources: [] };
+  const seoHealthSummary = plan.seoHealthSummary && typeof plan.seoHealthSummary === 'object' && !Array.isArray(plan.seoHealthSummary)
+    ? plan.seoHealthSummary as AiSeoDailyPlan['seoHealthSummary']
+    : { overviewSource: 'none', clicks: null, impressions: null, ctr: null, position: null, summary: 'Chưa có AI Daily plan hợp lệ.', alerts: [] };
+  const workLogSummary = plan.workLogSummary && typeof plan.workLogSummary === 'object' && !Array.isArray(plan.workLogSummary)
+    ? plan.workLogSummary as AiSeoDailyPlan['workLogSummary']
+    : { total: 0, watching: 0, needFix: 0, dueToday: 0, overdue: 0 };
+  return {
+    ...plan,
+    date: String(plan.date || new Date().toISOString().slice(0, 10)),
+    generatedAt: String(plan.generatedAt || ''),
+    source: plan.source === 'manual-run' ? 'manual-run' : 'auto-daily',
+    dataSources: safeArray<AiSeoDailyPlan['dataSources'][number]>(plan.dataSources),
+    dataFreshness: {
+      ...dataFreshness,
+      staleSources: safeArray<string>(dataFreshness.staleSources),
+      missingSources: safeArray<string>(dataFreshness.missingSources),
+    },
+    seoHealthSummary: {
+      ...seoHealthSummary,
+      alerts: safeArray<string>(seoHealthSummary.alerts),
+    },
+    todayTasks: safeArray<AiSeoDailyPlan['todayTasks'][number]>(plan.todayTasks),
+    next7DaysTasks: safeArray<AiSeoDailyPlan['next7DaysTasks'][number]>(plan.next7DaysTasks),
+    watchOpportunities: safeArray<AiSeoDailyPlan['watchOpportunities'][number]>(plan.watchOpportunities),
+    internalLinkSuggestions: safeArray<AiSeoDailyPlan['internalLinkSuggestions'][number]>(plan.internalLinkSuggestions),
+    cannibalizationWarnings: safeArray<AiSeoDailyPlan['cannibalizationWarnings'][number]>(plan.cannibalizationWarnings),
+    contentTasks: safeArray<AiSeoDailyPlan['contentTasks'][number]>(plan.contentTasks),
+    productOptimizationTasks: safeArray<AiSeoDailyPlan['productOptimizationTasks'][number]>(plan.productOptimizationTasks),
+    indexCheckTasks: safeArray<AiSeoDailyPlan['indexCheckTasks'][number]>(plan.indexCheckTasks),
+    notes: safeArray<string>(plan.notes),
+    queryPageRanges: safeArray<NonNullable<AiSeoDailyPlan['queryPageRanges']>[number]>(plan.queryPageRanges),
+    gscUpdateHistory: safeArray<NonNullable<AiSeoDailyPlan['gscUpdateHistory']>[number]>(plan.gscUpdateHistory),
+    manualGscSummary: plan.manualGscSummary || null,
+    googleAdsSummary: plan.googleAdsSummary || null,
+    workLogSummary,
+  } as AiSeoDailyPlan;
+}
+
 function dailySourceRows(plan: AiSeoDailyPlan | null) {
-  return plan?.dataSources || [];
+  return Array.isArray(plan?.dataSources) ? plan.dataSources : [];
 }
 
 const defaultFilters: DashboardSeoFilters = {
@@ -385,8 +433,8 @@ export default function SeoDashboard() {
           <div className={styles.aiDailyStatusGrid}>
             <MetricCard label="Lần phân tích gần nhất" value={formatOptionalDate(dailyAiPlan?.generatedAt)} hint={dailyAiPlan?.source === 'auto-daily' ? 'Chạy tự động/cron' : dailyAiPlan ? 'Chạy thủ công' : 'Chưa có plan đã lưu'} />
             <MetricCard label="Trạng thái dữ liệu" value={dailyAiPlan?.dataFreshness.status === 'fresh' ? 'Dữ liệu mới' : dailyAiPlan?.dataFreshness.status === 'stale' ? 'Dữ liệu cũ' : 'Thiếu dữ liệu'} hint={dailyAiPlan?.dataFreshness.newestUpdatedAt ? formatOptionalDate(dailyAiPlan.dataFreshness.newestUpdatedAt) : 'Chưa có nguồn mới'} />
-            <MetricCard label="Query+Page rows" value={formatNumber(dailyAiPlan?.dataSources.find((item) => item.id === 'query-page-api')?.count || 0)} hint={dailyAiPlan?.dataSources.find((item) => item.id === 'query-page-api')?.detail || 'Không tự sync khi mở trang'} />
-            <MetricCard label="Google Ads" value={formatNumber(dailyAiPlan?.dataSources.find((item) => item.id === 'google-ads')?.count || professionalPlan.sourceSummary.googleAdsKeywordCount || 0)} hint="Keyword Planner đã import" />
+            <MetricCard label="Query+Page rows" value={formatNumber(dailySourceRows(dailyAiPlan).filter((item) => item.id.startsWith('query-page-api-')).reduce((sum, item) => sum + Number(item.count || 0), 0) || dailySourceRows(dailyAiPlan).find((item) => item.id === 'query-page-api')?.count || 0)} hint="Tong cac moc 7d/28d/3m/6m/12m, khong tu sync khi mo trang" />
+            <MetricCard label="Google Ads" value={formatNumber(dailySourceRows(dailyAiPlan).find((item) => item.id === 'google-ads')?.count || professionalPlan.sourceSummary.googleAdsKeywordCount || 0)} hint="Keyword Planner đã import" />
             <MetricCard label="Supabase đã đọc" value={`${formatNumber(overview?.products || 0)} / ${formatNumber(overview?.blogPosts || 0)}`} hint="Sản phẩm / bài viết" />
             <MetricCard label="Nhật ký SEO v11" value={formatNumber(dailyAiPlan?.workLogSummary.total || professionalPlan.sourceSummary.workLogTotal)} hint={`${dailyAiPlan?.workLogSummary.needFix ?? professionalPlan.sourceSummary.workLogNeedFix} cần sửa tiếp`} />
           </div>
@@ -401,9 +449,9 @@ export default function SeoDashboard() {
           </div>
 
           {dailyAiMessage ? <div className={styles.alert}>{dailyAiMessage}</div> : null}
-          {dailyAiPlan?.notes.length ? <div className={styles.v61PlanAlerts}>{dailyAiPlan.notes.slice(0, 4).map((note) => <span key={'daily-note-' + note}>{note}</span>)}</div> : null}
+          {Array.isArray(dailyAiPlan?.notes) && dailyAiPlan.notes.length ? <div className={styles.v61PlanAlerts}>{dailyAiPlan.notes.slice(0, 4).map((note) => <span key={'daily-note-' + note}>{note}</span>)}</div> : null}
 
-          {dailyAiPlan?.internalLinkSuggestions.length ? (
+          {Array.isArray(dailyAiPlan?.internalLinkSuggestions) && dailyAiPlan.internalLinkSuggestions.length ? (
             <div className={styles.aiDailyInternalLinks}>
               <h3>Gợi ý internal link</h3>
               {dailyAiPlan.internalLinkSuggestions.slice(0, 10).map((item) => (
@@ -455,7 +503,7 @@ export default function SeoDashboard() {
                   <span>{task.score}/100 - {task.sourceData}</span>
                 </article>
               ))}
-              {dailyAiPlan?.cannibalizationWarnings.slice(0, 3).map((item) => (
+              {safeArray<AiSeoDailyPlan['cannibalizationWarnings'][number]>(dailyAiPlan?.cannibalizationWarnings).slice(0, 3).map((item) => (
                 <article className={styles.v61PlanMiniTask} key={'daily-cannibal-' + item.query}>
                   <strong>{item.query}</strong>
                   <span>{item.pages.length} URL cạnh tranh - {formatNumber(item.impressions)} impression</span>

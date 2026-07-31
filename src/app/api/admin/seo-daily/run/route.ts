@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ADMIN_SESSION_COOKIE, getAdminSessionValue } from '@/lib/adminAuth';
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin';
-import { syncQueryPage } from '../../search-console/googleSearchConsoleApi';
+import { GSC_QUERY_PAGE_HISTORY_STORE_KEY, GSC_QUERY_PAGE_RANGE_KEYS, getQueryPageRangeStoreKey, resolveDateRange, syncQueryPage } from '../../search-console/googleSearchConsoleApi';
 import {
   AI_SEO_DAILY_HISTORY_STORE_KEY,
   AI_SEO_DAILY_PLAN_STORE_KEY,
@@ -14,6 +14,8 @@ import type {
   GoogleAdsImportData,
   ProductSeoItem,
   SearchConsoleManualSummary,
+  SearchConsoleQueryPageRangeSummary,
+  SearchConsoleUpdateHistoryEntry,
   SearchConsoleV7Data,
   SeoBlogQualityItem,
   SeoCluster,
@@ -31,6 +33,7 @@ const CHUNK_SIZE = 180000;
 const STORE_VERSION = 'v11.2.3';
 const GSC_AGGREGATE_STORE_KEY = 'noithathungngoc-search-console-import-v1';
 const GSC_QUERY_PAGE_STORE_KEY = 'noithathungngoc-search-console-query-pages-v1';
+const GSC_IMPORT_HISTORY_KEY = 'noithathungngoc-search-console-import-history-v1';
 const GSC_MANUAL_SUMMARY_KEY = 'noithathungngoc-gsc-manual-summary-v11';
 const GOOGLE_ADS_STORE_KEY = 'noithathungngoc-google-ads-import-v1';
 const SEO_WORK_LOG_V11_KEY = 'noithathungngoc-seo-work-log-v11';
@@ -283,6 +286,29 @@ async function safeList<T>(supabase: SupabaseClient, table: string, orderColumn 
   return (data || []) as T[];
 }
 
+function latestImportMeta(data: SearchConsoleV7Data | null | undefined) {
+  return [...(data?.imports || [])].sort((a, b) => String(b.updatedAt || b.importedAt).localeCompare(String(a.updatedAt || a.importedAt)))[0] || null;
+}
+
+function mergeRangeRows(ranges: SearchConsoleQueryPageRangeSummary[], aggregateData: SearchConsoleV7Data | null) {
+  const rows = new Map<string, SearchConsoleV7Data['queries'][number]>();
+  ranges.forEach((range) => {
+    (range.data?.queries || [])
+      .sort((a, b) => b.impressions - a.impressions || b.clicks - a.clicks || a.position - b.position)
+      .slice(0, 900)
+      .forEach((row) => {
+        const key = String(row.query || '') + '|' + String(row.page || '');
+        const current = rows.get(key);
+        if (!current || row.impressions > current.impressions) rows.set(key, row);
+      });
+  });
+  (aggregateData?.queries || []).slice(0, 800).forEach((row) => {
+    const key = String(row.query || '') + '|' + String(row.page || '');
+    if (!rows.has(key)) rows.set(key, row);
+  });
+  return Array.from(rows.values()).sort((a, b) => b.impressions - a.impressions || b.clicks - a.clicks || a.position - b.position).slice(0, 2500);
+}
+
 async function loadDashboardInput(supabase: SupabaseClient, apiSummary: unknown) {
   const [
     aggregateStore,
@@ -291,6 +317,8 @@ async function loadDashboardInput(supabase: SupabaseClient, apiSummary: unknown)
     googleAdsStore,
     workLogStore,
     keywordMapStore,
+    queryPageHistoryStore,
+    importHistoryStore,
     productRows,
     blogRows,
     clusters,
@@ -303,24 +331,56 @@ async function loadDashboardInput(supabase: SupabaseClient, apiSummary: unknown)
     readStoreEntry<GoogleAdsImportData>(supabase, GOOGLE_ADS_STORE_KEY),
     readStoreEntry<SeoWorkLogItem[]>(supabase, SEO_WORK_LOG_V11_KEY),
     readStoreEntry<unknown>(supabase, SEO_KEYWORD_MAP_KEY),
+    readStoreEntry<{ items?: SearchConsoleUpdateHistoryEntry[] } | SearchConsoleUpdateHistoryEntry[]>(supabase, GSC_QUERY_PAGE_HISTORY_STORE_KEY),
+    readStoreEntry<{ items?: SearchConsoleUpdateHistoryEntry[] } | SearchConsoleUpdateHistoryEntry[]>(supabase, GSC_IMPORT_HISTORY_KEY),
     safeList<Record<string, unknown>>(supabase, 'products', 'id', 300),
     safeList<Record<string, unknown>>(supabase, 'blog_posts', 'created_at', 300),
     safeList<SeoCluster>(supabase, 'seo_clusters', 'priority', 100),
     safeList<SeoKeyword>(supabase, 'seo_keywords', 'priority', 500),
     safeList<TodayTask>(supabase, 'seo_tasks', 'updated_at', 100),
   ]);
+  const rangeStores = await Promise.all(GSC_QUERY_PAGE_RANGE_KEYS.map(async (rangeKey) => ({
+    rangeKey,
+    storeKey: getQueryPageRangeStoreKey(rangeKey),
+    entry: await readStoreEntry<{ data?: SearchConsoleV7Data; lastUpdated?: string }>(supabase, getQueryPageRangeStoreKey(rangeKey)),
+  })));
   const aggregateValue = aggregateStore.value;
   const aggregateData = ((aggregateValue as { data?: SearchConsoleV7Data })?.data || aggregateValue || null) as SearchConsoleV7Data | null;
-  const queryPageData = queryPageStore.value?.data || null;
-  const queryRows = [...(queryPageData?.queries || aggregateData?.queries || [])]
-    .sort((a, b) => b.impressions - a.impressions || b.clicks - a.clicks || a.position - b.position)
-    .slice(0, 2500);
-  const searchConsole = queryPageData || aggregateData ? {
-    ...(aggregateData || queryPageData),
-    overview: queryPageData?.overview || aggregateData?.overview,
-    imports: [...(queryPageData?.imports || []), ...(aggregateData?.imports || [])],
+  const legacyQueryPageData = queryPageStore.value?.data || null;
+  const queryPageRanges: SearchConsoleQueryPageRangeSummary[] = rangeStores.map((item) => {
+    const data = item.entry.value?.data || null;
+    const meta = latestImportMeta(data);
+    const fallback = resolveDateRange(item.rangeKey);
+    return {
+      rangeKey: item.rangeKey,
+      label: fallback.dateRangeLabel,
+      storeKey: item.storeKey,
+      hasData: Boolean(data?.queries?.length || meta),
+      rowCount: Number(meta?.rowCount || data?.queries?.length || 0),
+      updatedAt: item.entry.updatedAt || meta?.updatedAt || data?.overview?.lastUpdated || null,
+      dateRangeLabel: meta?.dateRangeLabel || fallback.dateRangeLabel,
+      startDate: meta?.startDate,
+      endDate: meta?.endDate,
+      partial: Boolean(meta?.partial),
+      stoppedReason: meta?.stoppedReason,
+      data,
+    };
+  });
+  const queryRows = mergeRangeRows(queryPageRanges, legacyQueryPageData || aggregateData);
+  const primaryQueryPageData = queryPageRanges.find((item) => item.rangeKey === '28d' && item.data)?.data
+    || queryPageRanges.find((item) => item.rangeKey === '3m' && item.data)?.data
+    || legacyQueryPageData
+    || aggregateData;
+  const searchConsole = primaryQueryPageData || aggregateData ? {
+    ...(aggregateData || primaryQueryPageData),
+    overview: primaryQueryPageData?.overview || aggregateData?.overview,
+    imports: [
+      ...queryPageRanges.flatMap((item) => item.data?.imports || []),
+      ...(legacyQueryPageData?.imports || []),
+      ...(aggregateData?.imports || []),
+    ],
     queries: queryRows,
-    pages: (queryPageData?.pages || aggregateData?.pages || []).slice(0, 800),
+    pages: (primaryQueryPageData?.pages || aggregateData?.pages || []).slice(0, 800),
     devices: aggregateData?.devices || [],
     countries: aggregateData?.countries || [],
     trend: aggregateData?.trend || [],
@@ -355,6 +415,11 @@ async function loadDashboardInput(supabase: SupabaseClient, apiSummary: unknown)
     overview,
     keywordMap: keywordMapStore.value,
     apiSummary,
+    searchConsoleRanges: queryPageRanges,
+    gscUpdateHistory: [
+      ...(Array.isArray(queryPageHistoryStore.value) ? queryPageHistoryStore.value : queryPageHistoryStore.value?.items || []),
+      ...(Array.isArray(importHistoryStore.value) ? importHistoryStore.value : importHistoryStore.value?.items || []),
+    ].slice(0, 80),
   };
 }
 

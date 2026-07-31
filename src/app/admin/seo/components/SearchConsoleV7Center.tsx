@@ -170,6 +170,9 @@ type GscApiSyncResponse = {
   stoppedReason: GscQueryPageStoppedReason;
   overview?: SearchConsoleV7Data['overview'];
   topRows?: SearchConsoleQuery[];
+  rangeKey?: string;
+  latestStoreKey?: string;
+  historyStoreKey?: string;
 };
 
 
@@ -177,6 +180,9 @@ type GscApiSyncResponse = {
 const STORAGE_KEY = 'noithathungngoc-search-console-import-v1';
 const LEGACY_STORAGE_KEY = 'noithathungoc-search-console-import-v1';
 const GSC_MANUAL_SUMMARY_KEY = 'noithathungngoc-gsc-manual-summary-v11';
+const GSC_QUERY_PAGE_HISTORY_KEY = 'noithathungngoc-search-console-query-pages-history-v1';
+const GSC_IMPORT_HISTORY_KEY = 'noithathungngoc-search-console-import-history-v1';
+function queryPageRangeStoreKey(rangeKey: string) { return SEARCH_CONSOLE_STORE_KEYS['query-page'] + '__range__' + rangeKey; }
 
 const SEARCH_CONSOLE_STORE_KEYS: Record<SearchConsoleImportKind, string> = {
   queries: 'noithathungngoc-search-console-queries-v1',
@@ -191,6 +197,7 @@ const SEARCH_CONSOLE_STORE_KEYS: Record<SearchConsoleImportKind, string> = {
 
 const dateRangeOptions = ['Chua xac dinh', '7 ngay', '28 ngay', '3 thang', '6 thang', '12 thang', '16 thang', 'Tuy chinh'];
 const apiDateRangeOptions = [
+  { value: '7d', label: '7 ngay' },
   { value: '28d', label: '28 ngày' },
   { value: '3m', label: '3 tháng' },
   { value: '6m', label: '6 tháng' },
@@ -285,10 +292,48 @@ function manualSummaryToDraft(summary: GscManualSummary | null): GscManualSummar
   };
 }
 
+function normalizeGscRangePayload(value: unknown): SearchConsoleV7Data | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const data = value as Partial<SearchConsoleV7Data>;
+  const overview = data.overview && typeof data.overview === 'object' && !Array.isArray(data.overview)
+    ? data.overview as SearchConsoleV7Data['overview']
+    : {
+      connected: false,
+      reason: 'no_data' as const,
+      message: 'Dữ liệu Search Console không hợp lệ, dashboard đang dùng fallback rỗng.',
+      siteUrl: '',
+      range: 'Chưa xác định',
+      clicks: 0,
+      impressions: 0,
+      ctr: 0,
+      position: 0,
+      lastUpdated: '',
+    };
+  return {
+    source: data.source || 'manual',
+    selectedType: data.selectedType || 'overview',
+    overview,
+    imports: Array.isArray(data.imports) ? data.imports : [],
+    queries: Array.isArray(data.queries) ? data.queries : [],
+    pages: Array.isArray(data.pages) ? data.pages : [],
+    devices: Array.isArray(data.devices) ? data.devices : [],
+    countries: Array.isArray(data.countries) ? data.countries : [],
+    trend: Array.isArray(data.trend) ? data.trend : [],
+    searchAppearances: Array.isArray(data.searchAppearances) ? data.searchAppearances : [],
+    opportunities: Array.isArray(data.opportunities) ? data.opportunities : [],
+  } as SearchConsoleV7Data;
+}
+
+function normalizeGscHistoryPayload(value: unknown) {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === 'object' && Array.isArray((value as { items?: unknown }).items)) return (value as { items: unknown[] }).items;
+  return [];
+}
+
 function buildCsvSummary(data: SearchConsoleV7Data | null): GscSummaryNumbers {
   if (!data) return { clicks: 0, impressions: 0, ctr: 0, position: 0, source: 'none' };
-  const sourceRows = data.pages.length ? data.pages : data.queries;
-  const source = data.pages.length ? 'pages' : data.queries.length ? 'queries' : 'none';
+  const sourceRows = Array.isArray(data.pages) && data.pages.length ? data.pages : Array.isArray(data.queries) ? data.queries : [];
+  const source = Array.isArray(data.pages) && data.pages.length ? 'pages' : Array.isArray(data.queries) && data.queries.length ? 'queries' : 'none';
   const clicks = sourceRows.reduce((sum, row) => sum + row.clicks, 0);
   const impressions = sourceRows.reduce((sum, row) => sum + row.impressions, 0);
   const weightedPosition = sourceRows.reduce((sum, row) => sum + row.position * Math.max(row.impressions, 1), 0);
@@ -525,7 +570,7 @@ function getTypedSourcesFromCache(kind: SearchConsoleImportKind): SearchConsoleT
     const raw = localStorage.getItem(SEARCH_CONSOLE_STORE_KEYS[kind]);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as Partial<SearchConsoleTypedStore> & { rawText?: string; data?: SearchConsoleV7Data; meta?: SearchConsoleImportMeta };
-    if (Array.isArray(parsed.sources)) return parsed.sources;
+    if (Array.isArray(parsed.sources)) return parsed.sources.filter((item) => item && typeof item === 'object');
     if (parsed.meta && parsed.data && typeof parsed.rawText === 'string') {
       return [{ meta: parsed.meta, data: parsed.data, rawText: parsed.rawText }];
     }
@@ -533,6 +578,42 @@ function getTypedSourcesFromCache(kind: SearchConsoleImportKind): SearchConsoleT
     return [];
   }
   return [];
+}
+
+function historyFromMeta(meta: SearchConsoleImportMeta, source: 'api' | 'csv', storeKey: string) {
+  return {
+    id: meta.id,
+    source,
+    type: meta.type,
+    dateRangeLabel: meta.dateRangeLabel,
+    rangeKey: meta.rangeKey,
+    startDate: meta.startDate,
+    endDate: meta.endDate,
+    rowCount: meta.rowCount,
+    full: !meta.partial,
+    partial: Boolean(meta.partial),
+    updatedAt: meta.updatedAt,
+    importedAt: meta.importedAt,
+    storeKey,
+    stoppedReason: meta.stoppedReason,
+    pagesFetched: meta.pagesFetched,
+    maxPages: meta.maxPages,
+    rowLimit: meta.rowLimit,
+  };
+}
+
+function buildHistoryStoreRaw(storeKey: string, entries: ReturnType<typeof historyFromMeta>[], now: string) {
+  let previous: ReturnType<typeof historyFromMeta>[] = [];
+  try {
+    const parsed = JSON.parse(localStorage.getItem(storeKey) || 'null') as { items?: ReturnType<typeof historyFromMeta>[] } | ReturnType<typeof historyFromMeta>[] | null;
+    previous = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.items) ? parsed.items : [];
+  } catch {
+    previous = [];
+  }
+  const next = [...entries, ...previous.filter((item) => !entries.some((entry) => entry.id === item.id))]
+    .sort((a, b) => String(b.updatedAt || b.importedAt).localeCompare(String(a.updatedAt || a.importedAt)))
+    .slice(0, 160);
+  return JSON.stringify({ version: 1, items: next, lastUpdated: now });
 }
 
 function buildTypedStoreRaw(kind: SearchConsoleImportKind, incoming: SearchConsoleTypedSource[], aggregateData: SearchConsoleV7Data, now: string) {
@@ -929,7 +1010,7 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
   const [manualSummary, setManualSummary] = useState<GscManualSummary | null>(null);
   const [manualDraft, setManualDraft] = useState<GscManualSummaryDraft>(() => defaultManualDraft());
   const [apiStatus, setApiStatus] = useState<GscApiStatus | null>(null);
-  const [apiRange, setApiRange] = useState('3m');
+  const [apiRange, setApiRange] = useState('7d');
   const [apiSyncing, setApiSyncing] = useState(false);
   const [apiMessage, setApiMessage] = useState('');
 
@@ -967,22 +1048,23 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
       const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       if (!saved) return;
       const parsed = normalizeStoredSearchConsole(JSON.parse(saved) as SearchConsoleImportStore);
+      const safeData = normalizeGscRangePayload(parsed.data);
       const latestRawText = parsed.rawText || Object.values(parsed.rawTextByType || {})[0] || '';
       const latestFileName = parsed.fileName || Object.values(parsed.fileNames || {})[0] || '';
       const latestRowCount = typeof parsed.rowCount === 'number'
         ? parsed.rowCount
         : Number(Object.values(parsed.rowCounts || {})[0] || parseImportText(latestRawText).length);
-      const latestMeta = latestImport(parsed.data?.imports || parsed.imports);
+      const latestMeta = latestImport(safeData?.imports || parsed.imports);
 
       setRawText(latestRawText);
-      setData(parsed.data || null);
+      setData(safeData);
       setFileName(latestFileName);
       setRowCount(latestRowCount);
       setRawTextByType(parsed.rawTextByType || {});
       setFileNames(parsed.fileNames || {});
       setRowCounts(parsed.rowCounts || {});
       setDateRangeLabel(latestMeta?.dateRangeLabel || 'Chua xac dinh');
-      onData?.(parsed.data || null);
+      onData?.(safeData);
     } catch {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -990,15 +1072,16 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
 
   useEffect(() => {
     if (!externalData) return;
-    setData(externalData);
-    const latestMeta = latestImport(externalData.imports);
+    const safeExternalData = normalizeGscRangePayload(externalData);
+    setData(safeExternalData);
+    const latestMeta = latestImport(safeExternalData?.imports);
     setDateRangeLabel(latestMeta?.dateRangeLabel || 'Chua xac dinh');
   }, [externalData]);
 
   const keywordRows = useMemo(() => keywordMatchRows(data, keywords), [data, keywords]);
   const clusterRows = useMemo(() => clusterSignal(data, clusters), [data, clusters]);
-  const uniqueQueries = useMemo(() => new Set(data?.queries.map((row) => normalize(row.query)).filter(Boolean)).size, [data]);
-  const uniquePages = useMemo(() => new Set(data?.pages.map((row) => normalize(row.page)).filter(Boolean)).size, [data]);
+  const uniqueQueries = useMemo(() => new Set((Array.isArray(data?.queries) ? data.queries : []).map((row) => normalize(row.query)).filter(Boolean)).size, [data]);
+  const uniquePages = useMemo(() => new Set((Array.isArray(data?.pages) ? data.pages : []).map((row) => normalize(row.page)).filter(Boolean)).size, [data]);
   const availableRanges = useMemo(() => Array.from(new Set((data?.imports || []).map((item) => item.dateRangeLabel).filter(Boolean))), [data]);
   const latestImports = useMemo(() => (data?.imports || []).slice(0, 8), [data]);
   const importSummaryText = data
@@ -1085,7 +1168,8 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
       maxPagesReached: result.maxPagesReached,
       stoppedReason: result.stoppedReason,
       fileName: 'Google Search Console API',
-      storeKey: SEARCH_CONSOLE_STORE_KEYS['query-page'],
+      storeKey: result.storeKey || queryPageRangeStoreKey(result.rangeKey || apiRange),
+      rangeKey: result.rangeKey || apiRange,
     };
     const nextData: SearchConsoleV7Data = {
       source: 'api',
@@ -1150,7 +1234,7 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
       const response = await fetch('/api/admin/search-console/query-page', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ range: apiRange, force }),
+        body: JSON.stringify({ range: apiRange, force, rowLimit: 10000, maxPages: 2 }),
       });
       const body = await response.json().catch(() => ({})) as Partial<GscApiSyncResponse> & { message?: string; detail?: string };
       if (!response.ok || !body.ok) throw new Error(body.detail || body.message || 'Không đồng bộ được Query+Page từ API.');
@@ -1240,6 +1324,11 @@ function SearchConsoleV7Center({ keywords, clusters, onData, compact = false, ex
       cacheOk = cacheSeoStoreValue(SEARCH_CONSOLE_STORE_KEYS[kind], typedRaw) && cacheOk;
       storeItems.push(buildStoreItem(SEARCH_CONSOLE_STORE_KEYS[kind], typedRaw, now));
     });
+
+    const importHistoryEntries = imports.map((item) => historyFromMeta(item.meta, 'csv', SEARCH_CONSOLE_STORE_KEYS[item.kind]));
+    const importHistoryRaw = buildHistoryStoreRaw(GSC_IMPORT_HISTORY_KEY, importHistoryEntries, now);
+    cacheOk = cacheSeoStoreValue(GSC_IMPORT_HISTORY_KEY, importHistoryRaw) && cacheOk;
+    storeItems.push(buildStoreItem(GSC_IMPORT_HISTORY_KEY, importHistoryRaw, now));
 
     if (!cacheOk) setError('Dữ liệu lớn đã được gửi lên Supabase store; cache trình duyệt có thể không lưu đủ do giới hạn localStorage.');
     saveSeoDashboardToSupabase(storeItems).catch(() => null);

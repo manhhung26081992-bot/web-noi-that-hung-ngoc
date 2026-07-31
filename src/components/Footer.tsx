@@ -57,7 +57,7 @@ export default function Footer() {
             <ul className={styles.linkList}>
               {col.links.map((item, i) => (
                 <li key={i}>
-                  <Link href={item.url}>
+                  <Link href={item.url} prefetch={false}>
                     <span className={styles.arrow}>➔</span> {item.name}
                   </Link>
                 </li>

@@ -19,6 +19,13 @@ export const SEO_DASHBOARD_SYNC_KEYS = [
   'noithathungngoc-search-console-queries-v1',
   'noithathungngoc-search-console-pages-v1',
   'noithathungngoc-search-console-query-pages-v1',
+  'noithathungngoc-search-console-query-pages-v1__range__7d',
+  'noithathungngoc-search-console-query-pages-v1__range__28d',
+  'noithathungngoc-search-console-query-pages-v1__range__3m',
+  'noithathungngoc-search-console-query-pages-v1__range__6m',
+  'noithathungngoc-search-console-query-pages-v1__range__12m',
+  'noithathungngoc-search-console-query-pages-history-v1',
+  'noithathungngoc-search-console-import-history-v1',
   'noithathungngoc-search-console-dates-v1',
   'noithathungngoc-search-console-devices-v1',
   'noithathungngoc-search-console-countries-v1',
@@ -349,8 +356,12 @@ export function restoreSupabaseDataToLocalStorage(items: SeoDashboardStoreItem[]
     const raw = typeof item.payload.raw === 'string'
       ? item.payload.raw
       : JSON.stringify(item.payload.value ?? item.payload);
-    window.localStorage.setItem(item.storeKey, raw);
-    restoredKeys.push(item.storeKey);
+    try {
+      window.localStorage.setItem(item.storeKey, raw);
+      restoredKeys.push(item.storeKey);
+    } catch {
+      // Payload lớn hoặc hỏng không được làm sập dashboard; Supabase vẫn là nguồn chính.
+    }
   });
 
   return {

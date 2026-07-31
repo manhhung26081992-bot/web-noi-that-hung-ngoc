@@ -78,14 +78,14 @@ export default function CategorySidebar() {
         <ul className={styles.list}>
           {MENU_ITEMS.filter((item) => item.link !== '/').map((item) => (
             <li key={item.link} className={styles.item}>
-              <Link href={addTrailingSlash(item.link)} className={styles.mainLink}>
+              <Link href={addTrailingSlash(item.link)} prefetch={false} className={styles.mainLink}>
                 {item.name}
               </Link>
               {item.submenu && item.submenu.length > 0 && (
                 <ul className={styles.subList}>
                   {item.submenu.slice(0, 6).map((sub) => (
                     <li key={sub.link}>
-                      <Link href={addTrailingSlash(sub.link)}>{sub.name}</Link>
+                      <Link href={addTrailingSlash(sub.link)} prefetch={false}>{sub.name}</Link>
                     </li>
                   ))}
                 </ul>
@@ -100,7 +100,7 @@ export default function CategorySidebar() {
           <h3 className={styles.hotTitle}>Sản phẩm bán chạy</h3>
           <div className={styles.hotList}>
             {hotProducts.map((product) => (
-              <Link key={product.id} href={getProductUrl(product)} className={styles.hotProduct}>
+              <Link key={product.id} href={getProductUrl(product)} prefetch={false} className={styles.hotProduct}>
                 <span className={styles.hotImageWrap}>
                   <img
                     src={getProductImage(product)}

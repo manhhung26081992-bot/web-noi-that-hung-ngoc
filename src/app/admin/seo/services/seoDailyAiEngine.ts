@@ -7,6 +7,8 @@ import type {
   ProductSeoItem,
   SearchConsoleManualSummary,
   SearchConsoleQuery,
+  SearchConsoleQueryPageRangeSummary,
+  SearchConsoleUpdateHistoryEntry,
   SearchConsoleV7Data,
   SeoBlogQualityItem,
   SeoCluster,
@@ -36,6 +38,8 @@ export type SeoDailyAiEngineInput = {
   overview: SeoOverview | null;
   keywordMap?: unknown;
   apiSummary?: unknown;
+  searchConsoleRanges?: SearchConsoleQueryPageRangeSummary[];
+  gscUpdateHistory?: SearchConsoleUpdateHistoryEntry[];
 };
 
 function today() {
@@ -369,6 +373,80 @@ function buildInternalLinkSuggestions(input: SeoDailyAiEngineInput, tasks: AiSeo
   return Array.from(suggestions.values()).slice(0, 10);
 }
 
+const GSC_RANGE_ORDER = ['7d', '28d', '3m', '6m', '12m'];
+
+function rowRangeSignal(task: AiSeoDailyTask, ranges: SearchConsoleQueryPageRangeSummary[] = []) {
+  const keyword = normalizeKeyword(task.keyword || task.title);
+  const url = cleanPath(task.url || task.savedPrimaryUrl || task.suggestedPrimaryUrl || '');
+  const matched = ranges.find((range) => (range.data?.queries || []).some((row) => {
+    const rowKeyword = normalizeKeyword(row.query);
+    const sameQuery = keyword && (rowKeyword.includes(keyword) || keyword.includes(rowKeyword));
+    const sameUrl = url && cleanPath(row.page || '') === url;
+    return sameQuery || sameUrl;
+  })) || ranges.find((range) => range.hasData);
+  if (!matched) return { dataRange: '', signalSource: '' };
+  return {
+    dataRange: matched.label || matched.dateRangeLabel || matched.rangeKey,
+    signalSource: 'GSC API Query+Page ' + (matched.label || matched.dateRangeLabel || matched.rangeKey),
+  };
+}
+
+function attachRangeSignal(task: AiSeoDailyTask, ranges: SearchConsoleQueryPageRangeSummary[] = []) {
+  const signal = rowRangeSignal(task, ranges);
+  if (!signal.dataRange) return task;
+  return {
+    ...task,
+    dataRange: signal.dataRange,
+    signalSource: signal.signalSource,
+    reason: task.reason + ' Moc du lieu: ' + signal.dataRange + '.',
+    sourceData: [task.sourceData, signal.signalSource].filter(Boolean).join(' + '),
+    copyPrompt: task.copyPrompt + '\nMoc du lieu: ' + signal.dataRange + '\nNguon tin hieu: ' + signal.signalSource,
+  };
+}
+
+function buildRangeTrendNotes(ranges: SearchConsoleQueryPageRangeSummary[] = []) {
+  const byKey = new Map(ranges.map((range) => [range.rangeKey, range]));
+  const notes: string[] = [];
+  const seven = byKey.get('7d');
+  const three = byKey.get('3m');
+  if (seven?.hasData) notes.push('AI co moc 7 ngay de phat hien keyword/URL moi noi va CTR thap trong tuan.');
+  if (three?.hasData) notes.push('AI co moc 3 thang de so sanh tin hieu on dinh truoc khi uu tien toi uu.');
+  if (seven?.hasData && three?.hasData) {
+    const threeQueries = new Set((three.data?.queries || []).map((row) => normalizeKeyword(row.query)).filter(Boolean));
+    const fresh = (seven.data?.queries || []).filter((row) => row.impressions >= 10 && !threeQueries.has(normalizeKeyword(row.query))).slice(0, 3);
+    if (fresh.length) notes.push('Tin hieu moi 7 ngay: ' + fresh.map((row) => row.query).join(', ') + '.');
+  }
+  return notes;
+}
+
+function buildRangeTrendTasks(ranges: SearchConsoleQueryPageRangeSummary[] = []) {
+  const seven = ranges.find((range) => range.rangeKey === '7d');
+  const three = ranges.find((range) => range.rangeKey === '3m');
+  const threeQueries = new Set((three?.data?.queries || []).map((row) => normalizeKeyword(row.query)).filter(Boolean));
+  return (seven?.data?.queries || [])
+    .filter((row) => row.impressions >= 10 && row.position >= 4 && row.position <= 30 && !threeQueries.has(normalizeKeyword(row.query)))
+    .sort((a, b) => b.impressions - a.impressions || a.position - b.position)
+    .slice(0, 3)
+    .map((row, index): AiSeoDailyTask => ({
+      id: 'daily-gsc-7d-trend-' + index + '-' + normalizeKeyword(row.query).replace(/\s+/g, '-').slice(0, 40),
+      title: 'Theo doi tin hieu moi 7 ngay',
+      type: row.ctr < 2 && row.position <= 30 ? 'Toi uu CTR / internal link' : 'Co hoi theo doi',
+      priority: row.position <= 20 ? 'Cao' : 'Trung binh',
+      score: row.position <= 20 ? 78 : 64,
+      url: cleanPath(row.page || ''),
+      keyword: row.query,
+      secondaryKeywords: [],
+      reason: 'Moc du lieu: 7 ngay. Nguon tin hieu: GSC API Query+Page 7 ngay. Keyword co impression moi, vi tri ' + row.position + ', CTR ' + row.ctr + '%.',
+      sourceData: 'GSC API Query+Page 7 ngay',
+      action: row.ctr < 2 ? 'Kiem tra title/meta va them internal link nhe, chua viet bai moi neu chua co tin hieu 3 thang.' : 'Theo doi them trong 28 ngay va gan URL chinh neu can.',
+      expectedResult: 'Khong bo lo keyword moi noi nhung van tranh uu tien qua cao khi chua du du lieu dai hon.',
+      reindex: 'Khong submit lai neu chua sua noi dung that.',
+      copyPrompt: 'Kiem tra tin hieu 7 ngay cho keyword ' + row.query + ' tai URL ' + (row.page || '') + '.',
+      dataRange: '7 ngay',
+      signalSource: 'GSC API Query+Page 7 ngay',
+    }));
+}
+
 function buildIndexTasks(tasks: AiSeoDailyTask[], logs: SeoWorkLogItem[]) {
   const todayKey = today();
   const fromLogs = logs
@@ -419,10 +497,24 @@ export function buildSeoDailyAiPlan(input: SeoDailyAiEngineInput): AiSeoDailyPla
   const googleAdsUpdatedAt = summary.googleAdsUpdatedAt || null;
   const keywordMap = normalizeKeywordMap(input.keywordMap);
   const keywordMapCount = keywordMap.size || countUnknown(input.keywordMap);
+  const rangeSources: AiSeoDailyDataSource[] = GSC_RANGE_ORDER.map((rangeKey) => {
+    const item = (input.searchConsoleRanges || []).find((range) => range.rangeKey === rangeKey);
+    const label = item?.label || rangeKey;
+    return {
+      id: 'query-page-api-' + rangeKey,
+      label: 'Query+Page API ' + label,
+      hasData: Boolean(item?.hasData),
+      count: item?.rowCount || 0,
+      updatedAt: item?.updatedAt || null,
+      status: sourceStatus(Boolean(item?.hasData), item?.updatedAt || null),
+      detail: item?.hasData ? [item.storeKey, item.partial ? 'partial' : 'full', item.stoppedReason || 'completed'].filter(Boolean).join(' - ') : item?.storeKey || 'Chua co du lieu',
+    };
+  });
   const dataSources: AiSeoDailyDataSource[] = [
     { id: 'gsc-manual', label: 'GSC nhập tay', hasData: Boolean(input.manualGscSummary), updatedAt: manualUpdatedAt, status: sourceStatus(Boolean(input.manualGscSummary), manualUpdatedAt), detail: input.manualGscSummary?.range || '' },
     { id: 'gsc-api-overview', label: 'Search Console API overview', hasData: summary.performanceOverviewSource === 'API overview', updatedAt: summary.performanceUpdatedAt, status: sourceStatus(summary.performanceOverviewSource === 'API overview', summary.performanceUpdatedAt), detail: summary.performanceOverviewSource },
-    { id: 'query-page-api', label: 'Query+Page API', hasData: summary.apiQueryPageSummary.hasData, count: summary.apiQueryPageSummary.rowCount, updatedAt: apiUpdatedAt, status: sourceStatus(summary.apiQueryPageSummary.hasData, apiUpdatedAt), detail: summary.activeSearchConsoleSource },
+    { id: 'query-page-api', label: 'Query+Page API latest/current', hasData: summary.apiQueryPageSummary.hasData, count: summary.apiQueryPageSummary.rowCount, updatedAt: apiUpdatedAt, status: sourceStatus(summary.apiQueryPageSummary.hasData, apiUpdatedAt), detail: summary.activeSearchConsoleSource },
+    ...rangeSources,
     { id: 'search-console-csv', label: 'Search Console CSV', hasData: summary.csvSummary.hasData, count: summary.searchConsoleKeywordCount + summary.searchConsoleUrlCount, updatedAt: csvUpdatedAt, status: sourceStatus(summary.csvSummary.hasData, csvUpdatedAt), detail: summary.searchConsoleImportTypes.join(', ') || summary.csvSummary.source },
     { id: 'google-ads', label: 'Google Ads / Keyword Planner', hasData: Boolean(summary.googleAdsKeywordCount), count: summary.googleAdsKeywordCount, updatedAt: googleAdsUpdatedAt, status: sourceStatus(Boolean(summary.googleAdsKeywordCount), googleAdsUpdatedAt), detail: summary.googleAdsKeywordCount ? summary.googleAdsKeywordCount + ' keyword' : '' },
     { id: 'supabase-content', label: 'Supabase products/blog_posts', hasData: Boolean(input.products.length || input.blogs.length), count: input.products.length + input.blogs.length, updatedAt: generatedAt, status: input.products.length || input.blogs.length ? 'fresh' : 'missing', detail: `${input.products.length} sản phẩm, ${input.blogs.length} bài viết` },
@@ -432,13 +524,18 @@ export function buildSeoDailyAiPlan(input: SeoDailyAiEngineInput): AiSeoDailyPla
   const staleSources = dataSources.filter((source) => source.status === 'stale').map((source) => source.label);
   const missingSources = dataSources.filter((source) => source.status === 'missing').map((source) => source.label);
   const newestUpdatedAt = newest(dataSources.map((source) => source.updatedAt));
-  const todayTasks = professional.today.slice(0, 5).map((task) => enrichTaskWithKeywordMap(task, keywordMap, input.searchConsole?.queries || []));
-  const next7DaysTasks = professional.week.slice(0, 7).map((task) => enrichTaskWithKeywordMap(task, keywordMap, input.searchConsole?.queries || []));
-  const watchOpportunities = professional.watch.slice(0, 5).map((task) => enrichTaskWithKeywordMap(task, keywordMap, input.searchConsole?.queries || []));
+  const todayTasks = professional.today.slice(0, 5).map((task) => attachRangeSignal(enrichTaskWithKeywordMap(task, keywordMap, input.searchConsole?.queries || []), input.searchConsoleRanges));
+  const next7DaysTasks = professional.week.slice(0, 7).map((task) => attachRangeSignal(enrichTaskWithKeywordMap(task, keywordMap, input.searchConsole?.queries || []), input.searchConsoleRanges));
+  const watchOpportunities = [
+    ...buildRangeTrendTasks(input.searchConsoleRanges),
+    ...professional.watch.slice(0, 5).map((task) => attachRangeSignal(enrichTaskWithKeywordMap(task, keywordMap, input.searchConsole?.queries || []), input.searchConsoleRanges)),
+  ].slice(0, 7);
   const allTasks = [...todayTasks, ...next7DaysTasks, ...watchOpportunities];
   const internalLinkSuggestions = buildInternalLinkSuggestions(input, allTasks);
   const notes = [
     ...professional.alerts,
+    ...buildRangeTrendNotes(input.searchConsoleRanges),
+    input.gscUpdateHistory?.length ? 'Lich su cap nhat GSC gan nhat: ' + input.gscUpdateHistory.slice(0, 3).map((item) => (item.rangeKey || item.type) + ' ' + (item.updatedAt || item.importedAt || '')).join('; ') + '.' : '',
     staleSources.length ? 'Dữ liệu đã cũ, nên đồng bộ lại: ' + staleSources.join(', ') + '.' : '',
     missingSources.length ? 'Thiếu dữ liệu: ' + missingSources.join(', ') + '.' : '',
   ].filter(Boolean);
@@ -474,6 +571,8 @@ export function buildSeoDailyAiPlan(input: SeoDailyAiEngineInput): AiSeoDailyPla
     apiSummary: input.apiSummary,
     manualGscSummary: input.manualGscSummary,
     googleAdsSummary: input.googleAds?.summary || null,
+    queryPageRanges: input.searchConsoleRanges,
+    gscUpdateHistory: input.gscUpdateHistory,
     workLogSummary: {
       total: summary.workLogTotal,
       watching: summary.workLogWatching,

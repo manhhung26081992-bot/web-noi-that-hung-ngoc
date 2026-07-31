@@ -85,6 +85,7 @@ export default function ProductCard({ product, enableSchema = false, priority = 
       )}
       <Link 
         href={addTrailingSlash(`/san-pham/${product.slug}`)} 
+        prefetch={false}
         title={`Chi tiết sản phẩm ${product.name}`}
         className={styles.productLink}
       >

@@ -61,7 +61,7 @@ export default function Hero() {
     <p className={styles.sub}>{slide.sub}</p>
 
     <div className={styles.actions}>
-      <Link href={slide.link} className={styles.cta}>
+      <Link href={slide.link} prefetch={false} className={styles.cta}>
         {slide.cta}
       </Link>
 

@@ -426,6 +426,7 @@ export interface SearchConsoleImportMeta {
   fileName?: string;
   zipFileName?: string;
   storeKey?: string;
+  rangeKey?: string;
   dimensions?: string[];
   partial?: boolean;
   rowLimit?: number;
@@ -475,6 +476,41 @@ export interface SearchConsoleManualSummary {
   updatedAt: string;
 }
 
+export interface SearchConsoleUpdateHistoryEntry {
+  id: string;
+  source: 'api' | 'csv';
+  type: SearchConsoleImportMeta['type'];
+  dateRangeLabel: string;
+  rangeKey?: string;
+  startDate?: string;
+  endDate?: string;
+  rowCount: number;
+  full?: boolean;
+  partial?: boolean;
+  updatedAt?: string;
+  importedAt?: string;
+  storeKey: string;
+  stoppedReason?: SearchConsoleImportMeta['stoppedReason'];
+  pagesFetched?: number;
+  maxPages?: number;
+  rowLimit?: number;
+}
+
+export interface SearchConsoleQueryPageRangeSummary {
+  rangeKey: string;
+  label: string;
+  storeKey: string;
+  hasData: boolean;
+  rowCount: number;
+  updatedAt: string | null;
+  dateRangeLabel?: string;
+  startDate?: string;
+  endDate?: string;
+  partial?: boolean;
+  stoppedReason?: SearchConsoleImportMeta['stoppedReason'];
+  data?: SearchConsoleV7Data | null;
+}
+
 
 export interface AiSeoDailyDataSource {
   id: string;
@@ -504,6 +540,8 @@ export interface AiSeoDailyTask {
   savedPrimaryUrl?: string;
   suggestedPrimaryUrl?: string;
   competingUrls?: string[];
+  dataRange?: string;
+  signalSource?: string;
 }
 
 export interface AiSeoDailyPlan {
@@ -549,6 +587,8 @@ export interface AiSeoDailyPlan {
   apiSummary?: unknown;
   manualGscSummary?: SearchConsoleManualSummary | null;
   googleAdsSummary?: GoogleAdsImportSummary | null;
+  queryPageRanges?: SearchConsoleQueryPageRangeSummary[];
+  gscUpdateHistory?: SearchConsoleUpdateHistoryEntry[];
   workLogSummary: {
     total: number;
     watching: number;

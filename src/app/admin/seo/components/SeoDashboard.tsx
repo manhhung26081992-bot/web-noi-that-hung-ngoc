@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Badge, MetricCard, ModuleCard, SkeletonGrid } from './Ui';
 import { buildAiInsights, buildSeoCommands, buildTodaySummary } from './SeoV3Modules';
 import { buildAiDailyBrief, buildSeoScoreV41 } from './SeoV4Modules';
@@ -14,6 +14,7 @@ import styles from '../seo-dashboard.module.css';
 import { SEO_DASHBOARD_RESTORED_EVENT } from '../lib/seoDashboardSupabaseSync';
 import { loadSeoWorkLogs } from '../lib/seoWorkLogStorage';
 import type { AiSeoDailyPlan, AiSeoDailyTask, GoogleAdsImportData, IndexSummaryManual, SearchConsoleManualSummary, SearchConsoleV7Data } from '../types/seo';
+import type { GscOpportunitySummary, GscPerformanceSummary } from '../services/searchConsoleMetricsService';
 import type { SeoWorkLogItem } from '../types/seoV11';
 
 const SeoDashboardLowerModules = lazy(() => import('./SeoDashboardLowerModules'));
@@ -25,10 +26,15 @@ const SeoNextActionsV11 = lazy(() => import('./SeoNextActionsV11'));
 const GSC_MANUAL_SUMMARY_KEY = 'noithathungngoc-gsc-manual-summary-v11';
 
 type GscDashboardRangeStatus = { rangeKey?: string; label?: string; exists?: boolean; hasData?: boolean; rowCount?: number; updatedAt?: string | null; storeKey?: string; partial?: boolean; stoppedReason?: string };
-type GscDashboardApiStatus = { latestQueryPageSync?: GscDashboardRangeStatus | null; ranges?: Record<string, GscDashboardRangeStatus>; rangeQueryPageSyncs?: GscDashboardRangeStatus[] };
+type GscDashboardApiStatus = { latestQueryPageSync?: GscDashboardRangeStatus | null; ranges?: Record<string, GscDashboardRangeStatus>; rangeQueryPageSyncs?: GscDashboardRangeStatus[]; performanceSummary?: GscPerformanceSummary | null; opportunitySummary?: GscOpportunitySummary | null };
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat('vi-VN').format(value || 0);
+}
+
+function formatDecimal(value: number | null | undefined, digits = 1) {
+  if (value == null || !Number.isFinite(Number(value))) return '-';
+  return Number(value).toLocaleString('vi-VN', { maximumFractionDigits: digits, minimumFractionDigits: digits });
 }
 
 function formatDateTime(date: Date) {
@@ -159,6 +165,7 @@ export default function SeoDashboard() {
   const [dailyAiPlan, setDailyAiPlan] = useState<AiSeoDailyPlan | null>(null);
   const [gscApiStatus, setGscApiStatus] = useState<GscDashboardApiStatus | null>(null);
   const [dailyAiLoading, setDailyAiLoading] = useState(false);
+  const dailyAiRequestInFlight = useRef(false);
   const [dailyAiMessage, setDailyAiMessage] = useState('');
 
   useEffect(() => {
@@ -218,6 +225,8 @@ export default function SeoDashboard() {
           latestQueryPageSync: body.latestQueryPageSync || null,
           ranges: body.ranges || {},
           rangeQueryPageSyncs: Array.isArray(body.rangeQueryPageSyncs) ? body.rangeQueryPageSyncs : [],
+          performanceSummary: body.performanceSummary || null,
+          opportunitySummary: body.opportunitySummary || null,
         });
       }
     } catch {
@@ -236,23 +245,43 @@ export default function SeoDashboard() {
     }
   }
 
-  async function runDailyAiPlan() {
+  async function runDailyAiPlan(event?: React.MouseEvent<HTMLButtonElement>) {
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    if (dailyAiRequestInFlight.current) {
+      setDailyAiMessage('AI SEO Daily đang chạy, vui lòng chờ request hiện tại hoàn tất.');
+      return;
+    }
+
+    dailyAiRequestInFlight.current = true;
     setDailyAiLoading(true);
-    setDailyAiMessage('');
+    setDailyAiMessage('Đang gửi POST /api/admin/seo-daily/run...');
+
     try {
       const response = await fetch('/api/admin/seo-daily/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ range: '28d', rowLimit: 10000, maxPages: 2 }),
+        cache: 'no-store',
+        body: JSON.stringify({
+          range: '28d',
+          rowLimit: 10000,
+          maxPages: 2,
+          skipSearchConsoleSync: true,
+        }),
       });
-      const body = await response.json().catch(() => ({})) as { ok?: boolean; plan?: AiSeoDailyPlan; message?: string; error?: string; warnings?: string[] };
-      if (!response.ok || !body.plan) throw new Error(body.message || body.error || 'Không chạy được AI SEO hôm nay.');
+      const body = await response.json().catch(() => ({})) as { ok?: boolean; plan?: AiSeoDailyPlan; message?: string; error?: string; detail?: string; warnings?: string[] };
+      if (!response.ok || !body.plan) {
+        throw new Error('POST /api/admin/seo-daily/run trả ' + response.status + ': ' + (body.message || body.error || body.detail || 'Không chạy được AI SEO hôm nay.'));
+      }
+
       setDailyAiPlan(body.plan);
-      loadGscApiStatus();
-      setDailyAiMessage((body.message || 'Đã chạy AI SEO hôm nay.') + (body.warnings?.length ? ' ' + body.warnings.join(' ') : ''));
+      await Promise.all([loadGscApiStatus(), loadDailyAiPlan()]);
+      setDailyAiMessage('POST /api/admin/seo-daily/run trả ' + response.status + '. ' + (body.message || 'Đã chạy AI SEO hôm nay.') + (body.warnings?.length ? ' ' + body.warnings.join(' ') : ''));
     } catch (err) {
       setDailyAiMessage(err instanceof Error ? err.message : 'Không chạy được AI SEO hôm nay.');
     } finally {
+      dailyAiRequestInFlight.current = false;
       setDailyAiLoading(false);
     }
   }
@@ -393,6 +422,14 @@ export default function SeoDashboard() {
   const queryPageRowsFromDaily = dailySourceRows(dailyAiPlan).filter((item) => item.id.startsWith('query-page-api-')).reduce((sum, item) => sum + Number(item.count || 0), 0) || Number(dailySourceRows(dailyAiPlan).find((item) => item.id === 'query-page-api')?.count || 0);
   const queryPageRowsForUi = queryPageRowsFromStatus(gscApiStatus) || queryPageRowsFromDaily || Number(professionalPlan?.sourceSummary?.apiQueryPageSummary?.rowCount || 0);
   const hasAnySeoDataForUi = hasQueryPageStatus(gscApiStatus) || queryPageRowsForUi > 0 || Boolean(gscManualSummary) || Boolean(professionalPlan.sourceSummary.googleAdsKeywordCount);
+  const gscPerformanceSummary = gscApiStatus?.performanceSummary || null;
+  const gscPositionBuckets = gscPerformanceSummary?.positionBuckets || { top1To5: 0, top6To10: 0, top11To30: 0, top31To50: 0, over50: 0, unknown: 0 };
+  const gscOpportunityGroups = [
+    { id: 'top-6-10', title: 'Top 10 vị trí 6-10', rows: gscApiStatus?.opportunitySummary?.top6To10 || [] },
+    { id: 'top-11-30', title: 'Top 10 vị trí 11-30', rows: gscApiStatus?.opportunitySummary?.top11To30 || [] },
+    { id: 'low-ctr', title: 'Top 10 CTR thấp, impression cao', rows: gscApiStatus?.opportunitySummary?.lowCtrHighImpressions || [] },
+  ].filter((group) => group.rows.length);
+  const gscCannibalizationRows = gscApiStatus?.opportunitySummary?.cannibalization || [];
 
   if (loading) {
     return (
@@ -464,7 +501,7 @@ export default function SeoDashboard() {
         <ModuleCard
           title="AI SEO tự động hôm nay"
           description="Kế hoạch được tạo từ route server an toàn, lưu vào Supabase và không tự gọi Search Console API khi mở dashboard."
-          action={<button className={styles.primaryButton} type="button" onClick={runDailyAiPlan} disabled={dailyAiLoading}>{dailyAiLoading ? 'Đang chạy...' : 'Chạy AI SEO hôm nay'}</button>}
+          action={<button className={styles.primaryButton} type="button" onClick={runDailyAiPlan} aria-disabled={dailyAiLoading}>{dailyAiLoading ? 'Đang chạy...' : 'Chạy AI SEO hôm nay'}</button>}
         >
           <div className={styles.aiDailyStatusGrid}>
             <MetricCard label="Lần phân tích gần nhất" value={formatOptionalDate(dailyAiPlan?.generatedAt)} hint={dailyAiPlan?.source === 'auto-daily' ? 'Chạy tự động/cron' : dailyAiPlan ? 'Chạy thủ công' : 'Chưa có plan đã lưu'} />
@@ -557,6 +594,7 @@ export default function SeoDashboard() {
             <span>Tổng quan GSC: {professionalPlan.sourceSummary.performanceOverviewSource} - {professionalPlan.sourceSummary.performanceClicks ?? '-'} click, {professionalPlan.sourceSummary.performanceImpressions ?? '-'} impression, CTR {professionalPlan.sourceSummary.performanceCtr ?? '-'}%, position {professionalPlan.sourceSummary.performancePosition ?? '-'}</span>
             <span>GSC nhập tay: {professionalPlan.sourceSummary.manualGscSummary.hasData ? 'đã có' : 'chưa có'}{professionalPlan.sourceSummary.manualGscSummary.hasData ? ` - ${professionalPlan.sourceSummary.manualGscSummary.clicks ?? '-'} click, ${professionalPlan.sourceSummary.manualGscSummary.impressions ?? '-'} impression, CTR ${professionalPlan.sourceSummary.manualGscSummary.ctr ?? '-'}%, position ${professionalPlan.sourceSummary.manualGscSummary.position ?? '-'}, cập nhật ${formatOptionalDate(professionalPlan.sourceSummary.manualGscSummary.updatedAt)}` : ''}</span>
             <span>Search Console API Query+Page latest: {professionalPlan.sourceSummary.apiQueryPageSummary.hasData ? `đã có - ${formatNumber(professionalPlan.sourceSummary.apiQueryPageSummary.rowCount)} dòng, cập nhật ${formatOptionalDate(professionalPlan.sourceSummary.apiQueryPageSummary.updatedAt)}` : 'chưa có'}</span>
+            {gscPerformanceSummary?.rowCount ? <span>GSC metrics đã normalize: {formatNumber(gscPerformanceSummary.totalClicks)} clicks, {formatNumber(gscPerformanceSummary.totalImpressions)} impressions, CTR TB {formatDecimal(gscPerformanceSummary.averageCtr, 2)}%, position TB {formatDecimal(gscPerformanceSummary.averagePosition, 1)}</span> : null}
             {dailySourceRows(dailyAiPlan).filter((source) => source.id.startsWith('query-page-api-')).map((source) => (
               <span key={'ai-source-' + source.id}>{source.label}: {source.hasData ? 'đã có' : 'chưa có'}{source.count != null ? ' - ' + formatNumber(source.count) + ' dòng' : ''}{source.updatedAt ? ' - cập nhật ' + formatOptionalDate(source.updatedAt) : ''}{source.detail ? ' - ' + source.detail : ''}</span>
             ))}
@@ -568,6 +606,44 @@ export default function SeoDashboard() {
             <span>GSC ưu tiên chi tiết: {professionalPlan.sourceSummary.activeSearchConsoleSource}. Type đã nhập: {professionalPlan.sourceSummary.searchConsoleImportTypes.join(', ') || 'chưa có'}.</span>
             {professionalPlan.sourceSummary.warning ? <strong>{professionalPlan.sourceSummary.warning}</strong> : null}
           </div>
+          {gscPerformanceSummary?.rowCount ? (
+            <div className={styles.scV7InlinePanel}>
+              <h3>Chỉ số Search Console Query+Page</h3>
+              <div className={styles.metricGridSmall}>
+                <MetricCard label="Tổng clicks" value={formatNumber(gscPerformanceSummary.totalClicks)} hint={formatOptionalDate(gscPerformanceSummary.updatedAt)} />
+                <MetricCard label="Tổng impressions" value={formatNumber(gscPerformanceSummary.totalImpressions)} hint={formatNumber(gscPerformanceSummary.rowCount) + ' dòng Query+Page'} />
+                <MetricCard label="CTR trung bình" value={formatDecimal(gscPerformanceSummary.averageCtr, 2) + '%'} hint={formatNumber(gscPerformanceSummary.lowCtrQueryCount) + ' query có impression nhưng CTR thấp'} />
+                <MetricCard label="Position trung bình" value={formatDecimal(gscPerformanceSummary.averagePosition, 1)} hint="Tính theo trọng số impression" />
+              </div>
+              <p>
+                <span>Vị trí 1-5: {formatNumber(gscPositionBuckets.top1To5)} · 6-10: {formatNumber(gscPositionBuckets.top6To10)} · 11-30: {formatNumber(gscPositionBuckets.top11To30)}</span>
+                <span>Vị trí 31-50: {formatNumber(gscPositionBuckets.top31To50)} · &gt;50: {formatNumber(gscPositionBuckets.over50)} · chưa rõ: {formatNumber(gscPositionBuckets.unknown)}</span>
+              </p>
+            </div>
+          ) : null}
+          {gscOpportunityGroups.length || gscCannibalizationRows.length ? (
+            <div className={styles.scV7InlinePanel}>
+              <h3>Top cơ hội GSC theo position</h3>
+              <div className={styles.scV7OpportunityList}>
+                {gscOpportunityGroups.map((group) => (
+                  <article key={'gsc-opportunity-' + group.id}>
+                    <strong>{group.title}</strong>
+                    {group.rows.slice(0, 10).map((row) => (
+                      <span key={group.id + '-' + row.query + '-' + row.page}>{row.query} · position {formatDecimal(row.position, 1)} · {formatNumber(row.impressions)} impressions · CTR {formatDecimal(row.ctr, 2)}% · {row.action}</span>
+                    ))}
+                  </article>
+                ))}
+                {gscCannibalizationRows.length ? (
+                  <article>
+                    <strong>Top 10 query có nhiều URL cạnh tranh</strong>
+                    {gscCannibalizationRows.slice(0, 10).map((row) => (
+                      <span key={'gsc-cannibal-' + row.query}>{row.query} · {row.pages.length} URL · {formatNumber(row.impressions)} impressions · position TB {formatDecimal(row.averagePosition, 1)} · {row.action}</span>
+                    ))}
+                  </article>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
           {professionalPlan.alerts.length ? (
             <div className={styles.v61PlanAlerts}>
               {professionalPlan.alerts.map((item) => <span key={'plan-alert-' + item}>{item}</span>)}

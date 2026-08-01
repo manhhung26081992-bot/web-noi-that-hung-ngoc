@@ -11,6 +11,7 @@ import type {
   TodayTask,
 } from '../types/seo';
 import type { SeoWorkLogItem } from '../types/seoV11';
+import { normalizeSearchConsoleData } from './searchConsoleMetricsService';
 
 export type ProfessionalSeoTaskType =
   | 'Sửa title/meta/description'
@@ -958,9 +959,10 @@ function balancedTodayTasks(tasks: ProfessionalSeoTask[]) {
 }
 
 export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): ProfessionalSeoPlan {
+  const normalizedSearchConsole = normalizeSearchConsoleData(input.searchConsole);
   const planInput: BuildProfessionalSeoPlanInput = {
     ...input,
-    searchConsole: summarizeSearchConsoleForPlan(input.searchConsole),
+    searchConsole: summarizeSearchConsoleForPlan(normalizedSearchConsole),
     googleAds: summarizeGoogleAdsForPlan(input.googleAds),
   };
   const performanceOverview = choosePerformanceOverview(input, planInput.searchConsole);
@@ -981,7 +983,7 @@ export function buildProfessionalSeoPlan(input: BuildProfessionalSeoPlanInput): 
     ...(planInput.searchConsole?.pages || []).map((row) => cleanPath(row.page)),
     ...(planInput.searchConsole?.queries || []).map((row) => cleanPath(row.page)),
   ].filter(Boolean)).size;
-  const latestByType = latestSearchConsoleImports(input.searchConsole);
+  const latestByType = latestSearchConsoleImports(normalizedSearchConsole);
   const scDateRanges = Array.from(new Set((planInput.searchConsole?.imports || []).map((item) => item.dateRangeLabel).filter(Boolean)));
   const scImportTypes = Array.from(new Set((planInput.searchConsole?.imports || []).map((item) => item.type).filter(Boolean)));
   const workLogStats = summarizeWorkLogs(input.workLogs || []);

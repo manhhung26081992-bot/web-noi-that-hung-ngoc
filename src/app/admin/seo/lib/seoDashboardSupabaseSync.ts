@@ -31,6 +31,7 @@ export const SEO_DASHBOARD_SYNC_KEYS = [
   'noithathungngoc-search-console-countries-v1',
   'noithathungngoc-search-console-search-appearance-v1',
   'noithathungngoc-google-ads-import-v1',
+  'noithathungngoc-google-ads-account-history-v1',
   'noithathungngoc-index-summary-v1',
   'noithathungngoc-seo-work-log-v11',
   'noithathungngoc-seo-next-actions-v11',

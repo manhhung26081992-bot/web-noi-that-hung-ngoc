@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 import { ADMIN_SESSION_COOKIE, getAdminSessionValue } from '@/lib/adminAuth';
 import { getSupabaseAdminClient } from '@/lib/supabaseAdmin';
 import type { SearchConsoleImportMeta, SearchConsolePage, SearchConsoleQuery, SearchConsoleUpdateHistoryEntry, SearchConsoleV7Data } from '@/app/admin/seo/types/seo';
+import { buildGscOpportunitySummary, buildGscPerformanceSummary, mergeGscRowsForSummary, normalizeSearchConsoleData } from '@/app/admin/seo/services/searchConsoleMetricsService';
 
 export const GSC_OAUTH_STORE_KEY = 'noithathungngoc-search-console-oauth-v1';
 export const GSC_QUERY_PAGE_STORE_KEY = 'noithathungngoc-search-console-query-pages-v1';
@@ -727,8 +728,13 @@ async function appendQueryPageHistory(entry: SearchConsoleUpdateHistoryEntry) {
 }
 
 function extractDataFromAggregateStore(value: unknown): SearchConsoleV7Data | null {
-  const maybe = value as { data?: SearchConsoleV7Data };
-  return maybe?.data || null;
+  const normalized = normalizeStorePayloadValue(value);
+  if (!normalized || typeof normalized !== 'object' || Array.isArray(normalized)) return null;
+  const record = normalized as Record<string, unknown>;
+  if (Array.isArray(record.queries) || Array.isArray(record.pages)) return normalizeSearchConsoleData(normalized as SearchConsoleV7Data);
+  if (record.data) return extractDataFromAggregateStore(record.data);
+  if (record.aggregateData) return extractDataFromAggregateStore(record.aggregateData);
+  return null;
 }
 
 export async function getApiStatus() {
@@ -757,6 +763,23 @@ export async function getApiStatus() {
     importedAt: aggregateLatest.importedAt,
     storeKey: aggregateLatest.storeKey,
   } : null);
+  const [latestQueryPageStore, ...rangeDataStores] = await Promise.all([
+    readStoreValue<SearchConsoleTypedStore | SearchConsoleV7Data>(GSC_QUERY_PAGE_STORE_KEY).catch(() => null),
+    ...GSC_QUERY_PAGE_RANGE_KEYS.map((rangeKey) => readStoreValue<SearchConsoleTypedStore | SearchConsoleV7Data>(getQueryPageRangeStoreKey(rangeKey)).catch(() => null)),
+  ]);
+  const summaryRows = mergeGscRowsForSummary([
+    ...rangeDataStores.map((value, index) => ({
+      rows: extractDataFromAggregateStore(value)?.queries || [],
+      rangeLabel: rangeQueryPageSyncs[index]?.dateRangeLabel || GSC_QUERY_PAGE_RANGE_KEYS[index],
+    })),
+    { rows: extractDataFromAggregateStore(latestQueryPageStore)?.queries || [], rangeLabel: latest?.dateRangeLabel || 'latest' },
+  ], 5000);
+  const performanceSummary = buildGscPerformanceSummary(summaryRows, {
+    updatedAt: latest?.updatedAt || latest?.importedAt || rangeQueryPageSyncs.find((item) => item.updatedAt)?.updatedAt || null,
+    source: 'saved-query-page',
+    rangeLabel: 'Query+Page saved ranges',
+  });
+  const opportunitySummary = buildGscOpportunitySummary(summaryRows);
   return {
     ok: true,
     connected: Boolean(token?.connected),
@@ -794,6 +817,8 @@ export async function getApiStatus() {
       maxPagesReached: 'maxPagesReached' in latest ? latest.maxPagesReached : latest.stoppedReason === 'max_pages_reached',
       stoppedReason: latest.stoppedReason,
     } : null,
+    performanceSummary,
+    opportunitySummary,
   };
 }
 

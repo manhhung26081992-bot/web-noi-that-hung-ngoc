@@ -24,6 +24,7 @@ import type {
   TodayTask,
 } from '@/app/admin/seo/types/seo';
 import type { SeoWorkLogItem } from '@/app/admin/seo/types/seoV11';
+import { normalizeSearchConsoleData } from '@/app/admin/seo/services/searchConsoleMetricsService';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -137,7 +138,7 @@ function extractSearchConsoleData(value: unknown): SearchConsoleV7Data | null {
   const normalized = normalizeStorePayloadValue(value);
   if (!normalized || typeof normalized !== 'object' || Array.isArray(normalized)) return null;
   const record = normalized as Record<string, unknown>;
-  if (Array.isArray(record.queries) || Array.isArray(record.pages)) return normalized as SearchConsoleV7Data;
+  if (Array.isArray(record.queries) || Array.isArray(record.pages)) return normalizeSearchConsoleData(normalized as SearchConsoleV7Data);
   if (record.data) return extractSearchConsoleData(record.data);
   if (record.aggregateData) return extractSearchConsoleData(record.aggregateData);
   return null;

@@ -66,8 +66,81 @@ type StoreEntry<T> = {
   updatedAt: string | null;
 };
 
-function jsonError(status: number, message: string, detail?: string) {
-  return NextResponse.json({ ok: false, error: message, message, detail }, { status });
+type SeoDailyErrorCode =
+  | 'INPUT_INVALID'
+  | 'AUTH_FAILED'
+  | 'SOURCE_LOAD_FAILED'
+  | 'GSC_LOAD_FAILED'
+  | 'ADS_LOAD_FAILED'
+  | 'CONTENT_LOAD_FAILED'
+  | 'PLAN_BUILD_FAILED'
+  | 'PLAN_SAVE_FAILED'
+  | 'RESPONSE_SERIALIZE_FAILED'
+  | 'UNKNOWN_ERROR';
+
+type SeoDailyStage =
+  | 'input'
+  | 'auth'
+  | 'gsc-sync'
+  | 'load-sources'
+  | 'load-gsc'
+  | 'load-ads'
+  | 'load-content'
+  | 'build-plan'
+  | 'save-plan'
+  | 'serialize-response'
+  | 'unknown';
+
+type RequestDiagnostics = {
+  requestId: string;
+  warnings: string[];
+  degradedSources: string[];
+};
+
+class SeoDailyStageError extends Error {
+  code: SeoDailyErrorCode;
+  stage: SeoDailyStage;
+  retryable: boolean;
+
+  constructor(code: SeoDailyErrorCode, stage: SeoDailyStage, message: string, retryable = false) {
+    super(message);
+    this.name = 'SeoDailyStageError';
+    this.code = code;
+    this.stage = stage;
+    this.retryable = retryable;
+  }
+}
+
+function requestId() {
+  return 'seo-daily-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+}
+
+function cleanErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || 'Unknown error.');
+  return message
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, 'Bearer [redacted]')
+    .replace(/(apikey|authorization|password|secret|token|key)=([^&\s]+)/gi, '$1=[redacted]')
+    .slice(0, 500);
+}
+
+function logStageError(context: RequestDiagnostics, stage: SeoDailyStage, error: unknown, extra: Record<string, unknown> = {}) {
+  console.error('[seo-daily-run]', {
+    requestId: context.requestId,
+    stage,
+    errorName: error instanceof Error ? error.name : typeof error,
+    message: cleanErrorMessage(error),
+    ...extra,
+  });
+}
+
+function jsonError(status: number, code: SeoDailyErrorCode, stage: SeoDailyStage, requestIdValue: string, message: string, retryable = false) {
+  return NextResponse.json({ ok: false, code, message, stage, requestId: requestIdValue, retryable }, { status });
+}
+
+function clampPositiveInteger(value: unknown, fallback: number, max: number) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return fallback;
+  return Math.min(Math.floor(numeric), max);
 }
 
 async function hasAdminSession() {
@@ -177,6 +250,22 @@ async function readStoreEntry<T>(supabase: SupabaseClient, storeKey: string): Pr
   }
   const payload = safeJsonParse(chunks.join('')) as StorePayload;
   return { value: normalizeStorePayloadValue(payload) as T | null, updatedAt: main.updated_at || null };
+}
+
+async function readOptionalStoreEntry<T>(
+  supabase: SupabaseClient,
+  storeKey: string,
+  label: string,
+  diagnostics: RequestDiagnostics,
+): Promise<StoreEntry<T>> {
+  try {
+    return await readStoreEntry<T>(supabase, storeKey);
+  } catch (error) {
+    diagnostics.degradedSources.push(label);
+    diagnostics.warnings.push(label + ' chua doc duoc, AI Daily dung du lieu rong cho nguon nay.');
+    logStageError(diagnostics, label.includes('GSC') || label.includes('Search Console') ? 'load-gsc' : label.includes('Ads') ? 'load-ads' : 'load-sources', error, { source: label });
+    return { value: null, updatedAt: null };
+  }
 }
 
 function chunkText(text: string) {
@@ -343,10 +432,28 @@ function toBlogs(rows: Array<Record<string, unknown>>): SeoBlogQualityItem[] {
   }).sort((a, b) => a.score - b.score);
 }
 
-async function safeList<T>(supabase: SupabaseClient, table: string, orderColumn = 'updated_at', limit = 300): Promise<T[]> {
+async function strictList<T>(supabase: SupabaseClient, table: string, orderColumn = 'updated_at', limit = 300): Promise<T[]> {
   const { data, error } = await supabase.from(table).select('*').order(orderColumn, { ascending: false }).limit(limit);
-  if (error) return [];
+  if (error) throw error;
   return (data || []) as T[];
+}
+
+async function optionalList<T>(
+  supabase: SupabaseClient,
+  table: string,
+  label: string,
+  diagnostics: RequestDiagnostics,
+  orderColumn = 'updated_at',
+  limit = 300,
+): Promise<T[]> {
+  try {
+    return await strictList<T>(supabase, table, orderColumn, limit);
+  } catch (error) {
+    diagnostics.degradedSources.push(label);
+    diagnostics.warnings.push(label + ' chua doc duoc, AI Daily dung mang rong.');
+    logStageError(diagnostics, 'load-sources', error, { source: label, table });
+    return [];
+  }
 }
 
 function latestImportMeta(data: SearchConsoleV7Data | null | undefined) {
@@ -372,7 +479,7 @@ function mergeRangeRows(ranges: SearchConsoleQueryPageRangeSummary[], aggregateD
   return Array.from(rows.values()).sort((a, b) => b.impressions - a.impressions || b.clicks - a.clicks || a.position - b.position).slice(0, 2500);
 }
 
-async function loadDashboardInput(supabase: SupabaseClient, apiSummary: unknown) {
+async function loadDashboardInput(supabase: SupabaseClient, apiSummary: unknown, diagnostics: RequestDiagnostics) {
   const [
     aggregateStore,
     queryPageStore,
@@ -388,24 +495,24 @@ async function loadDashboardInput(supabase: SupabaseClient, apiSummary: unknown)
     keywords,
     tasks,
   ] = await Promise.all([
-    readStoreEntry<{ data?: SearchConsoleV7Data } | SearchConsoleV7Data>(supabase, GSC_AGGREGATE_STORE_KEY),
-    readStoreEntry<{ data?: SearchConsoleV7Data; lastUpdated?: string }>(supabase, GSC_QUERY_PAGE_STORE_KEY),
-    readStoreEntry<SearchConsoleManualSummary>(supabase, GSC_MANUAL_SUMMARY_KEY),
-    readStoreEntry<GoogleAdsImportData>(supabase, GOOGLE_ADS_STORE_KEY),
-    readStoreEntry<SeoWorkLogItem[]>(supabase, SEO_WORK_LOG_V11_KEY),
-    readStoreEntry<unknown>(supabase, SEO_KEYWORD_MAP_KEY),
-    readStoreEntry<{ items?: SearchConsoleUpdateHistoryEntry[] } | SearchConsoleUpdateHistoryEntry[]>(supabase, GSC_QUERY_PAGE_HISTORY_STORE_KEY),
-    readStoreEntry<{ items?: SearchConsoleUpdateHistoryEntry[] } | SearchConsoleUpdateHistoryEntry[]>(supabase, GSC_IMPORT_HISTORY_KEY),
-    safeList<Record<string, unknown>>(supabase, 'products', 'id', 300),
-    safeList<Record<string, unknown>>(supabase, 'blog_posts', 'created_at', 300),
-    safeList<SeoCluster>(supabase, 'seo_clusters', 'priority', 100),
-    safeList<SeoKeyword>(supabase, 'seo_keywords', 'priority', 500),
-    safeList<TodayTask>(supabase, 'seo_tasks', 'updated_at', 100),
+    readOptionalStoreEntry<{ data?: SearchConsoleV7Data } | SearchConsoleV7Data>(supabase, GSC_AGGREGATE_STORE_KEY, 'GSC aggregate store', diagnostics),
+    readOptionalStoreEntry<{ data?: SearchConsoleV7Data; lastUpdated?: string }>(supabase, GSC_QUERY_PAGE_STORE_KEY, 'GSC Query+Page latest store', diagnostics),
+    readOptionalStoreEntry<SearchConsoleManualSummary>(supabase, GSC_MANUAL_SUMMARY_KEY, 'GSC manual summary', diagnostics),
+    readOptionalStoreEntry<GoogleAdsImportData>(supabase, GOOGLE_ADS_STORE_KEY, 'Google Ads import', diagnostics),
+    readOptionalStoreEntry<SeoWorkLogItem[]>(supabase, SEO_WORK_LOG_V11_KEY, 'SEO work log v11', diagnostics),
+    readOptionalStoreEntry<unknown>(supabase, SEO_KEYWORD_MAP_KEY, 'SEO keyword map', diagnostics),
+    readOptionalStoreEntry<{ items?: SearchConsoleUpdateHistoryEntry[] } | SearchConsoleUpdateHistoryEntry[]>(supabase, GSC_QUERY_PAGE_HISTORY_STORE_KEY, 'GSC Query+Page history', diagnostics),
+    readOptionalStoreEntry<{ items?: SearchConsoleUpdateHistoryEntry[] } | SearchConsoleUpdateHistoryEntry[]>(supabase, GSC_IMPORT_HISTORY_KEY, 'GSC import history', diagnostics),
+    strictList<Record<string, unknown>>(supabase, 'products', 'id', 300),
+    strictList<Record<string, unknown>>(supabase, 'blog_posts', 'created_at', 300),
+    optionalList<SeoCluster>(supabase, 'seo_clusters', 'seo_clusters', diagnostics, 'priority', 100),
+    optionalList<SeoKeyword>(supabase, 'seo_keywords', 'seo_keywords', diagnostics, 'priority', 500),
+    optionalList<TodayTask>(supabase, 'seo_tasks', 'seo_tasks', diagnostics, 'updated_at', 100),
   ]);
   const rangeStores = await Promise.all(GSC_QUERY_PAGE_RANGE_KEYS.map(async (rangeKey) => ({
     rangeKey,
     storeKey: getQueryPageRangeStoreKey(rangeKey),
-    entry: await readStoreEntry<{ data?: SearchConsoleV7Data; lastUpdated?: string }>(supabase, getQueryPageRangeStoreKey(rangeKey)),
+    entry: await readOptionalStoreEntry<{ data?: SearchConsoleV7Data; lastUpdated?: string }>(supabase, getQueryPageRangeStoreKey(rangeKey), 'GSC Query+Page range ' + rangeKey, diagnostics),
   })));
   const aggregateValue = aggregateStore.value;
   const aggregateData = extractSearchConsoleData(aggregateValue);
@@ -490,53 +597,187 @@ async function readLatestPlan(supabase: SupabaseClient) {
   return readStoreEntry<AiSeoDailyPlan>(supabase, AI_SEO_DAILY_PLAN_STORE_KEY);
 }
 
+function summarizeQueryPageSync(value: unknown) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const record = value as Record<string, unknown>;
+  return {
+    ok: record.ok,
+    skipped: record.skipped,
+    message: record.message,
+    storeKey: record.storeKey,
+    latestStoreKey: record.latestStoreKey,
+    historyStoreKey: record.historyStoreKey,
+    rangeKey: record.rangeKey,
+    dateRangeLabel: record.dateRangeLabel,
+    rowCount: record.rowCount,
+    updatedAt: record.updatedAt,
+    partial: record.partial,
+    rowLimit: record.rowLimit,
+    maxPages: record.maxPages,
+    pagesFetched: record.pagesFetched,
+    fetchedRows: record.fetchedRows,
+    maxPagesReached: record.maxPagesReached,
+    stoppedReason: record.stoppedReason,
+  };
+}
+
+function sanitizeQueryPageRanges(ranges: SearchConsoleQueryPageRangeSummary[] | undefined): SearchConsoleQueryPageRangeSummary[] {
+  return (ranges || []).map((range) => ({
+    rangeKey: range.rangeKey,
+    label: range.label,
+    storeKey: range.storeKey,
+    hasData: range.hasData,
+    rowCount: range.rowCount,
+    updatedAt: range.updatedAt,
+    dateRangeLabel: range.dateRangeLabel,
+    startDate: range.startDate,
+    endDate: range.endDate,
+    partial: range.partial,
+    stoppedReason: range.stoppedReason,
+  }));
+}
+
+function sanitizePlan(plan: AiSeoDailyPlan): AiSeoDailyPlan {
+  return {
+    ...plan,
+    todayTasks: (plan.todayTasks || []).slice(0, 10),
+    next7DaysTasks: (plan.next7DaysTasks || []).slice(0, 20),
+    watchOpportunities: (plan.watchOpportunities || []).slice(0, 20),
+    internalLinkSuggestions: (plan.internalLinkSuggestions || []).slice(0, 20),
+    cannibalizationWarnings: (plan.cannibalizationWarnings || []).slice(0, 20),
+    contentTasks: (plan.contentTasks || []).slice(0, 20),
+    productOptimizationTasks: (plan.productOptimizationTasks || []).slice(0, 20),
+    indexCheckTasks: (plan.indexCheckTasks || []).slice(0, 20),
+    notes: (plan.notes || []).slice(0, 30),
+    apiSummary: summarizeQueryPageSync(plan.apiSummary),
+    queryPageRanges: sanitizeQueryPageRanges(plan.queryPageRanges),
+    gscUpdateHistory: (plan.gscUpdateHistory || []).slice(0, 40),
+  };
+}
+
+function assertJsonSerializable(value: unknown) {
+  JSON.stringify(value);
+}
+
 export async function GET(request: NextRequest) {
-  if (!(await authorize(request))) return jsonError(401, 'Bạn cần đăng nhập quản trị hoặc gửi x-seo-cron-secret hợp lệ.');
+  const diagnostics: RequestDiagnostics = { requestId: requestId(), warnings: [], degradedSources: [] };
+  if (!(await authorize(request))) {
+    return jsonError(
+      401,
+      'AUTH_FAILED',
+      'auth',
+      diagnostics.requestId,
+      'Ban can dang nhap quan tri hoac gui x-seo-cron-secret hop le.',
+    );
+  }
   try {
     const supabase = getSupabaseAdminClient();
     const entry = await readLatestPlan(supabase);
     return NextResponse.json({ ok: true, storeKey: AI_SEO_DAILY_PLAN_STORE_KEY, plan: entry.value, updatedAt: entry.updatedAt });
   } catch (error) {
-    return jsonError(500, 'Không đọc được AI SEO Daily plan.', error instanceof Error ? error.message : 'Lỗi không xác định.');
+    logStageError(diagnostics, 'load-sources', error);
+    return jsonError(500, 'SOURCE_LOAD_FAILED', 'load-sources', diagnostics.requestId, 'Khong doc duoc AI SEO Daily plan.', true);
   }
 }
 
 export async function POST(request: NextRequest) {
-  const authMode = await authorize(request);
-  if (!authMode) return jsonError(401, 'Bạn cần đăng nhập quản trị hoặc gửi x-seo-cron-secret hợp lệ.');
+  const diagnostics: RequestDiagnostics = { requestId: requestId(), warnings: [], degradedSources: [] };
+  let stage: SeoDailyStage = 'auth';
+  let code: SeoDailyErrorCode = 'UNKNOWN_ERROR';
+
   try {
-    const body = await request.json().catch(() => ({})) as { range?: string; force?: boolean; skipSearchConsoleSync?: boolean; rowLimit?: number; maxPages?: number };
-    const warnings: string[] = [];
+    const authMode = await authorize(request);
+    if (!authMode) {
+      return jsonError(
+        401,
+        'AUTH_FAILED',
+        'auth',
+        diagnostics.requestId,
+        'Ban can dang nhap quan tri hoac gui x-seo-cron-secret hop le.',
+      );
+    }
+
+    stage = 'input';
+    code = 'INPUT_INVALID';
+    const body = await request.json().catch(() => ({})) as {
+      range?: string;
+      force?: boolean;
+      skipSearchConsoleSync?: boolean;
+      rowLimit?: number;
+      maxPages?: number;
+    };
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      throw new SeoDailyStageError('INPUT_INVALID', 'input', 'Body khong hop le.');
+    }
+
     let queryPageSync: unknown = null;
     if (!body.skipSearchConsoleSync) {
+      stage = 'gsc-sync';
+      code = 'GSC_LOAD_FAILED';
       try {
         queryPageSync = await syncQueryPage(body.range || '28d', Boolean(body.force), {
-          rowLimit: Number(body.rowLimit || 10000),
-          maxPages: Number(body.maxPages || 2),
+          rowLimit: clampPositiveInteger(body.rowLimit, 10000, 10000),
+          maxPages: clampPositiveInteger(body.maxPages, 2, 2),
         });
       } catch (error) {
-        warnings.push('Search Console API chưa đồng bộ được: ' + (error instanceof Error ? error.message : 'lỗi không xác định'));
+        diagnostics.degradedSources.push('Search Console API sync');
+        diagnostics.warnings.push('Search Console API chua dong bo duoc, AI Daily dung du lieu da luu.');
+        logStageError(diagnostics, 'gsc-sync', error, { range: body.range || '28d' });
       }
     }
+
+    stage = 'load-sources';
+    code = 'SOURCE_LOAD_FAILED';
     const supabase = getSupabaseAdminClient();
-    const input = await loadDashboardInput(supabase, queryPageSync);
-    const plan = buildSeoDailyAiPlan({ ...input, source: authMode === 'cron' ? 'auto-daily' : 'manual-run' });
-    const historyEntry = await readStoreEntry<AiSeoDailyPlan[]>(supabase, AI_SEO_DAILY_HISTORY_STORE_KEY);
-    const history = [plan, ...(Array.isArray(historyEntry.value) ? historyEntry.value : []).filter((item) => item.date !== plan.date)]
-      .slice(0, 45);
+    let input: Awaited<ReturnType<typeof loadDashboardInput>>;
+    try {
+      input = await loadDashboardInput(supabase, summarizeQueryPageSync(queryPageSync), diagnostics);
+    } catch (error) {
+      logStageError(diagnostics, 'load-content', error);
+      throw new SeoDailyStageError('CONTENT_LOAD_FAILED', 'load-content', 'Khong doc duoc du lieu SEO loi tu Supabase.', true);
+    }
+
+    stage = 'build-plan';
+    code = 'PLAN_BUILD_FAILED';
+    const rawPlan = buildSeoDailyAiPlan({ ...input, source: authMode === 'cron' ? 'auto-daily' : 'manual-run' });
+    const plan = sanitizePlan(rawPlan);
+
+    stage = 'save-plan';
+    code = 'PLAN_SAVE_FAILED';
+    const historyEntry = await readOptionalStoreEntry<AiSeoDailyPlan[]>(supabase, AI_SEO_DAILY_HISTORY_STORE_KEY, 'AI SEO Daily history', diagnostics);
+    const previousHistory = Array.isArray(historyEntry.value) ? historyEntry.value.map(sanitizePlan) : [];
+    const history = [plan, ...previousHistory.filter((item) => item.date !== plan.date)].slice(0, 45);
     await upsertStoreValue(supabase, AI_SEO_DAILY_PLAN_STORE_KEY, plan);
     await upsertStoreValue(supabase, AI_SEO_DAILY_HISTORY_STORE_KEY, history);
-    return NextResponse.json({
+
+    stage = 'serialize-response';
+    code = 'RESPONSE_SERIALIZE_FAILED';
+    const responseBody = {
       ok: true,
+      requestId: diagnostics.requestId,
       storeKey: AI_SEO_DAILY_PLAN_STORE_KEY,
       historyStoreKey: AI_SEO_DAILY_HISTORY_STORE_KEY,
       plan,
-      warnings,
-      queryPageSync,
+      warnings: diagnostics.warnings,
+      degradedSources: Array.from(new Set(diagnostics.degradedSources)),
+      queryPageSync: summarizeQueryPageSync(queryPageSync),
       authMode,
-      message: 'Đã chạy AI SEO Daily và lưu kế hoạch vào Supabase.',
-    });
+      message: 'Da chay AI SEO Daily va luu ke hoach vao Supabase.',
+    };
+    assertJsonSerializable(responseBody);
+    return NextResponse.json(responseBody);
   } catch (error) {
-    return jsonError(500, 'Không chạy được AI SEO Daily.', error instanceof Error ? error.message : 'Lỗi không xác định.');
+    const typedError = error instanceof SeoDailyStageError
+      ? error
+      : new SeoDailyStageError(code, stage, 'Khong chay duoc AI SEO Daily.', stage !== 'build-plan');
+    logStageError(diagnostics, typedError.stage, error);
+    return jsonError(
+      typedError.code === 'INPUT_INVALID' ? 400 : 500,
+      typedError.code,
+      typedError.stage,
+      diagnostics.requestId,
+      typedError.message,
+      typedError.retryable,
+    );
   }
 }

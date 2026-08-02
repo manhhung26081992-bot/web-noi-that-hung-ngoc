@@ -270,14 +270,26 @@ export default function SeoDashboard() {
           skipSearchConsoleSync: true,
         }),
       });
-      const body = await response.json().catch(() => ({})) as { ok?: boolean; plan?: AiSeoDailyPlan; message?: string; error?: string; detail?: string; warnings?: string[] };
+      const body = await response.json().catch(() => ({})) as {
+        ok?: boolean;
+        plan?: AiSeoDailyPlan;
+        message?: string;
+        error?: string;
+        detail?: string;
+        warnings?: string[];
+        degradedSources?: string[];
+        code?: string;
+        stage?: string;
+        requestId?: string;
+      };
       if (!response.ok || !body.plan) {
-        throw new Error('POST /api/admin/seo-daily/run trả ' + response.status + ': ' + (body.message || body.error || body.detail || 'Không chạy được AI SEO hôm nay.'));
+        const diagnostic = [body.code, body.stage, body.requestId].filter(Boolean).join(' / ');
+        throw new Error('POST /api/admin/seo-daily/run trả ' + response.status + ': ' + (body.message || body.error || body.detail || 'Không chạy được AI SEO hôm nay.') + (diagnostic ? ' (' + diagnostic + ')' : ''));
       }
 
       setDailyAiPlan(body.plan);
       await Promise.all([loadGscApiStatus(), loadDailyAiPlan()]);
-      setDailyAiMessage('POST /api/admin/seo-daily/run trả ' + response.status + '. ' + (body.message || 'Đã chạy AI SEO hôm nay.') + (body.warnings?.length ? ' ' + body.warnings.join(' ') : ''));
+      setDailyAiMessage('POST /api/admin/seo-daily/run trả ' + response.status + '. ' + (body.message || 'Đã chạy AI SEO hôm nay.') + (body.warnings?.length ? ' ' + body.warnings.join(' ') : '') + (body.degradedSources?.length ? ' Nguồn fallback: ' + body.degradedSources.join(', ') + '.' : ''));
     } catch (err) {
       setDailyAiMessage(err instanceof Error ? err.message : 'Không chạy được AI SEO hôm nay.');
     } finally {

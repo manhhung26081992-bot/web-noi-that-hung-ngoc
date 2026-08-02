@@ -21,31 +21,16 @@ function normalizeImageUrl(image?: string | string[]) {
   return siteUrl(firstImage);
 }
 
-// Chuẩn hóa giá về số thuần để Offer schema hợp lệ.
-function normalizePrice(price?: number | string) {
-  if (price === undefined || price === null) return undefined;
-  if (typeof price === 'number') return price > 0 ? price : undefined;
-
-  const numericPrice = Number(String(price).replace(/[^\d]/g, ''));
-  return Number.isFinite(numericPrice) && numericPrice > 0
-    ? numericPrice
-    : undefined;
-}
-
 export default function CategorySchema({
   categoryName,
   categorySlug,
   products,
 }: CategorySchemaProps) {
   const categoryUrl = siteUrl(`/${categorySlug}`);
-  const schemaProducts = products
-    .map((product) => ({
-      ...product,
-      schemaPrice: normalizePrice(product.price),
-    }))
-    .filter((product) => product.schemaPrice);
+  const listProducts = products.filter((product) => product.name && product.slug);
 
-  // Chỉ đưa sản phẩm có giá hợp lệ vào schema để Google không báo Product snippets invalid.
+  // Trang danh mục chỉ dùng ItemList để tránh tạo nhiều Product/Offer schema không đúng ngữ cảnh.
+  // Product + Offer chi tiết được đặt ở trang /san-pham/[slug].
   const schemaData = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -53,27 +38,14 @@ export default function CategorySchema({
     url: categoryUrl,
     mainEntity: {
       '@type': 'ItemList',
-      itemListElement: schemaProducts.slice(0, 24).map((product, index) => ({
+      itemListElement: listProducts.slice(0, 24).map((product, index) => ({
           '@type': 'ListItem',
           position: index + 1,
           item: {
-            '@type': 'Product',
+            '@type': 'Thing',
             name: product.name,
             image: normalizeImageUrl(product.image),
             url: siteUrl(`/san-pham/${product.slug}`),
-            sku: product.id ? String(product.id) : product.slug,
-            brand: {
-              '@type': 'Brand',
-              name: 'Nội Thất Hùng Ngọc',
-            },
-            offers: {
-              '@type': 'Offer',
-              priceCurrency: 'VND',
-              price: product.schemaPrice,
-              availability: 'https://schema.org/InStock',
-              itemCondition: 'https://schema.org/NewCondition',
-              url: siteUrl(`/san-pham/${product.slug}`),
-            },
           },
         })),
     },

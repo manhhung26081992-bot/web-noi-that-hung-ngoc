@@ -164,6 +164,38 @@ function getCategorySlugsForProducts(slug: string) {
   return Object.keys(CATEGORY_GROUPS).includes(cleanSlug) ? CATEGORY_GROUPS[cleanSlug] : [cleanSlug];
 }
 
+function normalizeWhitespace(value: string) {
+  return String(value || '').replace(/\s+/g, ' ').trim();
+}
+
+function stripHtml(value: string) {
+  return normalizeWhitespace(value.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]+>/g, ' '));
+}
+
+function hasProductPriceText(value: string) {
+  return /\d[\d.\s]*(?:₫|đ|vnd)\b/i.test(value);
+}
+
+function getSeoContentMetaDescription(value: string) {
+  const content = stripHtml(value);
+  const sentences = content.match(/[^.!?]+[.!?]?/g)?.map((sentence) => normalizeWhitespace(sentence)).filter(Boolean) || [];
+  const candidates = sentences.filter((sentence) => !hasProductPriceText(sentence));
+
+  return candidates.find((sentence) => sentence.length >= 140 && sentence.length <= 170)
+    || candidates.find((sentence) => sentence.length <= 170)
+    || '';
+}
+
+function getCategoryMetaDescription(categoryName: string, categorySeo: Awaited<ReturnType<typeof getCategoryBySlug>>) {
+  const configuredDescription = normalizeWhitespace(categorySeo?.description || '');
+  if (configuredDescription) return configuredDescription;
+
+  const seoContentDescription = getSeoContentMetaDescription(categorySeo?.seo_content || '');
+  if (seoContentDescription) return seoContentDescription;
+
+  return `Mua ${categoryName} tại Nội Thất Hùng Ngọc. Sản phẩm nội thất bền đẹp, nhiều mẫu phù hợp cho văn phòng, gia đình và công trình.`;
+}
+
 export function generateStaticParams() {
   const slugs = new Set<string>();
 
@@ -188,15 +220,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const finalSlugs = getCategorySlugsForProducts(cleanSlug);
   const productsFromSupabase = await getProductsByMultipleCategories(finalSlugs);
   const hasProducts = productsFromSupabase.length > 0;
-  const title = categorySeo?.seo_title || category?.name || 'Danh mục sản phẩm';
+  const title = normalizeWhitespace(categorySeo?.seo_title || category?.name || 'Danh mục sản phẩm');
+  const categoryName = normalizeWhitespace(category?.name || categorySeo?.title || title);
+  const description = getCategoryMetaDescription(categoryName, categorySeo);
 
     const canonicalUrl = siteUrl(`/${cleanSlug}`);
 
   return {
     title,
-    description:
-      categorySeo?.seo_content ||
-      `Mua ${title} giá tốt tại Nội Thất Hùng Ngọc. Giao hàng nhanh tại Hà Nội.`,
+    description,
     alternates: {
       canonical: canonicalUrl,
     },
@@ -211,9 +243,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         },
     openGraph: {
       title,
-      description:
-        categorySeo?.seo_content ||
-        `Mua ${title} giá tốt tại Nội Thất Hùng Ngọc. Giao hàng nhanh tại Hà Nội.`,
+      description,
       url: canonicalUrl,
       type: 'website',
     },
@@ -239,7 +269,7 @@ export default async function CategoryPage({ params }: Props) {
 
   return (
     <main className={styles.container}>
-      {/* Schema danh mục giúp Google hiểu trang này là danh sách sản phẩm có giá. */}
+      {/* Schema danh mục chỉ mô tả CollectionPage/ItemList; Product + Offer nằm ở trang chi tiết. */}
       <CategorySchema
         categoryName={category.name}
         categorySlug={cleanSlug}
@@ -256,7 +286,6 @@ export default async function CategoryPage({ params }: Props) {
       </header>
 
       <div className={styles.categoryLayout}>
-        <CategorySidebar />
         <div className={styles.categoryMain}>
       <div className={styles.productSection}>
         {productsFromSupabase && productsFromSupabase.length > 0 ? (
@@ -305,6 +334,7 @@ export default async function CategoryPage({ params }: Props) {
         )}
       </div>
         </div>
+        <CategorySidebar />
       </div>
       {categorySeo?.seo_title && categorySeo?.seo_content && (
         <section className={styles.categorySeo}>
@@ -317,18 +347,18 @@ export default async function CategoryPage({ params }: Props) {
             />
           </div>
 
-          {internalLinks.length > 0 && (
-            <div className={styles.relatedBox}>
-              <h3>Danh mục liên quan</h3>
-              <div className={styles.relatedLinks}>
-                {internalLinks.map((link) => (
-                  <Link key={link.slug} href={addTrailingSlash(`/${link.slug}`)} prefetch={false} className={styles.relatedLink}>
-                    {link.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
+        </section>
+      )}
+      {internalLinks.length > 0 && (
+        <section className={styles.relatedBox} aria-labelledby="related-category-title">
+          <h2 id="related-category-title">Danh mục liên quan</h2>
+          <div className={styles.relatedLinks}>
+            {internalLinks.map((link) => (
+              <Link key={link.slug} href={addTrailingSlash(`/${link.slug}`)} prefetch={false} className={styles.relatedLink}>
+                {link.name}
+              </Link>
+            ))}
+          </div>
         </section>
       )}
     </main>
@@ -420,4 +450,3 @@ export default async function CategoryPage({ params }: Props) {
 //     </main>
 //   );
 // }
-

@@ -32,6 +32,11 @@
   text-transform: uppercase;
 }
 
+.current {
+  color: #333;
+  font-weight: 700;
+}
+
 /* Thông tin tổng quan danh mục */
 .headerInfo {
   display: flex;
@@ -47,6 +52,17 @@
   color: #888;
 }
 
+.categoryHeader {
+  margin-bottom: 18px;
+}
+
+.mainTitle {
+  margin: 0 0 10px;
+  color: #1f2937;
+  font-size: 32px;
+  line-height: 1.25;
+}
+
 /* Lưới sản phẩm - Tái sử dụng cấu trúc Grid */
 .productGrid {
   display: grid;
@@ -60,12 +76,23 @@
   gap: 20px;
 }
 
+.categoryLayout :global(aside) {
+  order: 1;
+}
+
 .categoryMain {
   min-width: 0;
   flex: 1;
+  order: 2;
   padding: 14px;
   border: 1px solid #d8e2e8;
   background: #fff;
+}
+
+.productSection,
+.productGridFull {
+  min-width: 0;
+  width: 100%;
 }
 
 .empty {
@@ -77,10 +104,24 @@
   border-radius: 8px;
 }
 
+.noProduct {
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.backHome {
+  display: inline-flex;
+  margin-top: 14px;
+  color: #32a7c8;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.backHome:hover {
+  text-decoration: underline;
+}
+
 .categorySeo {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 28px;
   margin-top: 56px;
   padding: 30px;
   border: 1px solid #e5edf7;
@@ -149,11 +190,12 @@
 }
 
 .relatedBox {
-  padding-left: 24px;
-  border-left: 1px solid #dbe8f6;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid #dbe8f6;
 }
 
-.relatedBox h3 {
+.relatedBox h2 {
   margin: 0 0 14px;
   color: #1f2937;
   font-size: 18px;
@@ -191,6 +233,11 @@
     display: block;
   }
 
+  .categoryLayout :global(aside),
+  .categoryMain {
+    order: initial;
+  }
+
   .categoryMain {
     padding: 0;
     border: 0;
@@ -201,19 +248,17 @@
     gap: 15px;
   }
 
-  .categorySeo {
-    grid-template-columns: 1fr;
-  }
-
   .relatedBox {
-    padding-left: 0;
-    border-left: 0;
-    border-top: 1px solid #dbe8f6;
-    padding-top: 20px;
+    margin-top: 22px;
+    padding-top: 18px;
   }
 }
 
 @media (max-width: 768px) {
+  .mainTitle {
+    font-size: 26px;
+  }
+
   .productGrid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;

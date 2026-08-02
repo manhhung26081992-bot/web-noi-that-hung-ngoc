@@ -32,7 +32,7 @@ export async function getBlogBySlug(slug: string) {
 export async function getCategoryBySlug(slug: string) {
   const { data, error } = await supabase
     .from('categories')
-    .select('slug, title, seo_title, seo_content')
+    .select('slug, title, description, seo_title, seo_content')
     .eq('slug', slug)
     .maybeSingle();
 
